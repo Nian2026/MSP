@@ -1,0 +1,1 @@
+../../../../../Shared/ExampleChatTranscriptRenderer/RuntimeResources/Math/chat-long-image-export-bridge.js

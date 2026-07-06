@@ -1,0 +1,2260 @@
+diff -ruN --exclude=target --exclude=.git --exclude=.DS_Store Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/config/src/config_toml.rs Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/config/src/config_toml.rs
+--- Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/config/src/config_toml.rs	2026-06-30 00:38:49
++++ Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/config/src/config_toml.rs	2026-07-03 11:19:58
+@@ -3,6 +3,7 @@
+ use std::collections::BTreeMap;
+ use std::collections::HashMap;
+ use std::path::Path;
++use std::path::PathBuf;
+ 
+ use crate::HooksToml;
+ use crate::permissions_toml::PermissionsToml;
+@@ -554,6 +555,9 @@
+ #[serde(tag = "type", rename_all = "snake_case")]
+ pub enum ThreadStoreToml {
+     Local {},
++    Chat {
++        root: Option<PathBuf>,
++    },
+     #[schemars(skip)]
+     InMemory {
+         id: String,
+diff -ruN --exclude=target --exclude=.git --exclude=.DS_Store Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/config/config_tests.rs Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/config/config_tests.rs
+--- Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/config/config_tests.rs	2026-06-30 00:38:49
++++ Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/config/config_tests.rs	2026-07-03 11:19:58
+@@ -3800,6 +3800,33 @@
+     assert!(err.to_string().contains("no longer supported"));
+ }
+ 
++#[tokio::test]
++async fn experimental_chat_thread_store_config_loads() {
++    let cfg: ConfigToml = toml::from_str(
++        r#"
++[experimental_thread_store]
++type = "chat"
++root = "/tmp/codex-chat-thread-store"
++"#,
++    )
++    .expect("chat thread-store config should deserialize");
++
++    let config = Config::load_from_base_config_with_overrides(
++        cfg,
++        ConfigOverrides::default(),
++        tempdir().expect("tempdir").abs(),
++    )
++    .await
++    .expect("chat thread-store config should load");
++
++    assert_eq!(
++        config.experimental_thread_store,
++        ThreadStoreConfig::Chat {
++            root: Some(std::path::PathBuf::from("/tmp/codex-chat-thread-store")),
++        }
++    );
++}
++
+ #[test]
+ fn profile_tui_rejects_unsupported_settings() {
+     let err = toml::from_str::<ConfigToml>(
+diff -ruN --exclude=target --exclude=.git --exclude=.DS_Store Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/config/mod.rs Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/config/mod.rs
+--- Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/config/mod.rs	2026-06-30 00:38:49
++++ Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/config/mod.rs	2026-07-03 11:19:58
+@@ -600,6 +600,8 @@
+     /// Persist threads locally using rollout JSONL files and sqlite metadata.
+     #[default]
+     Local,
++    /// Persist threads using validation `.chat` directory packages.
++    Chat { root: Option<PathBuf> },
+     /// In-memory thread store for test and debug configurations.
+     InMemory { id: String },
+ }
+@@ -2230,6 +2232,7 @@
+ fn thread_store_config(thread_store: Option<ThreadStoreToml>) -> ThreadStoreConfig {
+     match thread_store {
+         Some(ThreadStoreToml::Local {}) => ThreadStoreConfig::Local,
++        Some(ThreadStoreToml::Chat { root }) => ThreadStoreConfig::Chat { root },
+         Some(ThreadStoreToml::InMemory { id }) => ThreadStoreConfig::InMemory { id },
+         None => ThreadStoreConfig::Local,
+     }
+diff -ruN --exclude=target --exclude=.git --exclude=.DS_Store Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/thread_manager.rs Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/thread_manager.rs
+--- Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/thread_manager.rs	2026-06-30 00:38:49
++++ Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/thread_manager.rs	2026-07-03 16:00:27
+@@ -63,6 +63,8 @@
+ use codex_protocol::protocol::TurnEnvironmentSelection;
+ use codex_protocol::protocol::W3cTraceContext;
+ use codex_rollout::state_db::StateDbHandle;
++use codex_thread_store::ChatThreadStore;
++use codex_thread_store::ChatThreadStoreConfig;
+ use codex_thread_store::InMemoryThreadStore;
+ use codex_thread_store::LocalThreadStore;
+ use codex_thread_store::LocalThreadStoreConfig;
+@@ -288,6 +290,11 @@
+             ))
+         }
+         ThreadStoreConfig::InMemory { id } => InMemoryThreadStore::for_id(id),
++        ThreadStoreConfig::Chat { root } => Arc::new(ChatThreadStore::new(ChatThreadStoreConfig {
++            root: root
++                .clone()
++                .unwrap_or_else(|| config.codex_home.join("chat-thread-store").to_path_buf()),
++        })),
+     }
+ }
+ 
+@@ -1570,6 +1577,7 @@
+                 forked_from_thread_id,
+             )
+             .await;
++        let logical_rollout_path = initial_history_rollout_path(&initial_history);
+         let CodexSpawnOk {
+             codex, thread_id, ..
+         } = Box::pin(Codex::spawn(CodexSpawnArgs {
+@@ -1611,7 +1619,12 @@
+         }))
+         .await?;
+         let new_thread = self
+-            .finalize_thread_spawn(codex, thread_id, tracked_session_source)
++            .finalize_thread_spawn(
++                codex,
++                thread_id,
++                tracked_session_source,
++                logical_rollout_path,
++            )
+             .await?;
+         if is_resumed_thread {
+             new_thread.thread.emit_thread_resume_lifecycle().await;
+@@ -1624,9 +1637,10 @@
+         codex: Codex,
+         thread_id: ThreadId,
+         session_source: SessionSource,
++        logical_rollout_path: Option<PathBuf>,
+     ) -> CodexResult<NewThread> {
+         let event = codex.next_event().await?;
+-        let session_configured = match event {
++        let mut session_configured = match event {
+             Event {
+                 id,
+                 msg: EventMsg::SessionConfigured(session_configured),
+@@ -1635,6 +1649,9 @@
+                 return Err(CodexErr::SessionConfiguredNotFirstEvent);
+             }
+         };
++        if session_configured.rollout_path.is_none() {
++            session_configured.rollout_path = logical_rollout_path;
++        }
+ 
+         {
+             let mut threads = self.threads.write().await;
+@@ -1712,6 +1729,13 @@
+         history: Arc::new(history.items),
+         rollout_path: rollout_path.or(stored_thread.rollout_path),
+     }))
++}
++
++fn initial_history_rollout_path(initial_history: &InitialHistory) -> Option<PathBuf> {
++    match initial_history {
++        InitialHistory::Resumed(resumed) => resumed.rollout_path.clone(),
++        InitialHistory::New | InitialHistory::Cleared | InitialHistory::Forked(_) => None,
++    }
+ }
+ 
+ fn thread_store_rollout_read_error(err: ThreadStoreError) -> CodexErr {
+diff -ruN --exclude=target --exclude=.git --exclude=.DS_Store Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/thread_manager_tests.rs Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/thread_manager_tests.rs
+--- Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/core/src/thread_manager_tests.rs	2026-06-30 00:38:49
++++ Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/core/src/thread_manager_tests.rs	2026-07-03 15:52:09
+@@ -1307,6 +1307,164 @@
+ }
+ 
+ #[tokio::test]
++async fn chat_thread_store_config_writes_package_and_round_trips_history() {
++    let temp_dir = tempdir().expect("tempdir");
++    let mut config = test_config().await;
++    config.codex_home = temp_dir.path().join("codex-home").abs();
++    config.cwd = config.codex_home.abs();
++    config.experimental_thread_store = ThreadStoreConfig::Chat {
++        root: Some(temp_dir.path().join("chat-threads")),
++    };
++    std::fs::create_dir_all(&config.codex_home).expect("create codex home");
++
++    let thread_store = thread_store_from_config(&config, /*state_db*/ None);
++    let thread_id = ThreadId::default();
++
++    thread_store
++        .create_thread(codex_thread_store::CreateThreadParams {
++            session_id: thread_id.into(),
++            thread_id,
++            extra_config: None,
++            forked_from_id: None,
++            parent_thread_id: None,
++            source: SessionSource::Exec,
++            thread_source: None,
++            originator: "chat-backend-test".to_string(),
++            base_instructions: codex_protocol::models::BaseInstructions::default(),
++            dynamic_tools: Vec::new(),
++            selected_capability_roots: Vec::new(),
++            multi_agent_version: None,
++            history_mode: ThreadHistoryMode::Legacy,
++            initial_window_id: uuid::Uuid::now_v7().to_string(),
++            metadata: codex_thread_store::ThreadPersistenceMetadata {
++                cwd: Some(config.cwd.to_path_buf()),
++                model_provider: "test-provider".to_string(),
++                memory_mode: codex_protocol::protocol::ThreadMemoryMode::Enabled,
++            },
++        })
++        .await
++        .expect("create chat-backed thread");
++    thread_store
++        .append_items(codex_thread_store::AppendThreadItemsParams {
++            thread_id,
++            items: vec![RolloutItem::EventMsg(EventMsg::UserMessage(
++                UserMessageEvent {
++                    client_id: None,
++                    message: "hello chat package".to_string(),
++                    images: None,
++                    text_elements: Vec::new(),
++                    local_images: Vec::new(),
++                    ..Default::default()
++                },
++            ))],
++        })
++        .await
++        .expect("append chat-backed history");
++
++    let package_path = temp_dir
++        .path()
++        .join("chat-threads")
++        .join(format!("{thread_id}.chat"));
++    assert!(package_path.join("manifest.json").is_file());
++    assert!(package_path.join("timeline.ndjson").is_file());
++    assert!(package_path.join("journal.ndjson").is_file());
++    assert!(package_path.join("projections/chat-read.ndjson").is_file());
++    assert!(package_path.join("indexes/thread-metadata.json").is_file());
++
++    let history = thread_store
++        .load_history(codex_thread_store::LoadThreadHistoryParams {
++            thread_id,
++            include_archived: false,
++        })
++        .await
++        .expect("load chat-backed history");
++    assert_eq!(history.items.len(), 2);
++
++    let read = thread_store
++        .read_thread(codex_thread_store::ReadThreadParams {
++            thread_id,
++            include_archived: false,
++            include_history: true,
++        })
++        .await
++        .expect("read chat-backed thread");
++    assert_eq!(read.thread_id, thread_id);
++    assert_eq!(read.history.expect("history").items.len(), 2);
++}
++
++#[tokio::test]
++async fn chat_thread_store_resume_exposes_package_path_to_session() {
++    let temp_dir = tempdir().expect("tempdir");
++    let mut config = test_config().await;
++    config.codex_home = temp_dir.path().join("codex-home").abs();
++    config.cwd = config.codex_home.abs();
++    config.experimental_thread_store = ThreadStoreConfig::Chat {
++        root: Some(temp_dir.path().join("chat-threads")),
++    };
++    std::fs::create_dir_all(&config.codex_home).expect("create codex home");
++
++    let auth_manager =
++        AuthManager::from_auth_for_testing(CodexAuth::create_dummy_chatgpt_auth_for_testing());
++    let state_db = init_state_db(&config).await;
++    let manager = ThreadManager::new(
++        &config,
++        auth_manager.clone(),
++        SessionSource::Exec,
++        Arc::new(codex_exec_server::EnvironmentManager::default_for_tests()),
++        empty_extension_registry(),
++        Arc::new(crate::test_support::EmptyUserInstructionsProvider),
++        /*analytics_events_client*/ None,
++        thread_store_from_config(&config, state_db.clone()),
++        local_agent_graph_store_from_state_db(state_db.as_ref()),
++        TEST_INSTALLATION_ID.to_string(),
++        /*attestation_provider*/ None,
++        /*external_time_provider*/ None,
++    );
++
++    let source = manager
++        .start_thread(config.clone())
++        .await
++        .expect("start chat-backed thread");
++    source
++        .thread
++        .shutdown_and_wait()
++        .await
++        .expect("shutdown source thread");
++    let _ = manager.remove_thread(&source.thread_id).await;
++
++    let package_path = temp_dir
++        .path()
++        .join("chat-threads")
++        .join(format!("{}.chat", source.thread_id));
++    assert!(package_path.join("manifest.json").is_file());
++
++    let resumed = manager
++        .resume_thread_from_rollout(
++            config,
++            package_path.clone(),
++            auth_manager,
++            /*parent_trace*/ None,
++            /*supports_openai_form_elicitation*/ false,
++        )
++        .await
++        .expect("resume from chat package path");
++
++    assert_eq!(
++        resumed.session_configured.rollout_path.as_deref(),
++        Some(package_path.as_path())
++    );
++    assert_eq!(
++        resumed.thread.rollout_path().as_deref(),
++        Some(package_path.as_path())
++    );
++    resumed
++        .thread
++        .shutdown_and_wait()
++        .await
++        .expect("shutdown resumed thread");
++}
++
++#[tokio::test]
+ async fn new_uses_active_provider_for_model_refresh() {
+     let server = MockServer::start().await;
+     let models_mock = mount_models_once(&server, ModelsResponse { models: vec![] }).await;
+diff -ruN --exclude=target --exclude=.git --exclude=.DS_Store Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/thread-store/src/chat/mod.rs Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/thread-store/src/chat/mod.rs
+--- Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/thread-store/src/chat/mod.rs	1970-01-01 08:00:00
++++ Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/thread-store/src/chat/mod.rs	2026-07-03 18:15:29
+@@ -0,0 +1,1908 @@
++use std::cmp::Ordering;
++use std::collections::HashSet;
++use std::env;
++use std::fs;
++use std::fs::File;
++use std::fs::OpenOptions;
++use std::io::BufRead;
++use std::io::BufReader;
++use std::io::Write;
++use std::path::Path;
++use std::path::PathBuf;
++use std::process;
++use std::sync::Arc;
++
++use chrono::DateTime;
++use chrono::SecondsFormat;
++use chrono::Utc;
++use codex_protocol::ThreadId;
++use codex_protocol::models::ContentItem;
++use codex_protocol::models::PermissionProfile;
++use codex_protocol::models::ResponseItem;
++use codex_protocol::protocol::AskForApproval;
++use codex_protocol::protocol::EventMsg;
++use codex_protocol::protocol::RolloutItem;
++use codex_protocol::protocol::SessionContextWindow;
++use codex_protocol::protocol::SessionMeta;
++use codex_protocol::protocol::SessionMetaLine;
++use codex_protocol::protocol::ThreadMemoryMode;
++use codex_protocol::protocol::USER_MESSAGE_BEGIN;
++use codex_rollout::persisted_rollout_items;
++use serde::Deserialize;
++use serde::Serialize;
++use serde_json::json;
++use tokio::sync::Mutex;
++
++use crate::AppendThreadItemsParams;
++use crate::ArchiveThreadParams;
++use crate::CreateThreadParams;
++use crate::DeleteThreadParams;
++use crate::ListThreadsParams;
++use crate::LoadThreadHistoryParams;
++use crate::ReadThreadByRolloutPathParams;
++use crate::ReadThreadParams;
++use crate::ResumeThreadParams;
++use crate::SearchThreadsParams;
++use crate::StoredThread;
++use crate::StoredThreadHistory;
++use crate::StoredThreadSearchResult;
++use crate::ThreadMetadataPatch;
++use crate::ThreadPage;
++use crate::ThreadRelationFilter;
++use crate::ThreadSearchPage;
++use crate::ThreadSortKey;
++use crate::ThreadStore;
++use crate::ThreadStoreError;
++use crate::ThreadStoreFuture;
++use crate::ThreadStoreResult;
++use crate::UpdateThreadMetadataParams;
++use crate::error::reject_paginated_history_mode;
++use crate::types::canonical_history_mode_from_rollout_items;
++
++const MATCH_CONTEXT_BEFORE_CHARS: usize = 48;
++const MATCH_CONTEXT_AFTER_CHARS: usize = 96;
++const VALIDATION_FAILPOINT_ENV: &str = "CODEX_CHAT_BACKEND_VALIDATION_FAILPOINT";
++const VALIDATION_FAILPOINT_NEEDLE_ENV: &str = "CODEX_CHAT_BACKEND_VALIDATION_FAILPOINT_NEEDLE";
++
++/// Process-scoped configuration for the `.chat` validation thread store.
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct ChatThreadStoreConfig {
++    pub root: PathBuf,
++}
++
++/// `.chat` package-backed [`ThreadStore`] used by the source-level validation
++/// package.
++#[derive(Clone, Debug)]
++pub struct ChatThreadStore {
++    config: ChatThreadStoreConfig,
++    live_threads: Arc<Mutex<HashSet<ThreadId>>>,
++}
++
++#[derive(Clone, Debug, Serialize, Deserialize)]
++struct ChatManifest {
++    format: String,
++    version: u32,
++    profiles: Vec<String>,
++    capabilities: Vec<String>,
++    thread_id: ThreadId,
++    created_at: DateTime<Utc>,
++    updated_at: DateTime<Utc>,
++    archived_at: Option<DateTime<Utc>>,
++    create_params: CreateThreadParams,
++    metadata_patch: ThreadMetadataPatch,
++}
++
++#[derive(Clone, Debug, Serialize, Deserialize)]
++struct JournalEntry {
++    entry_type: String,
++    created_at: DateTime<Utc>,
++    commit_seq: u64,
++    thread_id: ThreadId,
++    #[serde(default)]
++    source_transport: SourceTransportEnvelope,
++    item: RolloutItem,
++}
++
++#[derive(Clone, Debug, Serialize, Deserialize)]
++struct SourceTransportEnvelope {
++    schema: String,
++    payload: serde_json::Value,
++}
++
++impl Default for SourceTransportEnvelope {
++    fn default() -> Self {
++        Self {
++            schema: "msp.chat.source_transport.v1".to_string(),
++            payload: serde_json::Value::Null,
++        }
++    }
++}
++
++#[derive(Clone, Debug, Serialize, Deserialize)]
++struct TimelineEvent {
++    id: String,
++    #[serde(rename = "type")]
++    event_type: String,
++    seq: u64,
++    commit_seq: u64,
++    created_at: DateTime<Utc>,
++    durability: String,
++    thread_id: ThreadId,
++    source_transport_ref: String,
++    source_item_kind: String,
++    payload: serde_json::Value,
++}
++
++impl ChatThreadStore {
++    pub fn new(config: ChatThreadStoreConfig) -> Self {
++        Self {
++            config,
++            live_threads: Arc::new(Mutex::new(HashSet::new())),
++        }
++    }
++
++    fn package_path(&self, thread_id: ThreadId) -> PathBuf {
++        self.config.root.join(format!("{thread_id}.chat"))
++    }
++
++    fn cold_package_path(&self, thread_id: ThreadId) -> PathBuf {
++        self.config.root.join(format!("{thread_id}.chat.cold"))
++    }
++
++    fn package_from_path(&self, path: &Path) -> PathBuf {
++        if path.is_dir() {
++            return path.to_path_buf();
++        }
++        path.parent()
++            .map(Path::to_path_buf)
++            .unwrap_or_else(|| path.to_path_buf())
++    }
++
++    fn existing_package_path(&self, thread_id: ThreadId) -> ThreadStoreResult<PathBuf> {
++        let package_path = self.package_path(thread_id);
++        if package_path.exists() {
++            return Ok(package_path);
++        }
++        let cold_package_path = self.cold_package_path(thread_id);
++        if cold_package_path.exists() {
++            return Ok(cold_package_path);
++        }
++        Err(ThreadStoreError::ThreadNotFound { thread_id })
++    }
++
++    fn writable_package_path(&self, thread_id: ThreadId) -> ThreadStoreResult<PathBuf> {
++        materialize_cold_package(
++            self.package_path(thread_id),
++            self.cold_package_path(thread_id),
++        )
++    }
++
++    fn writable_package_from_path(&self, path: &Path) -> ThreadStoreResult<PathBuf> {
++        let package_path = self.package_from_path(path);
++        let plain_path = cold_to_plain_package_path(&package_path);
++        let cold_path = if is_cold_package_path(&package_path) {
++            package_path
++        } else {
++            plain_to_cold_package_path(&plain_path)
++        };
++        materialize_cold_package(plain_path, cold_path)
++    }
++
++    async fn create_thread_inner(&self, params: CreateThreadParams) -> ThreadStoreResult<()> {
++        reject_paginated_history_mode(params.history_mode)?;
++        fs::create_dir_all(&self.config.root).map_err(io_error)?;
++        let package_path = self.package_path(params.thread_id);
++        if package_path.exists() || self.cold_package_path(params.thread_id).exists() {
++            return Err(ThreadStoreError::Conflict {
++                message: format!("thread {} already exists", params.thread_id),
++            });
++        }
++        ensure_package_layout(&package_path)?;
++        let now = Utc::now();
++        let manifest = ChatManifest {
++            format: "msp.chat".to_string(),
++            version: 1,
++            profiles: vec![
++                "core-timeline".to_string(),
++                "agent-timeline".to_string(),
++                "projection-cache".to_string(),
++                "resumable-context".to_string(),
++                "runtime-journal".to_string(),
++            ],
++            capabilities: vec![
++                "read_core".to_string(),
++                "write_core".to_string(),
++                "generate_projection".to_string(),
++                "replay_journal".to_string(),
++                "preserve_unknown_events".to_string(),
++            ],
++            thread_id: params.thread_id,
++            created_at: now,
++            updated_at: now,
++            archived_at: None,
++            create_params: params.clone(),
++            metadata_patch: ThreadMetadataPatch::default(),
++        };
++        write_manifest(&package_path, &manifest)?;
++        reset_canonical_files(&package_path)?;
++
++        let session_meta = session_meta_from_create_params(&params);
++        append_canonical_items(
++            &package_path,
++            params.thread_id,
++            vec![RolloutItem::SessionMeta(SessionMetaLine {
++                meta: session_meta,
++                git: None,
++            })],
++        )?;
++        rebuild_projections(&package_path)?;
++        write_thread_index(
++            &package_path,
++            &stored_thread_from_manifest(&manifest, None, None)?,
++        )?;
++        self.live_threads.lock().await.insert(params.thread_id);
++        Ok(())
++    }
++
++    async fn resume_thread_inner(&self, params: ResumeThreadParams) -> ThreadStoreResult<()> {
++        let package_path = if let Some(rollout_path) = params.rollout_path.as_ref() {
++            self.writable_package_from_path(rollout_path)?
++        } else {
++            self.writable_package_path(params.thread_id)?
++        };
++        let mut manifest = read_manifest(&package_path)?;
++        if manifest.thread_id != params.thread_id {
++            return Err(ThreadStoreError::InvalidRequest {
++                message: format!(
++                    "package {} belongs to thread {}, not {}",
++                    package_path.display(),
++                    manifest.thread_id,
++                    params.thread_id
++                ),
++            });
++        }
++        if manifest.archived_at.is_some() && !params.include_archived {
++            return Err(ThreadStoreError::InvalidRequest {
++                message: format!("thread {} is archived", params.thread_id),
++            });
++        }
++        let history_mode = params
++            .history
++            .as_deref()
++            .map(Vec::as_slice)
++            .map(canonical_history_mode_from_rollout_items)
++            .unwrap_or(manifest.create_params.history_mode);
++        reject_paginated_history_mode(history_mode)?;
++        manifest.metadata_patch.cwd = params.metadata.cwd;
++        manifest.metadata_patch.model_provider = Some(params.metadata.model_provider);
++        manifest.metadata_patch.memory_mode = Some(params.metadata.memory_mode);
++        manifest.updated_at = Utc::now();
++        write_manifest(&package_path, &manifest)?;
++        let stored = stored_thread_from_package(&package_path, false)?;
++        write_thread_index(&package_path, &stored)?;
++        self.live_threads.lock().await.insert(params.thread_id);
++        Ok(())
++    }
++
++    async fn append_items_inner(&self, params: AppendThreadItemsParams) -> ThreadStoreResult<()> {
++        let canonical_items = persisted_rollout_items(params.items.as_slice());
++        if canonical_items.is_empty() {
++            return Ok(());
++        }
++        let package_path = self.writable_package_path(params.thread_id)?;
++        let mut manifest = read_manifest(&package_path)?;
++        let failpoint_needle_matches = validation_failpoint_needle_matches(&canonical_items);
++        append_canonical_items(&package_path, params.thread_id, canonical_items)?;
++        manifest.updated_at = Utc::now();
++        write_manifest(&package_path, &manifest)?;
++        validation_failpoint_if(
++            "after-canonical-before-projections",
++            failpoint_needle_matches,
++        );
++        rebuild_projections(&package_path)?;
++        let stored = stored_thread_from_package(&package_path, false)?;
++        write_thread_index(&package_path, &stored)?;
++        Ok(())
++    }
++
++    async fn load_history_inner(
++        &self,
++        params: LoadThreadHistoryParams,
++    ) -> ThreadStoreResult<StoredThreadHistory> {
++        let package_path = self.existing_package_path(params.thread_id)?;
++        let manifest = read_manifest(&package_path)?;
++        if manifest.archived_at.is_some() && !params.include_archived {
++            return Err(ThreadStoreError::InvalidRequest {
++                message: format!("thread {} is archived", params.thread_id),
++            });
++        }
++        reject_paginated_history_mode(manifest.create_params.history_mode)?;
++        Ok(StoredThreadHistory {
++            thread_id: params.thread_id,
++            items: read_journal_items(&package_path)?,
++        })
++    }
++
++    async fn read_thread_inner(&self, params: ReadThreadParams) -> ThreadStoreResult<StoredThread> {
++        let package_path =
++            self.existing_package_path(params.thread_id)
++                .map_err(|err| match err {
++                    ThreadStoreError::ThreadNotFound { thread_id }
++                        if thread_id == params.thread_id =>
++                    {
++                        ThreadStoreError::InvalidRequest {
++                            message: format!("no rollout found for thread id {thread_id}"),
++                        }
++                    }
++                    err => err,
++                })?;
++        let manifest = read_manifest(&package_path)?;
++        if manifest.archived_at.is_some() && !params.include_archived {
++            return Err(ThreadStoreError::InvalidRequest {
++                message: format!("thread {} is archived", params.thread_id),
++            });
++        }
++        if params.include_history {
++            reject_paginated_history_mode(manifest.create_params.history_mode)?;
++        }
++        stored_thread_from_package_repairing_index(&package_path, params.include_history)
++    }
++
++    async fn read_thread_by_path_inner(
++        &self,
++        params: ReadThreadByRolloutPathParams,
++    ) -> ThreadStoreResult<StoredThread> {
++        let package_path = self.package_from_path(&params.rollout_path);
++        let manifest = read_manifest(&package_path)?;
++        if manifest.archived_at.is_some() && !params.include_archived {
++            return Err(ThreadStoreError::InvalidRequest {
++                message: format!("thread {} is archived", manifest.thread_id),
++            });
++        }
++        if params.include_history {
++            reject_paginated_history_mode(manifest.create_params.history_mode)?;
++        }
++        stored_thread_from_package_repairing_index(&package_path, params.include_history)
++    }
++
++    async fn list_threads_inner(&self, params: ListThreadsParams) -> ThreadStoreResult<ThreadPage> {
++        let mut items = Vec::new();
++        let mut relation_universe = Vec::new();
++        for package_path in package_paths(&self.config.root)? {
++            let Ok(thread) = stored_thread_from_package_repairing_index(&package_path, false)
++            else {
++                continue;
++            };
++            if params.relation_filter.is_some() {
++                relation_universe.push((thread.thread_id, thread.parent_thread_id));
++            }
++            if params.archived != thread.archived_at.is_some() {
++                continue;
++            }
++            if !params.allowed_sources.is_empty()
++                && !params.allowed_sources.contains(&thread.source)
++            {
++                continue;
++            }
++            if let Some(model_providers) = params.model_providers.as_ref()
++                && !model_providers.is_empty()
++                && !model_providers.contains(&thread.model_provider)
++            {
++                continue;
++            }
++            if let Some(cwd_filters) = params.cwd_filters.as_ref() {
++                if cwd_filters.is_empty() {
++                    continue;
++                }
++                if !cwd_filters.iter().any(|cwd| cwd == &thread.cwd) {
++                    continue;
++                }
++            }
++            if let Some(search_term) = params.search_term.as_ref()
++                && !thread_matches_search(&thread, search_term)
++            {
++                continue;
++            }
++            items.push(thread);
++        }
++
++        apply_relation_filter(&mut items, &relation_universe, params.relation_filter);
++        sort_threads(&mut items, params.sort_key, params.sort_direction);
++        paginate_threads(
++            items,
++            params.page_size,
++            params.cursor,
++            params.sort_key,
++            params.sort_direction,
++            params.relation_filter.is_some(),
++        )
++    }
++
++    async fn search_threads_inner(
++        &self,
++        params: SearchThreadsParams,
++    ) -> ThreadStoreResult<ThreadSearchPage> {
++        let mut matches = Vec::new();
++        for package_path in package_paths(&self.config.root)? {
++            let thread = match stored_thread_from_package_repairing_index(&package_path, false) {
++                Ok(thread) => thread,
++                Err(_) => continue,
++            };
++            if params.archived != thread.archived_at.is_some() {
++                continue;
++            }
++            if !params.allowed_sources.is_empty()
++                && !params.allowed_sources.contains(&thread.source)
++            {
++                continue;
++            }
++            let journal_items = read_journal_items(&package_path).unwrap_or_default();
++            let snippet_from_history =
++                first_journal_content_match_snippet(&journal_items, &params.search_term);
++            if snippet_from_history.is_none()
++                && !thread_matches_search(&thread, &params.search_term)
++            {
++                continue;
++            }
++            let snippet = snippet_from_history
++                .or_else(|| thread.first_user_message.clone())
++                .unwrap_or_else(|| {
++                    if thread.preview.is_empty() {
++                        params.search_term.clone()
++                    } else {
++                        thread.preview.clone()
++                    }
++                });
++            matches.push(StoredThreadSearchResult { thread, snippet });
++        }
++        sort_search_results(&mut matches, params.sort_key, params.sort_direction);
++        paginate_search_results(
++            matches,
++            params.page_size,
++            params.cursor,
++            params.sort_key,
++            params.sort_direction,
++        )
++    }
++
++    async fn update_thread_metadata_inner(
++        &self,
++        params: UpdateThreadMetadataParams,
++    ) -> ThreadStoreResult<StoredThread> {
++        let package_path = self.writable_package_path(params.thread_id)?;
++        let mut manifest = read_manifest(&package_path)?;
++        if manifest.archived_at.is_some() && !params.include_archived {
++            return Err(ThreadStoreError::InvalidRequest {
++                message: format!("thread {} is archived", params.thread_id),
++            });
++        }
++        manifest.metadata_patch.merge(params.patch);
++        manifest.updated_at = Utc::now();
++        write_manifest(&package_path, &manifest)?;
++        let stored = stored_thread_from_package(&package_path, false)?;
++        write_thread_index(&package_path, &stored)?;
++        Ok(stored)
++    }
++
++    async fn archive_thread_inner(&self, params: ArchiveThreadParams) -> ThreadStoreResult<()> {
++        let package_path = self.writable_package_path(params.thread_id)?;
++        let mut manifest = read_manifest(&package_path)?;
++        manifest.archived_at = Some(Utc::now());
++        manifest.updated_at = Utc::now();
++        write_manifest(&package_path, &manifest)?;
++        validation_failpoint("after-lifecycle-manifest-before-index");
++        let stored = stored_thread_from_package(&package_path, false)?;
++        write_thread_index(&package_path, &stored)?;
++        Ok(())
++    }
++
++    async fn unarchive_thread_inner(
++        &self,
++        params: ArchiveThreadParams,
++    ) -> ThreadStoreResult<StoredThread> {
++        let package_path = self.writable_package_path(params.thread_id)?;
++        let mut manifest = read_manifest(&package_path)?;
++        manifest.archived_at = None;
++        manifest.updated_at = Utc::now();
++        write_manifest(&package_path, &manifest)?;
++        validation_failpoint("after-lifecycle-manifest-before-index");
++        let stored = stored_thread_from_package(&package_path, false)?;
++        write_thread_index(&package_path, &stored)?;
++        Ok(stored)
++    }
++
++    async fn delete_thread_inner(&self, params: DeleteThreadParams) -> ThreadStoreResult<()> {
++        let package_path = self.package_path(params.thread_id);
++        let cold_package_path = self.cold_package_path(params.thread_id);
++        if !package_path.exists() && !cold_package_path.exists() {
++            return Err(ThreadStoreError::InvalidRequest {
++                message: format!("no rollout found for thread id {}", params.thread_id),
++            });
++        }
++        if package_path.exists() {
++            fs::remove_dir_all(package_path).map_err(io_error)?;
++        }
++        validation_failpoint("after-delete-plain-package-before-cold-package");
++        if cold_package_path.exists() {
++            fs::remove_dir_all(cold_package_path).map_err(io_error)?;
++        }
++        validation_failpoint("after-delete-cold-package");
++        self.live_threads.lock().await.remove(&params.thread_id);
++        Ok(())
++    }
++}
++
++impl ThreadStore for ChatThreadStore {
++    fn as_any(&self) -> &dyn std::any::Any {
++        self
++    }
++
++    fn create_thread(&self, params: CreateThreadParams) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(ChatThreadStore::create_thread_inner(self, params))
++    }
++
++    fn resume_thread(&self, params: ResumeThreadParams) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(ChatThreadStore::resume_thread_inner(self, params))
++    }
++
++    fn append_items(&self, params: AppendThreadItemsParams) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(ChatThreadStore::append_items_inner(self, params))
++    }
++
++    fn persist_thread(&self, thread_id: ThreadId) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(async move {
++            self.existing_package_path(thread_id)?;
++            Ok(())
++        })
++    }
++
++    fn flush_thread(&self, thread_id: ThreadId) -> ThreadStoreFuture<'_, ()> {
++        self.persist_thread(thread_id)
++    }
++
++    fn shutdown_thread(&self, thread_id: ThreadId) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(async move {
++            self.existing_package_path(thread_id)?;
++            self.live_threads.lock().await.remove(&thread_id);
++            Ok(())
++        })
++    }
++
++    fn discard_thread(&self, thread_id: ThreadId) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(async move {
++            self.live_threads.lock().await.remove(&thread_id);
++            Ok(())
++        })
++    }
++
++    fn load_history(
++        &self,
++        params: LoadThreadHistoryParams,
++    ) -> ThreadStoreFuture<'_, StoredThreadHistory> {
++        Box::pin(ChatThreadStore::load_history_inner(self, params))
++    }
++
++    fn read_thread(&self, params: ReadThreadParams) -> ThreadStoreFuture<'_, StoredThread> {
++        Box::pin(ChatThreadStore::read_thread_inner(self, params))
++    }
++
++    fn read_thread_by_rollout_path(
++        &self,
++        params: ReadThreadByRolloutPathParams,
++    ) -> ThreadStoreFuture<'_, StoredThread> {
++        Box::pin(ChatThreadStore::read_thread_by_path_inner(self, params))
++    }
++
++    fn list_threads(&self, params: ListThreadsParams) -> ThreadStoreFuture<'_, ThreadPage> {
++        Box::pin(ChatThreadStore::list_threads_inner(self, params))
++    }
++
++    fn search_threads(
++        &self,
++        params: SearchThreadsParams,
++    ) -> ThreadStoreFuture<'_, ThreadSearchPage> {
++        Box::pin(ChatThreadStore::search_threads_inner(self, params))
++    }
++
++    fn update_thread_metadata(
++        &self,
++        params: UpdateThreadMetadataParams,
++    ) -> ThreadStoreFuture<'_, StoredThread> {
++        Box::pin(ChatThreadStore::update_thread_metadata_inner(self, params))
++    }
++
++    fn archive_thread(&self, params: ArchiveThreadParams) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(ChatThreadStore::archive_thread_inner(self, params))
++    }
++
++    fn unarchive_thread(&self, params: ArchiveThreadParams) -> ThreadStoreFuture<'_, StoredThread> {
++        Box::pin(ChatThreadStore::unarchive_thread_inner(self, params))
++    }
++
++    fn delete_thread(&self, params: DeleteThreadParams) -> ThreadStoreFuture<'_, ()> {
++        Box::pin(ChatThreadStore::delete_thread_inner(self, params))
++    }
++}
++
++fn validation_failpoint(name: &str) {
++    if env::var(VALIDATION_FAILPOINT_ENV).ok().as_deref() == Some(name) {
++        process::abort();
++    }
++}
++
++fn validation_failpoint_if(name: &str, condition: bool) {
++    if condition {
++        validation_failpoint(name);
++    }
++}
++
++fn validation_failpoint_needle_matches<T: Serialize>(value: &T) -> bool {
++    let Some(needle) = env::var(VALIDATION_FAILPOINT_NEEDLE_ENV)
++        .ok()
++        .filter(|needle| !needle.is_empty())
++    else {
++        return true;
++    };
++    serde_json::to_string(value).is_ok_and(|serialized| serialized.contains(&needle))
++}
++
++fn ensure_package_layout(package_path: &Path) -> ThreadStoreResult<()> {
++    fs::create_dir_all(package_path).map_err(io_error)?;
++    fs::create_dir_all(package_path.join("projections")).map_err(io_error)?;
++    fs::create_dir_all(package_path.join("artifacts")).map_err(io_error)?;
++    fs::create_dir_all(package_path.join("blobs")).map_err(io_error)?;
++    fs::create_dir_all(package_path.join("indexes")).map_err(io_error)?;
++    Ok(())
++}
++
++fn reset_canonical_files(package_path: &Path) -> ThreadStoreResult<()> {
++    File::create(package_path.join("timeline.ndjson")).map_err(io_error)?;
++    File::create(package_path.join("journal.ndjson")).map_err(io_error)?;
++    Ok(())
++}
++
++fn append_canonical_items(
++    package_path: &Path,
++    thread_id: ThreadId,
++    items: Vec<RolloutItem>,
++) -> ThreadStoreResult<()> {
++    ensure_package_layout(package_path)?;
++    let mut commit_seq = count_lines(&package_path.join("journal.ndjson"))?;
++    let mut journal = OpenOptions::new()
++        .create(true)
++        .append(true)
++        .open(package_path.join("journal.ndjson"))
++        .map_err(io_error)?;
++    let mut timeline = OpenOptions::new()
++        .create(true)
++        .append(true)
++        .open(package_path.join("timeline.ndjson"))
++        .map_err(io_error)?;
++    for item in items {
++        commit_seq += 1;
++        let now = Utc::now();
++        let source = serde_json::to_value(&item).map_err(json_error)?;
++        let source_item_kind = source_item_kind(&source);
++        let entry = JournalEntry {
++            entry_type: "source_transport".to_string(),
++            created_at: now,
++            commit_seq,
++            thread_id,
++            source_transport: SourceTransportEnvelope {
++                schema: "msp.chat.source_transport.v1".to_string(),
++                payload: source.clone(),
++            },
++            item: item.clone(),
++        };
++        serde_json::to_writer(&mut journal, &entry).map_err(json_error)?;
++        writeln!(journal).map_err(io_error)?;
++        journal.sync_data().map_err(io_error)?;
++
++        let event = TimelineEvent {
++            id: format!("event-{commit_seq:020}"),
++            event_type: neutral_event_type(&source),
++            seq: commit_seq,
++            commit_seq,
++            created_at: now,
++            durability: "durable_replay".to_string(),
++            thread_id,
++            source_transport_ref: format!("journal:{commit_seq}"),
++            source_item_kind,
++            payload: source,
++        };
++        serde_json::to_writer(&mut timeline, &event).map_err(json_error)?;
++        writeln!(timeline).map_err(io_error)?;
++        timeline.sync_data().map_err(io_error)?;
++    }
++    Ok(())
++}
++
++fn rebuild_projections(package_path: &Path) -> ThreadStoreResult<()> {
++    let events = read_timeline_events(package_path)?;
++    write_projection(
++        package_path,
++        "chat-read.ndjson",
++        "chat-read.machine",
++        &events,
++    )?;
++    write_projection(
++        package_path,
++        "model-context.ndjson",
++        "model-context",
++        &events,
++    )?;
++    write_projection(package_path, "audit.ndjson", "audit", &events)?;
++    Ok(())
++}
++
++fn write_projection(
++    package_path: &Path,
++    filename: &str,
++    projection_kind: &str,
++    events: &[TimelineEvent],
++) -> ThreadStoreResult<()> {
++    let path = package_path.join("projections").join(filename);
++    let mut file = File::create(path).map_err(io_error)?;
++    let source_event_ids: Vec<_> = events.iter().map(|event| event.id.clone()).collect();
++    let source_fingerprint = format!(
++        "timeline:{}:{}:{}",
++        events.len(),
++        events.first().map(|event| event.id.as_str()).unwrap_or(""),
++        events.last().map(|event| event.id.as_str()).unwrap_or("")
++    );
++    let header = json!({
++        "record_type": "projection_metadata",
++        "projection_kind": projection_kind,
++        "projection_format": "ndjson",
++        "source_event_range": {
++            "from_seq": events.first().map(|event| event.seq),
++            "to_seq": events.last().map(|event| event.seq)
++        },
++        "source_event_ids": source_event_ids,
++        "source_fingerprint": source_fingerprint,
++        "generator": "codex-chat-backend-validation",
++        "generated_at": Utc::now(),
++        "lossy": false,
++        "redacted": false,
++        "truncated": false
++    });
++    serde_json::to_writer(&mut file, &header).map_err(json_error)?;
++    writeln!(file).map_err(io_error)?;
++    for event in events {
++        let projection_event = json!({
++            "record_type": "projection_event",
++            "projection_kind": projection_kind,
++            "source_event_id": event.id,
++            "source_seq": event.seq,
++            "event": event
++        });
++        serde_json::to_writer(&mut file, &projection_event).map_err(json_error)?;
++        writeln!(file).map_err(io_error)?;
++    }
++    file.sync_data().map_err(io_error)?;
++    Ok(())
++}
++
++fn write_thread_index(package_path: &Path, thread: &StoredThread) -> ThreadStoreResult<()> {
++    let path = package_path.join("indexes").join("thread-metadata.json");
++    if let Some(parent) = path.parent() {
++        fs::create_dir_all(parent).map_err(io_error)?;
++    }
++    write_json_pretty_atomic(&path, thread)
++}
++
++fn write_manifest(package_path: &Path, manifest: &ChatManifest) -> ThreadStoreResult<()> {
++    ensure_package_layout(package_path)?;
++    write_json_pretty_atomic(&package_path.join("manifest.json"), manifest)
++}
++
++fn write_json_pretty_atomic<T: Serialize>(path: &Path, value: &T) -> ThreadStoreResult<()> {
++    let file_name = path
++        .file_name()
++        .and_then(|name| name.to_str())
++        .unwrap_or("data.json");
++    let nonce = Utc::now().timestamp_nanos_opt().unwrap_or_default();
++    let temp_path = path.with_file_name(format!(".{file_name}.{nonce}.tmp"));
++
++    let mut file = File::create(&temp_path).map_err(io_error)?;
++    if let Err(error) = serde_json::to_writer_pretty(&mut file, value) {
++        let _ = fs::remove_file(&temp_path);
++        return Err(json_error(error));
++    }
++    if let Err(error) = writeln!(file) {
++        let _ = fs::remove_file(&temp_path);
++        return Err(io_error(error));
++    }
++    if let Err(error) = file.sync_data() {
++        let _ = fs::remove_file(&temp_path);
++        return Err(io_error(error));
++    }
++    if let Err(error) = fs::rename(&temp_path, path) {
++        let _ = fs::remove_file(&temp_path);
++        return Err(io_error(error));
++    }
++    if let Some(parent) = path.parent()
++        && let Ok(directory) = File::open(parent)
++    {
++        let _ = directory.sync_data();
++    }
++    Ok(())
++}
++
++fn read_manifest(package_path: &Path) -> ThreadStoreResult<ChatManifest> {
++    let file = File::open(package_path.join("manifest.json")).map_err(|err| match err.kind() {
++        std::io::ErrorKind::NotFound => ThreadStoreError::ThreadNotFound {
++            thread_id: thread_id_from_package_path(package_path),
++        },
++        _ => io_error(err),
++    })?;
++    serde_json::from_reader(file).map_err(json_error)
++}
++
++fn materialize_cold_package(plain_path: PathBuf, cold_path: PathBuf) -> ThreadStoreResult<PathBuf> {
++    if plain_path.exists() {
++        return Ok(plain_path);
++    }
++    if cold_path.exists() {
++        fs::rename(&cold_path, &plain_path).map_err(io_error)?;
++        return Ok(plain_path);
++    }
++    Err(ThreadStoreError::ThreadNotFound {
++        thread_id: thread_id_from_package_path(&plain_path),
++    })
++}
++
++fn is_cold_package_path(package_path: &Path) -> bool {
++    package_path
++        .file_name()
++        .and_then(|name| name.to_str())
++        .is_some_and(|name| name.ends_with(".chat.cold"))
++}
++
++fn cold_to_plain_package_path(package_path: &Path) -> PathBuf {
++    let Some(name) = package_path.file_name().and_then(|name| name.to_str()) else {
++        return package_path.to_path_buf();
++    };
++    let Some(thread_id) = name.strip_suffix(".chat.cold") else {
++        return package_path.to_path_buf();
++    };
++    package_path.with_file_name(format!("{thread_id}.chat"))
++}
++
++fn plain_to_cold_package_path(package_path: &Path) -> PathBuf {
++    let Some(name) = package_path.file_name().and_then(|name| name.to_str()) else {
++        return package_path.to_path_buf();
++    };
++    package_path.with_file_name(format!("{name}.cold"))
++}
++
++fn thread_id_from_package_path(package_path: &Path) -> ThreadId {
++    package_path
++        .file_name()
++        .and_then(|name| name.to_str())
++        .and_then(|name| {
++            name.strip_suffix(".chat.cold")
++                .or_else(|| name.strip_suffix(".chat"))
++        })
++        .and_then(|name| ThreadId::from_string(name).ok())
++        .unwrap_or_default()
++}
++
++fn read_journal_items(package_path: &Path) -> ThreadStoreResult<Vec<RolloutItem>> {
++    let file = File::open(package_path.join("journal.ndjson")).map_err(io_error)?;
++    let mut items = Vec::new();
++    for line in BufReader::new(file).lines() {
++        let line = line.map_err(io_error)?;
++        if line.trim().is_empty() {
++            continue;
++        }
++        let entry: JournalEntry = serde_json::from_str(&line).map_err(json_error)?;
++        items.push(entry.item);
++    }
++    Ok(items)
++}
++
++fn first_journal_content_match_snippet(items: &[RolloutItem], search_term: &str) -> Option<String> {
++    items
++        .iter()
++        .filter_map(conversation_text_from_item)
++        .find_map(|text| excerpt_around_match(text.as_str(), search_term))
++}
++
++fn conversation_text_from_item(item: &RolloutItem) -> Option<String> {
++    match item {
++        RolloutItem::EventMsg(EventMsg::UserMessage(user)) => {
++            let text = strip_user_message_prefix(user.message.as_str());
++            if text.is_empty() {
++                None
++            } else {
++                Some(text.to_string())
++            }
++        }
++        RolloutItem::EventMsg(EventMsg::AgentMessage(agent)) => {
++            if agent.message.trim().is_empty() {
++                None
++            } else {
++                Some(agent.message.trim().to_string())
++            }
++        }
++        RolloutItem::ResponseItem(ResponseItem::Message { role, content, .. }) => {
++            let text = content
++                .iter()
++                .filter_map(content_item_text)
++                .collect::<Vec<_>>()
++                .join(" ");
++            if text.trim().is_empty() || (role != "user" && role != "assistant") {
++                None
++            } else {
++                Some(text)
++            }
++        }
++        _ => None,
++    }
++}
++
++fn content_item_text(item: &ContentItem) -> Option<&str> {
++    match item {
++        ContentItem::InputText { text } | ContentItem::OutputText { text } => Some(text.as_str()),
++        ContentItem::InputImage { .. } => None,
++    }
++}
++
++fn strip_user_message_prefix(text: &str) -> &str {
++    match text.find(USER_MESSAGE_BEGIN) {
++        Some(idx) => text[idx + USER_MESSAGE_BEGIN.len()..].trim(),
++        None => text.trim(),
++    }
++}
++
++fn excerpt_around_match(text: &str, search_term: &str) -> Option<String> {
++    let normalized = normalize_preview_text(text);
++    let normalized_lower = normalized.to_lowercase();
++    let search_lower = search_term.to_lowercase();
++    let match_start = normalized_lower.find(search_lower.as_str())?;
++    let match_end = match_start + search_lower.len();
++    let excerpt_start =
++        char_start_before(normalized.as_str(), match_start, MATCH_CONTEXT_BEFORE_CHARS);
++    let excerpt_end = char_end_after(normalized.as_str(), match_end, MATCH_CONTEXT_AFTER_CHARS);
++    let excerpt = normalized[excerpt_start..excerpt_end].trim();
++    if excerpt.is_empty() {
++        return None;
++    }
++
++    let mut snippet = String::new();
++    if excerpt_start > 0 {
++        snippet.push_str("... ");
++    }
++    snippet.push_str(excerpt);
++    if excerpt_end < normalized.len() {
++        snippet.push_str(" ...");
++    }
++    Some(snippet)
++}
++
++fn normalize_preview_text(text: &str) -> String {
++    text.split_whitespace().collect::<Vec<_>>().join(" ")
++}
++
++fn char_start_before(text: &str, byte_index: usize, chars_before: usize) -> usize {
++    text[..byte_index]
++        .char_indices()
++        .rev()
++        .nth(chars_before)
++        .map(|(idx, _)| idx)
++        .unwrap_or(0)
++}
++
++fn char_end_after(text: &str, byte_index: usize, chars_after: usize) -> usize {
++    text[byte_index..]
++        .char_indices()
++        .nth(chars_after)
++        .map(|(offset, _)| byte_index.saturating_add(offset))
++        .unwrap_or(text.len())
++}
++
++fn read_timeline_events(package_path: &Path) -> ThreadStoreResult<Vec<TimelineEvent>> {
++    let file = File::open(package_path.join("timeline.ndjson")).map_err(io_error)?;
++    let mut events = Vec::new();
++    for line in BufReader::new(file).lines() {
++        let line = line.map_err(io_error)?;
++        if line.trim().is_empty() {
++            continue;
++        }
++        events.push(serde_json::from_str(&line).map_err(json_error)?);
++    }
++    Ok(events)
++}
++
++fn stored_thread_from_package(
++    package_path: &Path,
++    include_history: bool,
++) -> ThreadStoreResult<StoredThread> {
++    let manifest = read_manifest(package_path)?;
++    let history = if include_history {
++        Some(StoredThreadHistory {
++            thread_id: manifest.thread_id,
++            items: read_journal_items(package_path)?,
++        })
++    } else {
++        None
++    };
++    stored_thread_from_manifest(&manifest, Some(package_path.to_path_buf()), history)
++}
++
++fn stored_thread_from_package_repairing_index(
++    package_path: &Path,
++    include_history: bool,
++) -> ThreadStoreResult<StoredThread> {
++    let thread = stored_thread_from_package(package_path, include_history)?;
++    rebuild_projections(package_path)?;
++    write_thread_index(package_path, &thread)?;
++    Ok(thread)
++}
++
++fn stored_thread_from_manifest(
++    manifest: &ChatManifest,
++    package_path: Option<PathBuf>,
++    history: Option<StoredThreadHistory>,
++) -> ThreadStoreResult<StoredThread> {
++    let created = &manifest.create_params;
++    let metadata = &manifest.metadata_patch;
++    let name = metadata.name.clone().flatten();
++    let created_at = metadata.created_at.unwrap_or(manifest.created_at);
++    let updated_at = metadata.updated_at.unwrap_or(manifest.updated_at);
++    let recency_at = metadata
++        .advance_recency_at
++        .or(metadata.updated_at)
++        .unwrap_or(manifest.updated_at);
++    let first_user_message = metadata.first_user_message.clone();
++    let preview = metadata
++        .preview
++        .clone()
++        .or_else(|| first_user_message.clone())
++        .unwrap_or_default();
++
++    Ok(StoredThread {
++        thread_id: manifest.thread_id,
++        extra_config: created.extra_config.clone(),
++        rollout_path: metadata
++            .rollout_path
++            .clone()
++            .or_else(|| package_path.clone()),
++        forked_from_id: created.forked_from_id,
++        parent_thread_id: created.parent_thread_id,
++        preview,
++        name,
++        model_provider: metadata
++            .model_provider
++            .clone()
++            .unwrap_or_else(|| created.metadata.model_provider.clone()),
++        model: metadata.model.clone(),
++        reasoning_effort: metadata.reasoning_effort.clone(),
++        created_at,
++        updated_at,
++        recency_at,
++        archived_at: manifest.archived_at,
++        cwd: metadata
++            .cwd
++            .clone()
++            .or_else(|| created.metadata.cwd.clone())
++            .unwrap_or_default(),
++        cli_version: metadata
++            .cli_version
++            .clone()
++            .unwrap_or_else(|| "codex-chat-backend-validation".to_string()),
++        source: metadata
++            .source
++            .clone()
++            .unwrap_or_else(|| created.source.clone()),
++        history_mode: created.history_mode,
++        thread_source: metadata
++            .thread_source
++            .clone()
++            .unwrap_or_else(|| created.thread_source.clone()),
++        agent_nickname: metadata
++            .agent_nickname
++            .clone()
++            .flatten()
++            .or_else(|| created.source.get_nickname()),
++        agent_role: metadata
++            .agent_role
++            .clone()
++            .flatten()
++            .or_else(|| created.source.get_agent_role()),
++        agent_path: metadata
++            .agent_path
++            .clone()
++            .flatten()
++            .or_else(|| created.source.get_agent_path().map(Into::into)),
++        git_info: metadata.git_info.as_ref().and_then(git_info_from_patch),
++        approval_mode: metadata.approval_mode.unwrap_or(AskForApproval::Never),
++        permission_profile: metadata
++            .permission_profile
++            .clone()
++            .unwrap_or_else(PermissionProfile::read_only),
++        token_usage: metadata.token_usage.clone(),
++        first_user_message,
++        history,
++    })
++}
++
++fn package_paths(root: &Path) -> ThreadStoreResult<Vec<PathBuf>> {
++    if !root.exists() {
++        return Ok(Vec::new());
++    }
++    let mut paths = Vec::new();
++    for entry in fs::read_dir(root).map_err(io_error)? {
++        let entry = entry.map_err(io_error)?;
++        let path = entry.path();
++        if !path.is_dir() {
++            continue;
++        }
++        if path.extension().is_some_and(|ext| ext == "chat") {
++            paths.push(path);
++        } else if is_cold_package_path(&path) {
++            let plain_path = cold_to_plain_package_path(&path);
++            if !plain_path.exists() {
++                paths.push(path);
++            }
++        }
++    }
++    Ok(paths)
++}
++
++fn count_lines(path: &Path) -> ThreadStoreResult<u64> {
++    if !path.exists() {
++        return Ok(0);
++    }
++    let file = File::open(path).map_err(io_error)?;
++    Ok(BufReader::new(file)
++        .lines()
++        .filter(|line| line.as_ref().is_ok_and(|line| !line.trim().is_empty()))
++        .count() as u64)
++}
++
++fn session_meta_from_create_params(params: &CreateThreadParams) -> SessionMeta {
++    SessionMeta {
++        session_id: params.session_id,
++        id: params.thread_id,
++        forked_from_id: params.forked_from_id,
++        parent_thread_id: params.parent_thread_id,
++        cwd: params.metadata.cwd.clone().unwrap_or_default(),
++        agent_nickname: params.source.get_nickname(),
++        agent_role: params.source.get_agent_role(),
++        agent_path: params.source.get_agent_path().map(Into::into),
++        originator: params.originator.clone(),
++        source: params.source.clone(),
++        thread_source: params.thread_source.clone(),
++        model_provider: Some(params.metadata.model_provider.clone()),
++        base_instructions: Some(params.base_instructions.clone()),
++        dynamic_tools: (!params.dynamic_tools.is_empty()).then(|| params.dynamic_tools.clone()),
++        selected_capability_roots: params.selected_capability_roots.clone(),
++        memory_mode: matches!(params.metadata.memory_mode, ThreadMemoryMode::Disabled)
++            .then_some("disabled".to_string()),
++        history_mode: params.history_mode,
++        multi_agent_version: params.multi_agent_version,
++        context_window: Some(SessionContextWindow::new(params.initial_window_id.clone())),
++        ..SessionMeta::default()
++    }
++}
++
++fn source_item_kind(value: &serde_json::Value) -> String {
++    let Some(object) = value.as_object() else {
++        return "unknown".to_string();
++    };
++    object
++        .get("type")
++        .and_then(|kind| kind.as_str())
++        .map(ToOwned::to_owned)
++        .or_else(|| object.keys().find(|key| key.as_str() != "payload").cloned())
++        .unwrap_or_else(|| "unknown".to_string())
++}
++
++fn neutral_event_type(source: &serde_json::Value) -> String {
++    let source_item_kind = source_item_kind(source);
++    let kind = source_item_kind.to_ascii_lowercase();
++    if kind.contains("sessionmeta") || kind.contains("session_meta") {
++        "runtime_context_snapshot".to_string()
++    } else if kind.contains("compacted") {
++        "durable_compaction_checkpoint".to_string()
++    } else if kind.contains("turncontext") || kind.contains("turn_context") {
++        "runtime_context_snapshot".to_string()
++    } else if kind.contains("worldstate") || kind.contains("world_state") {
++        if source_world_state_full(source) == Some(false) {
++            "state_patch".to_string()
++        } else {
++            "state_snapshot".to_string()
++        }
++    } else if kind.contains("responseitem") || kind.contains("response_item") {
++        neutral_response_item_event_type(source)
++    } else if kind.contains("eventmsg") || kind.contains("event_msg") {
++        neutral_event_msg_event_type(source)
++    } else {
++        "status_changed".to_string()
++    }
++}
++
++fn source_payload_type(source: &serde_json::Value) -> String {
++    source
++        .get("payload")
++        .and_then(|payload| payload.get("type"))
++        .and_then(|kind| kind.as_str())
++        .unwrap_or_default()
++        .to_ascii_lowercase()
++}
++
++fn source_world_state_full(source: &serde_json::Value) -> Option<bool> {
++    source
++        .get("payload")
++        .and_then(|payload| payload.get("full"))
++        .and_then(|full| full.as_bool())
++        .or_else(|| source.get("full").and_then(|full| full.as_bool()))
++}
++
++fn neutral_event_msg_event_type(source: &serde_json::Value) -> String {
++    match source_payload_type(source).as_str() {
++        "thread_rolled_back" => "timeline_rollback".to_string(),
++        _ => "status_changed".to_string(),
++    }
++}
++
++fn neutral_response_item_event_type(source: &serde_json::Value) -> String {
++    let payload_type = source_payload_type(source);
++    if payload_type.contains("shell_call") {
++        "command_call".to_string()
++    } else if payload_type.contains("shell_output") {
++        "command_output".to_string()
++    } else if payload_type.ends_with("_output") {
++        "tool_output".to_string()
++    } else if payload_type.contains("function_call")
++        || payload_type.contains("custom_tool_call")
++        || payload_type.contains("web_search_call")
++        || payload_type.contains("image_generation_call")
++    {
++        "tool_call".to_string()
++    } else {
++        "message".to_string()
++    }
++}
++
++fn thread_matches_search(thread: &StoredThread, search_term: &str) -> bool {
++    let needle = search_term.to_lowercase();
++    thread.preview.to_lowercase().contains(&needle)
++        || thread
++            .name
++            .as_ref()
++            .is_some_and(|name| name.to_lowercase().contains(&needle))
++        || thread
++            .first_user_message
++            .as_ref()
++            .is_some_and(|message| message.to_lowercase().contains(&needle))
++}
++
++fn apply_relation_filter(
++    items: &mut Vec<StoredThread>,
++    relation_universe: &[(ThreadId, Option<ThreadId>)],
++    relation_filter: Option<ThreadRelationFilter>,
++) {
++    match relation_filter {
++        Some(ThreadRelationFilter::DirectChildrenOf(parent_thread_id)) => {
++            items.retain(|thread| thread.parent_thread_id == Some(parent_thread_id));
++        }
++        Some(ThreadRelationFilter::DescendantsOf(ancestor_thread_id)) => {
++            let mut subtree = HashSet::from([ancestor_thread_id]);
++            loop {
++                let mut discovered = false;
++                for (thread_id, parent_thread_id) in relation_universe {
++                    if parent_thread_id
++                        .is_some_and(|parent_thread_id| subtree.contains(&parent_thread_id))
++                    {
++                        discovered |= subtree.insert(*thread_id);
++                    }
++                }
++                if !discovered {
++                    break;
++                }
++            }
++            items.retain(|thread| {
++                thread.thread_id != ancestor_thread_id && subtree.contains(&thread.thread_id)
++            });
++        }
++        None => {}
++    }
++}
++
++fn sort_threads(
++    items: &mut [StoredThread],
++    sort_key: ThreadSortKey,
++    sort_direction: crate::SortDirection,
++) {
++    items.sort_by(|left, right| {
++        let ordering = match sort_key {
++            ThreadSortKey::CreatedAt => left.created_at.cmp(&right.created_at),
++            ThreadSortKey::UpdatedAt => left.updated_at.cmp(&right.updated_at),
++            ThreadSortKey::RecencyAt => left.recency_at.cmp(&right.recency_at),
++        }
++        .then_with(|| left.thread_id.to_string().cmp(&right.thread_id.to_string()));
++        match sort_direction {
++            crate::SortDirection::Asc => ordering,
++            crate::SortDirection::Desc => reverse_ordering(ordering),
++        }
++    });
++}
++
++fn sort_search_results(
++    items: &mut [StoredThreadSearchResult],
++    sort_key: ThreadSortKey,
++    sort_direction: crate::SortDirection,
++) {
++    items.sort_by(|left, right| {
++        let ordering = match sort_key {
++            ThreadSortKey::CreatedAt => left.thread.created_at.cmp(&right.thread.created_at),
++            ThreadSortKey::UpdatedAt => left.thread.updated_at.cmp(&right.thread.updated_at),
++            ThreadSortKey::RecencyAt => left.thread.recency_at.cmp(&right.thread.recency_at),
++        }
++        .then_with(|| {
++            left.thread
++                .thread_id
++                .to_string()
++                .cmp(&right.thread.thread_id.to_string())
++        });
++        match sort_direction {
++            crate::SortDirection::Asc => ordering,
++            crate::SortDirection::Desc => reverse_ordering(ordering),
++        }
++    });
++}
++
++fn reverse_ordering(ordering: Ordering) -> Ordering {
++    match ordering {
++        Ordering::Less => Ordering::Greater,
++        Ordering::Equal => Ordering::Equal,
++        Ordering::Greater => Ordering::Less,
++    }
++}
++
++#[derive(Clone, Debug)]
++struct ChatCursor {
++    timestamp: DateTime<Utc>,
++    thread_id: Option<ThreadId>,
++}
++
++fn parse_chat_cursor(token: &str) -> Option<ChatCursor> {
++    let (timestamp, thread_id) = match token.rsplit_once('|') {
++        Some((timestamp, thread_id)) => (timestamp, Some(ThreadId::from_string(thread_id).ok()?)),
++        None => (token, None),
++    };
++    let timestamp = DateTime::parse_from_rfc3339(timestamp)
++        .ok()?
++        .with_timezone(&Utc);
++    Some(ChatCursor {
++        timestamp,
++        thread_id,
++    })
++}
++
++fn thread_sort_timestamp(thread: &StoredThread, sort_key: ThreadSortKey) -> DateTime<Utc> {
++    match sort_key {
++        ThreadSortKey::CreatedAt => thread.created_at,
++        ThreadSortKey::UpdatedAt => thread.updated_at,
++        ThreadSortKey::RecencyAt => thread.recency_at,
++    }
++}
++
++fn cursor_start_index(
++    items: &[StoredThread],
++    cursor: Option<&str>,
++    sort_key: ThreadSortKey,
++    sort_direction: crate::SortDirection,
++) -> usize {
++    let Some(cursor) = cursor else {
++        return 0;
++    };
++    if let Ok(offset) = cursor.parse::<usize>() {
++        return offset.min(items.len());
++    }
++    let Some(cursor) = parse_chat_cursor(cursor) else {
++        return 0;
++    };
++    if let Some(thread_id) = cursor.thread_id
++        && let Some(index) = items
++            .iter()
++            .position(|thread| thread.thread_id == thread_id)
++    {
++        return (index + 1).min(items.len());
++    }
++    items
++        .iter()
++        .position(|thread| {
++            let ordering = thread_sort_timestamp(thread, sort_key)
++                .cmp(&cursor.timestamp)
++                .then_with(|| {
++                    if let Some(thread_id) = cursor.thread_id {
++                        thread.thread_id.to_string().cmp(&thread_id.to_string())
++                    } else {
++                        Ordering::Equal
++                    }
++                });
++            let ordering = match sort_direction {
++                crate::SortDirection::Asc => ordering,
++                crate::SortDirection::Desc => reverse_ordering(ordering),
++            };
++            ordering == Ordering::Greater
++        })
++        .unwrap_or(items.len())
++}
++
++fn thread_cursor(
++    thread: &StoredThread,
++    sort_key: ThreadSortKey,
++    include_thread_id_tiebreaker: bool,
++) -> String {
++    let timestamp = match sort_key {
++        ThreadSortKey::CreatedAt => {
++            thread_sort_timestamp(thread, sort_key).to_rfc3339_opts(SecondsFormat::Secs, true)
++        }
++        ThreadSortKey::UpdatedAt | ThreadSortKey::RecencyAt => {
++            thread_sort_timestamp(thread, sort_key).to_rfc3339_opts(SecondsFormat::AutoSi, true)
++        }
++    };
++    if include_thread_id_tiebreaker || matches!(sort_key, ThreadSortKey::RecencyAt) {
++        format!("{timestamp}|{}", thread.thread_id)
++    } else {
++        timestamp
++    }
++}
++
++fn paginate_threads(
++    items: Vec<StoredThread>,
++    page_size: usize,
++    cursor: Option<String>,
++    sort_key: ThreadSortKey,
++    sort_direction: crate::SortDirection,
++    include_thread_id_tiebreaker: bool,
++) -> ThreadStoreResult<ThreadPage> {
++    let start = cursor_start_index(&items, cursor.as_deref(), sort_key, sort_direction);
++    let page_size = page_size.max(1);
++    let end = (start + page_size).min(items.len());
++    let next_cursor = (end < items.len())
++        .then(|| thread_cursor(&items[end - 1], sort_key, include_thread_id_tiebreaker));
++    Ok(ThreadPage {
++        items: items[start.min(items.len())..end].to_vec(),
++        next_cursor,
++    })
++}
++
++fn paginate_search_results(
++    items: Vec<StoredThreadSearchResult>,
++    page_size: usize,
++    cursor: Option<String>,
++    sort_key: ThreadSortKey,
++    sort_direction: crate::SortDirection,
++) -> ThreadStoreResult<ThreadSearchPage> {
++    let thread_items = items
++        .iter()
++        .map(|result| result.thread.clone())
++        .collect::<Vec<_>>();
++    let start = cursor_start_index(&thread_items, cursor.as_deref(), sort_key, sort_direction);
++    let page_size = page_size.max(1);
++    let end = (start + page_size).min(items.len());
++    let next_cursor =
++        (end < items.len()).then(|| thread_cursor(&items[end - 1].thread, sort_key, false));
++    Ok(ThreadSearchPage {
++        items: items[start.min(items.len())..end].to_vec(),
++        next_cursor,
++    })
++}
++
++fn git_info_from_patch(patch: &crate::GitInfoPatch) -> Option<codex_protocol::protocol::GitInfo> {
++    let sha = patch.sha.clone().flatten();
++    let branch = patch.branch.clone().flatten();
++    let origin_url = patch.origin_url.clone().flatten();
++    if sha.is_none() && branch.is_none() && origin_url.is_none() {
++        return None;
++    }
++    Some(codex_protocol::protocol::GitInfo {
++        commit_hash: sha.as_deref().map(codex_git_utils::GitSha::new),
++        branch,
++        repository_url: origin_url,
++    })
++}
++
++fn io_error(error: std::io::Error) -> ThreadStoreError {
++    ThreadStoreError::Internal {
++        message: error.to_string(),
++    }
++}
++
++fn json_error(error: serde_json::Error) -> ThreadStoreError {
++    ThreadStoreError::Internal {
++        message: error.to_string(),
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::ThreadPersistenceMetadata;
++    use codex_protocol::models::BaseInstructions;
++    use codex_protocol::protocol::EventMsg;
++    use codex_protocol::protocol::SessionSource;
++    use codex_protocol::protocol::ThreadHistoryMode;
++    use codex_protocol::protocol::ThreadMemoryMode;
++    use codex_protocol::protocol::UserMessageEvent;
++    use tempfile::TempDir;
++
++    #[tokio::test]
++    async fn creates_standard_package_and_round_trips_history() {
++        let temp = TempDir::new().expect("temp dir");
++        let store = ChatThreadStore::new(ChatThreadStoreConfig {
++            root: temp.path().join("threads"),
++        });
++        let thread_id = ThreadId::default();
++
++        store
++            .create_thread(create_params(thread_id))
++            .await
++            .expect("create");
++        store
++            .append_items(AppendThreadItemsParams {
++                thread_id,
++                items: vec![RolloutItem::EventMsg(EventMsg::UserMessage(
++                    UserMessageEvent {
++                        client_id: None,
++                        message: "hello chat package".to_string(),
++                        images: None,
++                        ..Default::default()
++                    },
++                ))],
++            })
++            .await
++            .expect("append");
++
++        let package = temp
++            .path()
++            .join("threads")
++            .join(format!("{thread_id}.chat"));
++        assert!(package.join("manifest.json").is_file());
++        assert!(package.join("timeline.ndjson").is_file());
++        assert!(package.join("journal.ndjson").is_file());
++        assert!(package.join("projections/chat-read.ndjson").is_file());
++        assert!(package.join("indexes/thread-metadata.json").is_file());
++
++        let history = store
++            .load_history(LoadThreadHistoryParams {
++                thread_id,
++                include_archived: false,
++            })
++            .await
++            .expect("history");
++        assert_eq!(history.items.len(), 2);
++
++        let thread = store
++            .read_thread(ReadThreadParams {
++                thread_id,
++                include_archived: false,
++                include_history: true,
++            })
++            .await
++            .expect("read");
++        assert_eq!(thread.thread_id, thread_id);
++        assert_eq!(thread.history.expect("history").items.len(), 2);
++    }
++
++    #[tokio::test]
++    async fn reads_cold_package_and_materializes_for_writes() {
++        let temp = TempDir::new().expect("temp dir");
++        let root = temp.path().join("threads");
++        let store = ChatThreadStore::new(ChatThreadStoreConfig { root: root.clone() });
++        let thread_id =
++            ThreadId::from_string(&uuid::Uuid::now_v7().to_string()).expect("thread id");
++
++        store
++            .create_thread(create_params(thread_id))
++            .await
++            .expect("create");
++        store
++            .append_items(AppendThreadItemsParams {
++                thread_id,
++                items: vec![RolloutItem::EventMsg(EventMsg::UserMessage(
++                    UserMessageEvent {
++                        client_id: None,
++                        message: "first cold package message".to_string(),
++                        images: None,
++                        ..Default::default()
++                    },
++                ))],
++            })
++            .await
++            .expect("append first");
++
++        let plain = root.join(format!("{thread_id}.chat"));
++        let cold = root.join(format!("{thread_id}.chat.cold"));
++        std::fs::rename(&plain, &cold).expect("move to cold");
++        assert!(!plain.exists());
++        assert!(cold.exists());
++
++        let cold_thread = store
++            .read_thread(ReadThreadParams {
++                thread_id,
++                include_archived: false,
++                include_history: true,
++            })
++            .await
++            .expect("read cold");
++        assert_eq!(cold_thread.thread_id, thread_id);
++        assert_eq!(cold_thread.history.expect("history").items.len(), 2);
++        assert!(!plain.exists());
++        assert!(cold.exists());
++
++        let cold_list = store
++            .list_threads(ListThreadsParams {
++                page_size: 10,
++                cursor: None,
++                sort_key: ThreadSortKey::CreatedAt,
++                sort_direction: crate::SortDirection::Desc,
++                allowed_sources: Vec::new(),
++                model_providers: None,
++                cwd_filters: None,
++                archived: false,
++                search_term: None,
++                relation_filter: None,
++                use_state_db_only: false,
++            })
++            .await
++            .expect("list cold");
++        assert_eq!(cold_list.items.len(), 1);
++
++        store
++            .append_items(AppendThreadItemsParams {
++                thread_id,
++                items: vec![RolloutItem::EventMsg(EventMsg::UserMessage(
++                    UserMessageEvent {
++                        client_id: None,
++                        message: "second materialized package message".to_string(),
++                        images: None,
++                        ..Default::default()
++                    },
++                ))],
++            })
++            .await
++            .expect("append materializes");
++        assert!(plain.exists());
++        assert!(!cold.exists());
++
++        let history = store
++            .load_history(LoadThreadHistoryParams {
++                thread_id,
++                include_archived: false,
++            })
++            .await
++            .expect("history after materialize");
++        assert_eq!(history.items.len(), 3);
++
++        std::fs::create_dir_all(&cold).expect("create cold sibling");
++        store
++            .delete_thread(DeleteThreadParams { thread_id })
++            .await
++            .expect("delete siblings");
++        assert!(!plain.exists());
++        assert!(!cold.exists());
++    }
++
++    #[tokio::test]
++    async fn updates_lists_searches_and_archives_threads() {
++        let temp = TempDir::new().expect("temp dir");
++        let store = ChatThreadStore::new(ChatThreadStoreConfig {
++            root: temp.path().join("threads"),
++        });
++        let thread_id = ThreadId::default();
++        store
++            .create_thread(create_params(thread_id))
++            .await
++            .expect("create");
++        store
++            .update_thread_metadata(UpdateThreadMetadataParams {
++                thread_id,
++                include_archived: false,
++                patch: ThreadMetadataPatch {
++                    preview: Some("visible preview".to_string()),
++                    first_user_message: Some("visible preview".to_string()),
++                    ..Default::default()
++                },
++            })
++            .await
++            .expect("metadata");
++
++        let page = store
++            .list_threads(ListThreadsParams {
++                page_size: 10,
++                cursor: None,
++                sort_key: ThreadSortKey::CreatedAt,
++                sort_direction: crate::SortDirection::Desc,
++                allowed_sources: Vec::new(),
++                model_providers: None,
++                cwd_filters: None,
++                archived: false,
++                search_term: Some("visible".to_string()),
++                relation_filter: None,
++                use_state_db_only: false,
++            })
++            .await
++            .expect("list");
++        assert_eq!(page.items.len(), 1);
++
++        let search = store
++            .search_threads(SearchThreadsParams {
++                page_size: 10,
++                cursor: None,
++                sort_key: ThreadSortKey::CreatedAt,
++                sort_direction: crate::SortDirection::Desc,
++                allowed_sources: Vec::new(),
++                archived: false,
++                search_term: "visible".to_string(),
++            })
++            .await
++            .expect("search");
++        assert_eq!(search.items.len(), 1);
++
++        store
++            .archive_thread(ArchiveThreadParams { thread_id })
++            .await
++            .expect("archive");
++        let active = store
++            .list_threads(ListThreadsParams {
++                archived: false,
++                page_size: 10,
++                cursor: None,
++                sort_key: ThreadSortKey::CreatedAt,
++                sort_direction: crate::SortDirection::Desc,
++                allowed_sources: Vec::new(),
++                model_providers: None,
++                cwd_filters: None,
++                search_term: None,
++                relation_filter: None,
++                use_state_db_only: false,
++            })
++            .await
++            .expect("active");
++        let archived = store
++            .list_threads(ListThreadsParams {
++                archived: true,
++                page_size: 10,
++                cursor: None,
++                sort_key: ThreadSortKey::CreatedAt,
++                sort_direction: crate::SortDirection::Desc,
++                allowed_sources: Vec::new(),
++                model_providers: None,
++                cwd_filters: None,
++                search_term: None,
++                relation_filter: None,
++                use_state_db_only: false,
++            })
++            .await
++            .expect("archived");
++        assert!(active.items.is_empty());
++        assert_eq!(archived.items.len(), 1);
++    }
++
++    #[tokio::test]
++    async fn missing_package_reports_requested_thread_id() {
++        let temp = TempDir::new().expect("temp dir");
++        let store = ChatThreadStore::new(ChatThreadStoreConfig {
++            root: temp.path().join("threads"),
++        });
++        let thread_id =
++            ThreadId::from_string(&uuid::Uuid::now_v7().to_string()).expect("thread id");
++
++        let error = store
++            .read_thread(ReadThreadParams {
++                thread_id,
++                include_archived: true,
++                include_history: false,
++            })
++            .await
++            .expect_err("missing package");
++
++        assert!(matches!(
++            error,
++            ThreadStoreError::InvalidRequest { message }
++                if message == format!("no rollout found for thread id {thread_id}")
++        ));
++    }
++
++    #[tokio::test]
++    async fn read_thread_rebuilds_missing_metadata_index() {
++        let temp = TempDir::new().expect("temp dir");
++        let store = ChatThreadStore::new(ChatThreadStoreConfig {
++            root: temp.path().join("threads"),
++        });
++        let thread_id =
++            ThreadId::from_string(&uuid::Uuid::now_v7().to_string()).expect("thread id");
++
++        store
++            .create_thread(create_params(thread_id))
++            .await
++            .expect("create");
++        let package = temp
++            .path()
++            .join("threads")
++            .join(format!("{thread_id}.chat"));
++        let index = package.join("indexes/thread-metadata.json");
++        assert!(index.is_file());
++        std::fs::remove_file(&index).expect("remove index");
++        assert!(!index.exists());
++
++        let thread = store
++            .read_thread(ReadThreadParams {
++                thread_id,
++                include_archived: true,
++                include_history: false,
++            })
++            .await
++            .expect("read");
++
++        assert_eq!(thread.thread_id, thread_id);
++        assert!(index.is_file());
++    }
++
++    #[test]
++    fn source_item_kind_reads_flattened_rollout_type() {
++        assert_eq!(
++            source_item_kind(&json!({"type": "session_meta", "payload": {}})),
++            "session_meta"
++        );
++        assert_eq!(
++            neutral_event_type(&json!({"type": "session_meta", "payload": {}})),
++            "runtime_context_snapshot"
++        );
++        assert_eq!(
++            neutral_event_type(&json!({"type": "response_item", "payload": {"type": "message"}})),
++            "message"
++        );
++        assert_eq!(
++            neutral_event_type(
++                &json!({"type": "response_item", "payload": {"type": "image_generation_call"}})
++            ),
++            "tool_call"
++        );
++        assert_eq!(
++            neutral_event_type(
++                &json!({"type": "event_msg", "payload": {"type": "thread_rolled_back", "num_turns": 1}})
++            ),
++            "timeline_rollback"
++        );
++        assert_eq!(
++            neutral_event_type(&json!({"type": "world_state", "payload": {"full": true}})),
++            "state_snapshot"
++        );
++        assert_eq!(
++            neutral_event_type(&json!({"type": "world_state", "payload": {"full": false}})),
++            "state_patch"
++        );
++    }
++
++    fn create_params(thread_id: ThreadId) -> CreateThreadParams {
++        CreateThreadParams {
++            session_id: thread_id.into(),
++            thread_id,
++            extra_config: None,
++            forked_from_id: None,
++            parent_thread_id: None,
++            source: SessionSource::Exec,
++            thread_source: None,
++            originator: "test_originator".to_string(),
++            base_instructions: BaseInstructions::default(),
++            dynamic_tools: Vec::new(),
++            selected_capability_roots: Vec::new(),
++            multi_agent_version: None,
++            history_mode: ThreadHistoryMode::Legacy,
++            initial_window_id: uuid::Uuid::now_v7().to_string(),
++            metadata: ThreadPersistenceMetadata {
++                cwd: None,
++                model_provider: "test-provider".to_string(),
++                memory_mode: ThreadMemoryMode::Enabled,
++            },
++        }
++    }
++}
+diff -ruN --exclude=target --exclude=.git --exclude=.DS_Store Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/thread-store/src/lib.rs Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/thread-store/src/lib.rs
+--- Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/thread-store/src/lib.rs	2026-06-30 00:38:49
++++ Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/thread-store/src/lib.rs	2026-07-03 11:19:58
+@@ -4,6 +4,7 @@
+ //! Implementations are responsible for resolving that id to local rollout files, RPC requests, or
+ //! any other backing store.
+ 
++mod chat;
+ mod error;
+ mod in_memory;
+ mod live_thread;
+@@ -12,6 +13,8 @@
+ mod thread_metadata_sync;
+ mod types;
+ 
++pub use chat::ChatThreadStore;
++pub use chat::ChatThreadStoreConfig;
+ pub use error::ThreadStoreError;
+ pub use error::ThreadStoreResult;
+ pub use in_memory::InMemoryThreadStore;

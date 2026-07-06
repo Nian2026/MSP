@@ -1,0 +1,19 @@
+{
+  "status": "pass",
+  "checked_at": "2026-07-03T11:36:22.340Z",
+  "screenshots": [
+    "desktop-ui-conformance.png",
+    "mobile-ui-conformance.png"
+  ],
+  "assertions": [
+    "desktop true timeline event type order",
+    "desktop seq order",
+    "stdout assistant intermediate tool stderr final interleave",
+    "messages and tool events are not grouped by type",
+    "tool command output error artifact unknown projection warning visible",
+    "search filters canonical timeline text",
+    "append and export preserve projection file",
+    "desktop no event card overlap",
+    "mobile renders command timeline without overlap"
+  ]
+}

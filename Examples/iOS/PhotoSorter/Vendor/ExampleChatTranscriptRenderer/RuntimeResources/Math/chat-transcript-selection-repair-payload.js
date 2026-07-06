@@ -1,0 +1,1 @@
+../../../../../Shared/ExampleChatTranscriptRenderer/RuntimeResources/Math/chat-transcript-selection-repair-payload.js

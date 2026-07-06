@@ -1,0 +1,15 @@
+# The Codex source snapshots are local generated evidence. Restore them from
+# the pinned upstream commit plus the tracked `.chat` backend patch when needed.
+upstream/**/codex-rs/target/
+upstream/**/node_modules/
+source-snapshots/
+instrumented-work/
+
+# Machine-readable validation results are generated evidence, not source.
+# Scripts default to .build/codex-cli-validation/results; keep source clean.
+results/
+
+# Human-readable run reports are generated or historical validation notes.
+# The public evidence boundary is recorded in PUBLIC_EVIDENCE.md and
+# phase-results/.
+reports/*

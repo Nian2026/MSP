@@ -1,0 +1,11 @@
+.build/
+.swiftpm/
+artifacts/
+Local/FastVLM/
+Project/PhotoSorter.local.xcodeproj/
+Resources/FastVLM/model/
+Project/build/
+DerivedData/
+Package.resolved
+VLM/FastVLM
+*.xcuserdata/

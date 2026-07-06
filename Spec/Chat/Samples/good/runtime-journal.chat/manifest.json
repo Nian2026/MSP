@@ -1,0 +1,10 @@
+{
+  "format": "msp.chat",
+  "version": 1,
+  "package_id": "chatpkg_good_runtime_journal",
+  "created_at": "2026-06-30T00:11:00Z",
+  "updated_at": "2026-06-30T00:11:02Z",
+  "profiles": ["core-timeline", "runtime-journal"],
+  "capabilities": ["read_core", "replay_journal"],
+  "timeline": {"path": "timeline.ndjson", "encoding": "utf-8", "record_format": "ndjson"}
+}

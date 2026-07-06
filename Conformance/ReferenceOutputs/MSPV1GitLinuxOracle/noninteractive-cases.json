@@ -1,0 +1,816 @@
+{
+    "artifact_kind": "msp-git-linux-oracle",
+    "captured_at": "2026-07-03T13:50:32.233487+00:00",
+    "git_invocation_prefix": [
+        "git",
+        "-c",
+        "init.defaultBranch=main",
+        "-c",
+        "color.ui=false",
+        "-c",
+        "core.quotePath=false",
+        "-c",
+        "advice.statusHints=false",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-c",
+        "core.pager=cat"
+    ],
+    "runner": {
+        "git_version": "git version 2.39.5",
+        "machine": "x86_64",
+        "os_release": "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"12\"\nVERSION=\"12 (bookworm)\"\nVERSION_CODENAME=bookworm\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+        "platform": "Linux-6.1.0-48-amd64-x86_64-with-glibc2.36",
+        "python": "3.11.2",
+        "release": "6.1.0-48-amd64",
+        "system": "Linux"
+    },
+    "safety": {
+        "allowed_git_subcommands": [
+            "add",
+            "commit",
+            "diff",
+            "init",
+            "log",
+            "ls-files",
+            "show",
+            "status"
+        ],
+        "environment_isolated": true,
+        "forbidden_git_subcommands": [
+            "am",
+            "apply",
+            "archive",
+            "bisect",
+            "clean",
+            "clone",
+            "credential",
+            "daemon",
+            "fetch",
+            "fsck",
+            "gc",
+            "lfs",
+            "merge",
+            "pull",
+            "push",
+            "rebase",
+            "receive-pack",
+            "remote",
+            "send-email",
+            "submodule",
+            "upload-pack",
+            "worktree"
+        ],
+        "hooks_disabled": true,
+        "network_git_subcommands_allowed": false,
+        "pager_editor_disabled": true,
+        "remote_run_root_prefix": "/tmp/msp-git-oracle-",
+        "remote_run_root_removed": true,
+        "shell_execution_for_git_commands": false,
+        "system_and_global_git_config_disabled": true,
+        "timeout_seconds_per_git_command": 10
+    },
+    "scenarios": [
+        {
+            "case_root_virtualization": {
+                "model_visible_root": "/",
+                "output_normalization": "case root physical path is normalized to / before fixture export",
+                "real_case_root_redacted": true
+            },
+            "fixture": [
+                {
+                    "id": "mkdir-docs",
+                    "kind": "fixture-mutation",
+                    "op": "mkdir",
+                    "path": "/docs"
+                },
+                {
+                    "content_b64": "YWxwaGEK",
+                    "id": "write-doc",
+                    "kind": "fixture-mutation",
+                    "op": "write_file",
+                    "path": "/docs/a.txt"
+                }
+            ],
+            "id": "git-nonrepo-status-error",
+            "post_checks": [],
+            "public_workspace_snapshot_excluding_dot_git": [
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/"
+                },
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/docs"
+                },
+                {
+                    "content_b64": "YWxwaGEK",
+                    "kind": "file",
+                    "mode": "644",
+                    "path": "/docs/a.txt",
+                    "sha256": "b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060",
+                    "size": 6
+                }
+            ],
+            "steps": [
+                {
+                    "elapsed_ms": 1.977,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 128,
+                    "id": "status-short-nonrepo",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "ZmF0YWw6IG5vdCBhIGdpdCByZXBvc2l0b3J5IChvciBhbnkgb2YgdGhlIHBhcmVudCBkaXJlY3Rvcmllcyk6IC5naXQK",
+                    "stderr_text": "fatal: not a git repository (or any of the parent directories): .git\n",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "status-short-nonrepo"
+                }
+            ],
+            "title": "status outside a repository reports the canonical fatal error"
+        },
+        {
+            "case_root_virtualization": {
+                "model_visible_root": "/",
+                "output_normalization": "case root physical path is normalized to / before fixture export",
+                "real_case_root_redacted": true
+            },
+            "fixture": [
+                {
+                    "id": "mkdir-docs",
+                    "kind": "fixture-mutation",
+                    "op": "mkdir",
+                    "path": "/docs"
+                },
+                {
+                    "content_b64": "aGVsbG8K",
+                    "id": "write-a",
+                    "kind": "fixture-mutation",
+                    "op": "write_file",
+                    "path": "/docs/a.txt"
+                }
+            ],
+            "id": "git-basic-local-repo-lifecycle",
+            "post_checks": [
+                {
+                    "elapsed_ms": 2.856,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "post-status-short",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "post-status-short"
+                },
+                {
+                    "elapsed_ms": 1.948,
+                    "executed_git_subcommand": "ls-files",
+                    "exit_code": 0,
+                    "id": "post-ls-files-stage",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "ls-files",
+                        "-s"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "MTAwNjQ0IDk0OTU0YWJkYTQ5ZGU4NjE1YTA0OGY4ZDJlNjRiNWRlODQ4ZTI3YTEgMAlkb2NzL2EudHh0Cg==",
+                    "stdout_text": "100644 94954abda49de8615a048f8d2e64b5de848e27a1 0\tdocs/a.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "post-ls-files-stage"
+                }
+            ],
+            "public_workspace_snapshot_excluding_dot_git": [
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/"
+                },
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/docs"
+                },
+                {
+                    "content_b64": "aGVsbG8Kd29ybGQK",
+                    "kind": "file",
+                    "mode": "644",
+                    "path": "/docs/a.txt",
+                    "sha256": "4a1e67f2fe1d1cc7b31d0ca2ec441da4778203a036a77da10344c85e24ff0f92",
+                    "size": 12
+                }
+            ],
+            "steps": [
+                {
+                    "elapsed_ms": 4.859,
+                    "executed_git_subcommand": "init",
+                    "exit_code": 0,
+                    "id": "init",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "init"
+                    ],
+                    "raw_output_contained_case_root": true,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "SW5pdGlhbGl6ZWQgZW1wdHkgR2l0IHJlcG9zaXRvcnkgaW4gLy5naXQvCg==",
+                    "stdout_text": "Initialized empty Git repository in /.git/\n",
+                    "timeout_seconds": 10,
+                    "title": "init"
+                },
+                {
+                    "elapsed_ms": 3.114,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "status-short-initial",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "Pz8gZG9jcy8K",
+                    "stdout_text": "?? docs/\n",
+                    "timeout_seconds": 10,
+                    "title": "status-short-initial"
+                },
+                {
+                    "elapsed_ms": 2.771,
+                    "executed_git_subcommand": "add",
+                    "exit_code": 0,
+                    "id": "add-a",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "add",
+                        "/docs/a.txt"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "add-a"
+                },
+                {
+                    "elapsed_ms": 3.024,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "status-short-added",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "QSAgZG9jcy9hLnR4dAo=",
+                    "stdout_text": "A  docs/a.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "status-short-added"
+                },
+                {
+                    "elapsed_ms": 2.85,
+                    "executed_git_subcommand": "diff",
+                    "exit_code": 0,
+                    "id": "diff-cached-a",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "diff",
+                        "--cached",
+                        "--no-color",
+                        "--no-ext-diff",
+                        "--",
+                        "/docs/a.txt"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "ZGlmZiAtLWdpdCBhL2RvY3MvYS50eHQgYi9kb2NzL2EudHh0Cm5ldyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAwMDAwMDAuLmNlMDEzNjIKLS0tIC9kZXYvbnVsbAorKysgYi9kb2NzL2EudHh0CkBAIC0wLDAgKzEgQEAKK2hlbGxvCg==",
+                    "stdout_text": "diff --git a/docs/a.txt b/docs/a.txt\nnew file mode 100644\nindex 0000000..ce01362\n--- /dev/null\n+++ b/docs/a.txt\n@@ -0,0 +1 @@\n+hello\n",
+                    "timeout_seconds": 10,
+                    "title": "diff-cached-a"
+                },
+                {
+                    "elapsed_ms": 7.233,
+                    "executed_git_subcommand": "commit",
+                    "exit_code": 0,
+                    "id": "commit-add-doc",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "commit",
+                        "-m",
+                        "add doc"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "W21haW4gKHJvb3QtY29tbWl0KSBhOTVhYjExXSBhZGQgZG9jCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKykKIGNyZWF0ZSBtb2RlIDEwMDY0NCBkb2NzL2EudHh0Cg==",
+                    "stdout_text": "[main (root-commit) a95ab11] add doc\n 1 file changed, 1 insertion(+)\n create mode 100644 docs/a.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "commit-add-doc"
+                },
+                {
+                    "elapsed_ms": 2.396,
+                    "executed_git_subcommand": "log",
+                    "exit_code": 0,
+                    "id": "log-oneline-after-first-commit",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "log",
+                        "--oneline"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "YTk1YWIxMSBhZGQgZG9jCg==",
+                    "stdout_text": "a95ab11 add doc\n",
+                    "timeout_seconds": 10,
+                    "title": "log-oneline-after-first-commit"
+                },
+                {
+                    "content_b64": "aGVsbG8Kd29ybGQK",
+                    "id": "write-a-update",
+                    "kind": "fixture-mutation",
+                    "op": "write_file",
+                    "path": "/docs/a.txt"
+                },
+                {
+                    "elapsed_ms": 2.778,
+                    "executed_git_subcommand": "diff",
+                    "exit_code": 0,
+                    "id": "diff-worktree-a",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "diff",
+                        "--no-color",
+                        "--no-ext-diff",
+                        "--",
+                        "/docs/a.txt"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "ZGlmZiAtLWdpdCBhL2RvY3MvYS50eHQgYi9kb2NzL2EudHh0CmluZGV4IGNlMDEzNjIuLjk0OTU0YWIgMTAwNjQ0Ci0tLSBhL2RvY3MvYS50eHQKKysrIGIvZG9jcy9hLnR4dApAQCAtMSArMSwyIEBACiBoZWxsbword29ybGQK",
+                    "stdout_text": "diff --git a/docs/a.txt b/docs/a.txt\nindex ce01362..94954ab 100644\n--- a/docs/a.txt\n+++ b/docs/a.txt\n@@ -1 +1,2 @@\n hello\n+world\n",
+                    "timeout_seconds": 10,
+                    "title": "diff-worktree-a"
+                },
+                {
+                    "elapsed_ms": 3.481,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "status-short-modified-a",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short",
+                        "/docs/a.txt"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "IE0gZG9jcy9hLnR4dAo=",
+                    "stdout_text": " M docs/a.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "status-short-modified-a"
+                },
+                {
+                    "elapsed_ms": 3.183,
+                    "executed_git_subcommand": "add",
+                    "exit_code": 0,
+                    "id": "add-a-update",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "add",
+                        "/docs/a.txt"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "add-a-update"
+                },
+                {
+                    "elapsed_ms": 7.293,
+                    "executed_git_subcommand": "commit",
+                    "exit_code": 0,
+                    "id": "commit-update-doc",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "commit",
+                        "-m",
+                        "update doc"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "W21haW4gMWZkOWViOV0gdXBkYXRlIGRvYwogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspCg==",
+                    "stdout_text": "[main 1fd9eb9] update doc\n 1 file changed, 1 insertion(+)\n",
+                    "timeout_seconds": 10,
+                    "title": "commit-update-doc"
+                },
+                {
+                    "elapsed_ms": 2.558,
+                    "executed_git_subcommand": "log",
+                    "exit_code": 0,
+                    "id": "log-oneline-two",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "log",
+                        "--oneline",
+                        "--max-count=2"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "MWZkOWViOSB1cGRhdGUgZG9jCmE5NWFiMTEgYWRkIGRvYwo=",
+                    "stdout_text": "1fd9eb9 update doc\na95ab11 add doc\n",
+                    "timeout_seconds": 10,
+                    "title": "log-oneline-two"
+                },
+                {
+                    "elapsed_ms": 2.047,
+                    "executed_git_subcommand": "ls-files",
+                    "exit_code": 0,
+                    "id": "ls-files",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "ls-files"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "ZG9jcy9hLnR4dAo=",
+                    "stdout_text": "docs/a.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "ls-files"
+                },
+                {
+                    "elapsed_ms": 2.612,
+                    "executed_git_subcommand": "show",
+                    "exit_code": 0,
+                    "id": "show-stat-head",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "show",
+                        "--stat",
+                        "--oneline",
+                        "--no-color",
+                        "HEAD"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "MWZkOWViOSB1cGRhdGUgZG9jCiBkb2NzL2EudHh0IHwgMSArCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKykK",
+                    "stdout_text": "1fd9eb9 update doc\n docs/a.txt | 1 +\n 1 file changed, 1 insertion(+)\n",
+                    "timeout_seconds": 10,
+                    "title": "show-stat-head"
+                }
+            ],
+            "title": "init, status, add, diff, commit, log, ls-files, show"
+        },
+        {
+            "case_root_virtualization": {
+                "model_visible_root": "/",
+                "output_normalization": "case root physical path is normalized to / before fixture export",
+                "real_case_root_redacted": true
+            },
+            "fixture": [
+                {
+                    "id": "mkdir-docs",
+                    "kind": "fixture-mutation",
+                    "op": "mkdir",
+                    "path": "/docs"
+                }
+            ],
+            "id": "git-pathspec-missing-file",
+            "post_checks": [
+                {
+                    "elapsed_ms": 2.915,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "post-status-short",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "post-status-short"
+                }
+            ],
+            "public_workspace_snapshot_excluding_dot_git": [
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/"
+                },
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/docs"
+                }
+            ],
+            "steps": [
+                {
+                    "elapsed_ms": 5.733,
+                    "executed_git_subcommand": "init",
+                    "exit_code": 0,
+                    "id": "init",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "init"
+                    ],
+                    "raw_output_contained_case_root": true,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "SW5pdGlhbGl6ZWQgZW1wdHkgR2l0IHJlcG9zaXRvcnkgaW4gLy5naXQvCg==",
+                    "stdout_text": "Initialized empty Git repository in /.git/\n",
+                    "timeout_seconds": 10,
+                    "title": "init"
+                },
+                {
+                    "elapsed_ms": 2.796,
+                    "executed_git_subcommand": "add",
+                    "exit_code": 128,
+                    "id": "add-missing",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "add",
+                        "/docs/missing.txt"
+                    ],
+                    "raw_output_contained_case_root": true,
+                    "stderr_b64": "ZmF0YWw6IHBhdGhzcGVjICcvZG9jcy9taXNzaW5nLnR4dCcgZGlkIG5vdCBtYXRjaCBhbnkgZmlsZXMK",
+                    "stderr_text": "fatal: pathspec '/docs/missing.txt' did not match any files\n",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "add-missing"
+                }
+            ],
+            "title": "missing virtual path is normalized in git diagnostics"
+        },
+        {
+            "case_root_virtualization": {
+                "model_visible_root": "/",
+                "output_normalization": "case root physical path is normalized to / before fixture export",
+                "real_case_root_redacted": true
+            },
+            "fixture": [
+                {
+                    "id": "mkdir-docs",
+                    "kind": "fixture-mutation",
+                    "op": "mkdir",
+                    "path": "/docs"
+                },
+                {
+                    "content_b64": "c3BhY2UgcGF0aAo=",
+                    "id": "write-space",
+                    "kind": "fixture-mutation",
+                    "op": "write_file",
+                    "path": "/docs/report file.txt"
+                },
+                {
+                    "content_b64": "dW5pY29kZSBwYXRoCg==",
+                    "id": "write-unicode",
+                    "kind": "fixture-mutation",
+                    "op": "write_file",
+                    "path": "/docs/\u4e2d\u6587.txt"
+                }
+            ],
+            "id": "git-space-and-unicode-paths",
+            "post_checks": [
+                {
+                    "elapsed_ms": 3.226,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "post-status-short",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "post-status-short"
+                }
+            ],
+            "public_workspace_snapshot_excluding_dot_git": [
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/"
+                },
+                {
+                    "kind": "directory",
+                    "mode": "755",
+                    "path": "/docs"
+                },
+                {
+                    "content_b64": "c3BhY2UgcGF0aAo=",
+                    "kind": "file",
+                    "mode": "644",
+                    "path": "/docs/report file.txt",
+                    "sha256": "bbc5d03d6abef36b8aea0ec65ad8f8078fb56b8fffa539facabc4a1a7e7412ca",
+                    "size": 11
+                },
+                {
+                    "content_b64": "dW5pY29kZSBwYXRoCg==",
+                    "kind": "file",
+                    "mode": "644",
+                    "path": "/docs/\u4e2d\u6587.txt",
+                    "sha256": "6d599d7293e0dd1b021978a8329a6079707eae9efdbf88919097eefe8c3daca3",
+                    "size": 13
+                }
+            ],
+            "steps": [
+                {
+                    "elapsed_ms": 5.441,
+                    "executed_git_subcommand": "init",
+                    "exit_code": 0,
+                    "id": "init",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "init"
+                    ],
+                    "raw_output_contained_case_root": true,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "SW5pdGlhbGl6ZWQgZW1wdHkgR2l0IHJlcG9zaXRvcnkgaW4gLy5naXQvCg==",
+                    "stdout_text": "Initialized empty Git repository in /.git/\n",
+                    "timeout_seconds": 10,
+                    "title": "init"
+                },
+                {
+                    "elapsed_ms": 2.677,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "status-short-untracked",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "Pz8gZG9jcy8K",
+                    "stdout_text": "?? docs/\n",
+                    "timeout_seconds": 10,
+                    "title": "status-short-untracked"
+                },
+                {
+                    "elapsed_ms": 2.917,
+                    "executed_git_subcommand": "add",
+                    "exit_code": 0,
+                    "id": "add-space",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "add",
+                        "/docs/report file.txt"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "add-space"
+                },
+                {
+                    "elapsed_ms": 2.741,
+                    "executed_git_subcommand": "add",
+                    "exit_code": 0,
+                    "id": "add-unicode",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "add",
+                        "/docs/\u4e2d\u6587.txt"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "",
+                    "stdout_text": "",
+                    "timeout_seconds": 10,
+                    "title": "add-unicode"
+                },
+                {
+                    "elapsed_ms": 3.263,
+                    "executed_git_subcommand": "status",
+                    "exit_code": 0,
+                    "id": "status-short-added",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "status",
+                        "--short"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "QSAgImRvY3MvcmVwb3J0IGZpbGUudHh0IgpBICBkb2NzL+S4reaWhy50eHQK",
+                    "stdout_text": "A  \"docs/report file.txt\"\nA  docs/\u4e2d\u6587.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "status-short-added"
+                },
+                {
+                    "elapsed_ms": 8.411,
+                    "executed_git_subcommand": "commit",
+                    "exit_code": 0,
+                    "id": "commit-paths",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "commit",
+                        "-m",
+                        "add space and unicode paths"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "W21haW4gKHJvb3QtY29tbWl0KSA0ZDYwOTk4XSBhZGQgc3BhY2UgYW5kIHVuaWNvZGUgcGF0aHMKIDIgZmlsZXMgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspCiBjcmVhdGUgbW9kZSAxMDA2NDQgZG9jcy9yZXBvcnQgZmlsZS50eHQKIGNyZWF0ZSBtb2RlIDEwMDY0NCBkb2NzL+S4reaWhy50eHQK",
+                    "stdout_text": "[main (root-commit) 4d60998] add space and unicode paths\n 2 files changed, 2 insertions(+)\n create mode 100644 docs/report file.txt\n create mode 100644 docs/\u4e2d\u6587.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "commit-paths"
+                },
+                {
+                    "elapsed_ms": 2.415,
+                    "executed_git_subcommand": "ls-files",
+                    "exit_code": 0,
+                    "id": "ls-files",
+                    "kind": "git-command",
+                    "model_argv": [
+                        "git",
+                        "ls-files"
+                    ],
+                    "raw_output_contained_case_root": false,
+                    "stderr_b64": "",
+                    "stderr_text": "",
+                    "stdout_b64": "ZG9jcy9yZXBvcnQgZmlsZS50eHQKZG9jcy/kuK3mlocudHh0Cg==",
+                    "stdout_text": "docs/report file.txt\ndocs/\u4e2d\u6587.txt\n",
+                    "timeout_seconds": 10,
+                    "title": "ls-files"
+                }
+            ],
+            "title": "status, add, commit, and ls-files preserve space and unicode paths"
+        }
+    ],
+    "schema_version": 1
+}

@@ -1,0 +1,16 @@
+[package]
+name = "codex-exec-server"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "codex_exec_server"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+async-trait = "0.1.89"
+codex-utils-absolute-path = { path = "../codex-utils-absolute-path-runtime" }
+tokio = { version = "1", features = ["fs", "sync"] }

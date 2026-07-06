@@ -1,0 +1,1 @@
+../../../../../Shared/ExampleChatTranscriptRenderer/RuntimeResources/Math/chat-transcript-payload-patcher.js

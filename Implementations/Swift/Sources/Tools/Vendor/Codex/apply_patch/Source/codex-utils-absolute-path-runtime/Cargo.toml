@@ -1,0 +1,26 @@
+[package]
+name = "codex-utils-absolute-path"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "codex_utils_absolute_path"
+path = "../codex-rs/utils/absolute-path/src/lib.rs"
+doctest = false
+
+[dependencies]
+dirs = "6.0.0"
+dunce = "1.0.5"
+schemars = "0.8.22"
+serde = { version = "1", features = ["derive"] }
+ts-rs = { version = "11.1.0", features = [
+    "serde-json-impl",
+    "no-serde-warnings",
+] }
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+serde_json = "1"
+tempfile = "3.23.0"

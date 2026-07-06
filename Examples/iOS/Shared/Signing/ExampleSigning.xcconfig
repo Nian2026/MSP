@@ -1,0 +1,8 @@
+// Public signing defaults for the iOS examples.
+// Put developer-specific values in ignored ExampleSigning.local.xcconfig,
+// or pass them to xcodebuild as build settings.
+
+MSP_EXAMPLE_DEVELOPMENT_TEAM =
+MSP_EXAMPLE_BUNDLE_ID_PREFIX = com.modelshellprotocol.examples
+
+#include? "ExampleSigning.local.xcconfig"

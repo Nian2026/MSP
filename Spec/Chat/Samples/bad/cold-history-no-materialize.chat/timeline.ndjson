@@ -1,0 +1,1 @@
+{"id":"evt_bad_cold_001","type":"conversation_lifecycle","seq":1,"created_at":"2026-06-30T00:26:00Z","durability":"durable_replay","payload":{"operation":"append","previous_representation":"compressed","new_representation":"plain","affected_indexes":["search"]}}

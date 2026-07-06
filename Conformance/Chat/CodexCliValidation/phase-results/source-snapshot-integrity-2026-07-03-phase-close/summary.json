@@ -1,0 +1,129 @@
+{
+  "status": "pass",
+  "generated_at": "2026-07-03T11:30:01+00:00",
+  "validation_dir": "<repo-root>/Conformance/Chat/CodexCliValidation",
+  "pinned_commit": "80f54d1266b4571ef649e7e5ecc382dd4e670937",
+  "failed_check_count": 0,
+  "checks": [
+    {
+      "name": "original snapshot exists",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-original"
+    },
+    {
+      "name": "adapted snapshot exists",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-chat-backend"
+    },
+    {
+      "name": "original source entry count",
+      "status": "pass",
+      "detail": "5313 source entries"
+    },
+    {
+      "name": "adapted source entry count",
+      "status": "pass",
+      "detail": "5314 source entries"
+    },
+    {
+      "name": "original LICENSE retained",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-original/LICENSE"
+    },
+    {
+      "name": "original sentinel files present",
+      "status": "pass",
+      "detail": "8 sentinels"
+    },
+    {
+      "name": "original has no nested git metadata",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-original/.git"
+    },
+    {
+      "name": "original preserves upstream symlink entries",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-original/codex-rs/vendor/bubblewrap/LICENSE"
+    },
+    {
+      "name": "adapted LICENSE retained",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-chat-backend/LICENSE"
+    },
+    {
+      "name": "adapted sentinel files present",
+      "status": "pass",
+      "detail": "8 sentinels"
+    },
+    {
+      "name": "adapted has no nested git metadata",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-chat-backend/.git"
+    },
+    {
+      "name": "adapted preserves upstream symlink entries",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-chat-backend/codex-rs/vendor/bubblewrap/LICENSE"
+    },
+    {
+      "name": "original has no chat backend module",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-original/codex-rs/thread-store/src/chat/mod.rs"
+    },
+    {
+      "name": "adapted has chat backend module",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-chat-backend/codex-rs/thread-store/src/chat/mod.rs"
+    },
+    {
+      "name": "original does not export ChatThreadStore",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-original/codex-rs/thread-store/src/lib.rs"
+    },
+    {
+      "name": "adapted exports ChatThreadStore",
+      "status": "pass",
+      "detail": "source-snapshots/openai-codex-chat-backend/codex-rs/thread-store/src/lib.rs"
+    },
+    {
+      "name": "no original-only files",
+      "status": "pass",
+      "detail": "unexpected=[] count=0"
+    },
+    {
+      "name": "adapted-only files match allowlist",
+      "status": "pass",
+      "detail": "unexpected=[] missing=[]"
+    },
+    {
+      "name": "changed files match allowlist",
+      "status": "pass",
+      "detail": "unexpected=[] missing=[]"
+    },
+    {
+      "name": "diff summary",
+      "status": "info",
+      "detail": "changed=6 adapted_only=1 original_only=0"
+    },
+    {
+      "name": "upstream repo exists",
+      "status": "pass",
+      "detail": "$CODEX_UPSTREAM_REPO"
+    },
+    {
+      "name": "pinned commit object exists",
+      "status": "pass",
+      "detail": "80f54d1266b4571ef649e7e5ecc382dd4e670937"
+    },
+    {
+      "name": "original file list matches pinned commit",
+      "status": "pass",
+      "detail": "missing=0 extra=0"
+    },
+    {
+      "name": "original sentinel content matches pinned commit",
+      "status": "pass",
+      "detail": "sample sentinels match"
+    }
+  ]
+}

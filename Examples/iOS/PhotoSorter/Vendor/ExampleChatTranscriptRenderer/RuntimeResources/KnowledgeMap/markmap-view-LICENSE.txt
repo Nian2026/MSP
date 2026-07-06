@@ -1,0 +1,1 @@
+../../../../../Shared/ExampleChatTranscriptRenderer/RuntimeResources/KnowledgeMap/markmap-view-LICENSE.txt

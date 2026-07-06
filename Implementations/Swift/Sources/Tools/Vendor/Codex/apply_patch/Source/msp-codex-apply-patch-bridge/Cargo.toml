@@ -1,0 +1,26 @@
+[package]
+name = "msp-codex-apply-patch-bridge"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "msp_codex_apply_patch_bridge"
+path = "src/lib.rs"
+crate-type = ["staticlib", "cdylib", "rlib"]
+doctest = false
+
+[dependencies]
+async-trait = "0.1.89"
+codex-apply-patch = { path = "../codex-apply-patch-runtime" }
+codex-exec-server = { path = "../codex-exec-server-compat" }
+codex-utils-absolute-path = { path = "../codex-utils-absolute-path-runtime" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha1 = "0.10.6"
+similar = "2.7.0"
+tokio = { version = "1", features = ["macros", "rt", "time"] }
+
+[dev-dependencies]
+tempfile = "3.23.0"

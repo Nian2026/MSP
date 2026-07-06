@@ -1,0 +1,5 @@
+// Copy this file to ExampleSigning.local.xcconfig, or run:
+//   Examples/iOS/Tools/bootstrap-ios-examples.sh --team ABCDE12345 --bundle-prefix com.yourname.msp
+
+MSP_EXAMPLE_DEVELOPMENT_TEAM = ABCDE12345
+MSP_EXAMPLE_BUNDLE_ID_PREFIX = com.yourname.msp

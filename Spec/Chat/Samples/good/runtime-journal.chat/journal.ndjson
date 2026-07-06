@@ -1,0 +1,1 @@
+{"journal_id":"jrnl_good_001","timeline_event_id":"evt_journal_001","commit_seq":1,"entry_type":"durable_barrier","writer_state":{"flushed":true}}

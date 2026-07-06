@@ -1,0 +1,1 @@
+{"id":"evt_bad_unsafe_artifact_001","type":"artifact_ref","seq":1,"created_at":"2026-07-02T00:32:00Z","durability":"durable_replay","payload":{"blob_id":"blob_unsafe","source_event_id":"evt_bad_unsafe_artifact_001","kind":"text","media_type":"text/plain","display_name":"Escaping path","status":"available","path":"../outside.txt"}}

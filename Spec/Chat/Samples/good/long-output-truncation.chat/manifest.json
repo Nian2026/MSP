@@ -1,0 +1,10 @@
+{
+  "format": "msp.chat",
+  "version": 1,
+  "package_id": "chatpkg_good_long_output_truncation",
+  "created_at": "2026-06-30T00:08:00Z",
+  "updated_at": "2026-06-30T00:08:05Z",
+  "profiles": ["core-timeline", "command-timeline", "projection-cache"],
+  "capabilities": ["read_core", "read_command_timeline", "generate_projection"],
+  "timeline": {"path": "timeline.ndjson", "encoding": "utf-8", "record_format": "ndjson"}
+}

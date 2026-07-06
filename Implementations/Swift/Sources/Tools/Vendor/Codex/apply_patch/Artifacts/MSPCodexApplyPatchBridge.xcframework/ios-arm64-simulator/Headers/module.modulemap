@@ -1,0 +1,4 @@
+module MSPCodexApplyPatchBridge {
+    header "msp_codex_apply_patch_bridge.h"
+    export *
+}

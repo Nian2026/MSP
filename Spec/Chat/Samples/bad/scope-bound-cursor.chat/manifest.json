@@ -1,0 +1,10 @@
+{
+  "format": "msp.chat",
+  "version": 1,
+  "package_id": "chatpkg_bad_scope_cursor",
+  "created_at": "2026-06-30T00:19:00Z",
+  "updated_at": "2026-06-30T00:19:02Z",
+  "profiles": ["core-timeline", "projection-cache"],
+  "capabilities": ["read_core", "generate_projection"],
+  "timeline": {"path": "timeline.ndjson", "encoding": "utf-8", "record_format": "ndjson"}
+}

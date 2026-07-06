@@ -1,0 +1,129 @@
+{
+  "gate_files_read": [
+    "Conformance/Chat/CodexCliValidation/fixtures/gate-input/codex-validation-gate-note.txt",
+    "Spec/Chat/README.md",
+    "Conformance/Chat/CodexCliValidation/VENDOR_MANIFEST.md",
+    "Conformance/Chat/CodexCliValidation/BASELINE_CHECKS.md",
+    "Conformance/Chat/CodexCliValidation/PARITY_TEST_MATRIX.md"
+  ],
+  "generated_at": "2026-07-03T11:30:14.172949Z",
+  "help_stdout_sha256_equal": true,
+  "not_yet_proven": [
+    "normal CLI session parity",
+    "app-server runtime parity",
+    "command/tool execution parity",
+    "resume/running rejoin/fork/rollback/compaction parity",
+    "list/search/archive/delete parity",
+    "crash recovery parity",
+    "complete data fidelity",
+    "user-indistinguishability under normal Codex usage"
+  ],
+  "scope": "cli-build-source-snapshots",
+  "status": "pass",
+  "trees": {
+    "chat-backend": {
+      "binary": {
+        "exists": true,
+        "is_symlink": true,
+        "path": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/target/debug/codex",
+        "resolved_path": "<codex-chat-validation-build-root>/chat-backend/debug/codex",
+        "sha256": "335b9658561baed91d2770a1d160542705bc730fbfde513347ead2189fad3ff3",
+        "size_bytes": 640793320
+      },
+      "binary_check": {
+        "artifact": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/target/debug/codex",
+        "artifact_exists": true,
+        "artifact_size_bytes": 640793320,
+        "built": false,
+        "cargo_target_dir": "<codex-chat-validation-build-root>/chat-backend",
+        "external_artifact": "<codex-chat-validation-build-root>/chat-backend/debug/codex",
+        "external_artifact_exists": true
+      },
+      "codex_rs": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs",
+      "external_binary": {
+        "exists": true,
+        "is_symlink": false,
+        "path": "<codex-chat-validation-build-root>/chat-backend/debug/codex",
+        "resolved_path": "<codex-chat-validation-build-root>/chat-backend/debug/codex",
+        "sha256": "335b9658561baed91d2770a1d160542705bc730fbfde513347ead2189fad3ff3",
+        "size_bytes": 640793320
+      },
+      "help": {
+        "command": [
+          "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/target/debug/codex",
+          "--help"
+        ],
+        "cwd": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs",
+        "duration_seconds": 0.019,
+        "exit_code": 0,
+        "stderr": "",
+        "stdout_sha256": "fa378d750cb16b0ebbe19d0a827ce425c50e80004b4b7d774646cbd244e114b2"
+      },
+      "name": "chat-backend",
+      "version": {
+        "command": [
+          "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/target/debug/codex",
+          "--version"
+        ],
+        "cwd": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs",
+        "duration_seconds": 0.256,
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": "codex-cli 0.0.0\n"
+      }
+    },
+    "original": {
+      "binary": {
+        "exists": true,
+        "is_symlink": true,
+        "path": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/target/debug/codex",
+        "resolved_path": "<codex-chat-validation-build-root>/original/debug/codex",
+        "sha256": "3abf919cc93027d37fd514dc8aea1a9238acc33af4c2eb54e40596a692e50530",
+        "size_bytes": 635865528
+      },
+      "binary_check": {
+        "artifact": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/target/debug/codex",
+        "artifact_exists": true,
+        "artifact_size_bytes": 635865528,
+        "built": false,
+        "cargo_target_dir": "<codex-chat-validation-build-root>/original",
+        "external_artifact": "<codex-chat-validation-build-root>/original/debug/codex",
+        "external_artifact_exists": true
+      },
+      "codex_rs": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs",
+      "external_binary": {
+        "exists": true,
+        "is_symlink": false,
+        "path": "<codex-chat-validation-build-root>/original/debug/codex",
+        "resolved_path": "<codex-chat-validation-build-root>/original/debug/codex",
+        "sha256": "3abf919cc93027d37fd514dc8aea1a9238acc33af4c2eb54e40596a692e50530",
+        "size_bytes": 635865528
+      },
+      "help": {
+        "command": [
+          "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/target/debug/codex",
+          "--help"
+        ],
+        "cwd": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs",
+        "duration_seconds": 0.025,
+        "exit_code": 0,
+        "stderr": "",
+        "stdout_sha256": "fa378d750cb16b0ebbe19d0a827ce425c50e80004b4b7d774646cbd244e114b2"
+      },
+      "name": "original",
+      "version": {
+        "command": [
+          "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/target/debug/codex",
+          "--version"
+        ],
+        "cwd": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs",
+        "duration_seconds": 0.321,
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": "codex-cli 0.0.0\n"
+      }
+    }
+  },
+  "validation_dir": "<repo-root>/Conformance/Chat/CodexCliValidation",
+  "version_stdout_equal": true
+}

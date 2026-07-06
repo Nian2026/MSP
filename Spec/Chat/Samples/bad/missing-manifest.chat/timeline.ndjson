@@ -1,0 +1,1 @@
+{"id":"evt_bad_missing_manifest_001","type":"message","seq":1,"created_at":"2026-06-30T00:10:00Z","durability":"durable_replay","payload":{"role":"user","content":"This package has no manifest."}}

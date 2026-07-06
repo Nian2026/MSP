@@ -1,0 +1,126 @@
+# Notices
+
+Project license: Apache License, Version 2.0 (`Apache-2.0`); see `LICENSE` at
+the repository root. Project copyright: Copyright 2026 Nian.
+
+This repository includes or references the third-party and vendored materials
+below. Keep the named license and provenance files with any public source
+release that includes the corresponding code or assets.
+
+## Source Release Boundary
+
+Public source releases must be built from the Git publishable surface or from
+the release dry-run publish tree. Do not publish by zipping or copying the raw
+working directory: ignored local material such as `.build/`, Xcode user data,
+local FastVLM sources, local model bundles, and local signing/project overrides
+is intentionally outside the source release boundary.
+
+The source release notice policy accepts structured third-party inventories
+alongside the applicable top-level license/provenance files named below. If a
+downstream distribution policy requires complete per-package license texts,
+generate and review that expanded notice set before distributing the derived
+artifact.
+
+## Vendored Codex apply_patch Runtime
+
+The MSP Codex `apply_patch` runtime is derived from the upstream Codex Rust
+workspace and is tracked under:
+
+```text
+Implementations/Swift/Sources/Tools/Vendor/Codex/apply_patch
+```
+
+The vendored Codex source and the local bridge are recorded as Apache-2.0. The
+source snapshot is intentionally scoped to the apply_patch runtime/proof files
+listed in `Source/CODEX_SOURCE_PROVENANCE.txt`; third-party Cargo dependency
+license evidence is kept in `Licenses/THIRD-PARTY-CARGO-LICENSES.json`; the
+Apache-2.0 text and Codex note are kept in `Licenses/APACHE-2.0.txt` and
+`Licenses/CODEX-LICENSE-NOTE.md`.
+
+The checked-in `MSPCodexApplyPatchBridge.xcframework` is an intentional
+prebuilt iOS bridge artifact for source-release usability. Keep
+`Artifacts/MSPCodexApplyPatchBridge.xcframework/BUILD_RECEIPT.txt`, the scoped
+source provenance, and the Cargo license inventory with any release that
+contains that artifact. Source-only downstreams may rebuild or replace the
+bridge from the recorded provenance instead of consuming the checked-in binary.
+
+## ExampleChatTranscriptRenderer Runtime Assets
+
+The example iOS apps bundle shared ExampleChatTranscriptRenderer runtime assets
+under:
+
+```text
+Examples/iOS/Shared/ExampleChatTranscriptRenderer
+```
+
+The bundled browser/runtime assets include `chat-unified-markdown.js`, which
+bundles unified/remark/rehype/micromark, MathJax (`mathjax-full`), KaTeX,
+mhchemparser, and related browser markdown packages, plus standalone KaTeX,
+highlight.js, Prettier, d3, markmap-view, and pagedjs resources. Their license
+and provenance evidence is kept next to the shared runtime resources:
+
+```text
+RuntimeResources/Math/chat-unified-markdown-THIRD-PARTY.json
+RuntimeResources/Math/katex-LICENSE.txt
+RuntimeResources/Math/highlightjs-LICENSE.txt
+RuntimeResources/Math/prettier-LICENSE.txt
+RuntimeResources/KnowledgeMap/d3-LICENSE.txt
+RuntimeResources/KnowledgeMap/markmap-view-LICENSE.txt
+RuntimeResources/Paged/pagedjs-LICENSE.md
+```
+
+`RuntimeResources/Math/legacy-spinner.apng` is a project-local
+ExampleChatTranscriptRenderer UI asset. Its provenance note is kept in
+`RuntimeResources/Math/PROJECT-ASSET-PROVENANCE.md`; update that note if the
+asset is replaced with third-party material.
+
+The bundled JavaScript package inventory is intentionally machine-readable. It
+does not replace a downstream distribution's own legal review when a distributor
+requires complete per-package license text.
+
+## LightweightReader Generated UI Evidence
+
+The LightweightReader `.chat` demo keeps generated Playwright UI evidence under:
+
+```text
+Spec/Chat/Demos/LightweightReader/results
+```
+
+`desktop-ui-conformance.png` and `mobile-ui-conformance.png` are generated
+screenshots from `npm run test:ui`, not third-party artwork. The adjacent
+`GENERATED_ARTIFACTS.md` file records the generation boundary for those PNGs.
+
+## SwiftPM Dependencies
+
+The public Swift packages reference `swift-cgit2` through SwiftPM. It is a
+package dependency, not a vendored source checkout in the publishable tree.
+
+PhotoSorter can optionally reference `mlx-swift`, `mlx-swift-examples`, and
+`swift-transformers` through SwiftPM when `PHOTOSORTER_ENABLE_LOCAL_FASTVLM=1`
+and local FastVLM sources are present. Those optional checkouts and model
+artifacts are not part of the default publishable tree.
+
+## Build-Time CPython For iOS Examples
+
+The source tree does not vendor BeeWare Python-Apple-support or CPython
+framework binaries. The checked-in iOS example build phases can populate a local
+BeeWare CPython iOS cache and embed `Python.framework` plus the Python home into
+developer-built app bundles.
+
+That is acceptable for source release because the generated frameworks and
+stdlib are local build outputs. Any public binary app distribution that includes
+those embedded runtime files must carry the applicable BeeWare, CPython, and
+Python Software Foundation notices/licenses for the exact runtime bundle being
+distributed.
+
+## PhotoSorter FastVLM Local Inputs
+
+PhotoSorter local FastVLM Swift source, MLX checkouts, and FastVLM model bundles
+are opt-in local development inputs. They live under ignored paths such as
+`Examples/iOS/PhotoSorter/Local/FastVLM/`,
+`Examples/iOS/PhotoSorter/Vendor/mlx-swift*`, and
+`Examples/iOS/PhotoSorter/Resources/FastVLM/model/`.
+
+Those files must not be included in the default source release unless their
+upstream license terms, model terms, and notices have been reviewed and added to
+this notice set.

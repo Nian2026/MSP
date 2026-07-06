@@ -1,0 +1,1223 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00000000000000000000001 /* PhotoSorterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000001 /* PhotoSorterApp.swift */; };
+		A00000000000000000000002 /* MSPPlaygroundViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000002 /* MSPPlaygroundViewModel.swift */; };
+		A00000000000000000000003 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000003 /* RootView.swift */; };
+		A00000000000000000000004 /* MSPPlaygroundShellRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000004 /* MSPPlaygroundShellRuntime.swift */; };
+		A00000000000000000000005 /* MSPPlaygroundWorkspaceBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000005 /* MSPPlaygroundWorkspaceBootstrap.swift */; };
+		A00000000000000000000006 /* WorkspaceFileTreeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000006 /* WorkspaceFileTreeState.swift */; };
+		A00000000000000000000007 /* LiquidGlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000007 /* LiquidGlassSurface.swift */; };
+		A00000000000000000000008 /* MSPDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000008 /* MSPDesignTokens.swift */; };
+		A00000000000000000000009 /* WorkspaceFileNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000009 /* WorkspaceFileNode.swift */; };
+		A0000000000000000000000A /* WorkspaceFileTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000000A /* WorkspaceFileTreeView.swift */; };
+		A0000000000000000000000B /* WorkspaceFileNodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000000B /* WorkspaceFileNodeRow.swift */; };
+		A00000000000000000000010 /* WorkspaceDrawerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000010 /* WorkspaceDrawerContainer.swift */; };
+		A00000000000000000000011 /* WorkspaceDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000011 /* WorkspaceDrawerView.swift */; };
+		A00000000000000000000012 /* ModelShellProxy in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000002 /* ModelShellProxy */; };
+		A00000000000000000000013 /* MSPApple in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000003 /* MSPApple */; };
+		A00000000000000000000035 /* MSPAgentBridge in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000006 /* MSPAgentBridge */; };
+		A00000000000000000000051 /* MSPAgentChatStore in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000013 /* MSPAgentChatStore */; };
+		A0000000000000000000006D /* MSPChatCommands in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000014 /* MSPChatCommands */; };
+		A0000000000000000000003D /* MSPPythonEmbeddedRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000007 /* MSPPythonEmbeddedRuntime */; };
+		A0000000000000000000003E /* MSPPythonRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000008 /* MSPPythonRuntime */; };
+		A0000000000000000000003F /* MSPCore in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000009 /* MSPCore */; };
+		A00000000000000000000014 /* MSPModelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000013 /* MSPModelConfiguration.swift */; };
+		A00000000000000000000019 /* MSPPlaygroundAgentRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000018 /* MSPPlaygroundAgentRuntime.swift */; };
+		A00000000000000000000052 /* PhotoSorterChatPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000051 /* PhotoSorterChatPersistence.swift */; };
+		A0000000000000000000001A /* MSPAgentTimelineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000019 /* MSPAgentTimelineItem.swift */; };
+		A0000000000000000000001B /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000001A /* ChatView.swift */; };
+		A0000000000000000000001C /* ChatComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000001B /* ChatComposerView.swift */; };
+		A0000000000000000000001E /* RuntimeResources in Resources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000001D /* RuntimeResources */; };
+		A0000000000000000000001F /* ExampleChatTranscriptRendererShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000001E /* ExampleChatTranscriptRendererShell.swift */; };
+		A00000000000000000000020 /* ExampleChatTranscriptWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000001F /* ExampleChatTranscriptWebView.swift */; };
+		A00000000000000000000021 /* ExampleChatTranscriptPayloadFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000020 /* ExampleChatTranscriptPayloadFactory.swift */; };
+		A00000000000000000000022 /* ExampleChatTranscriptThemePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000022 /* ExampleChatTranscriptThemePreset.swift */; };
+		A00000000000000000000050 /* ExampleChatPlanProgressPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000050 /* ExampleChatPlanProgressPill.swift */; };
+		A00000000000000000000023 /* ExampleChatRuntimeJSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000023 /* ExampleChatRuntimeJSONValue.swift */; };
+		A00000000000000000000028 /* MSPPlaygroundE2EEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000028 /* MSPPlaygroundE2EEventLog.swift */; };
+		A0000000000000000000002A /* MSPCodexOAuthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000002A /* MSPCodexOAuthModels.swift */; };
+		A0000000000000000000002B /* MSPCodexOAuthQuotaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000002B /* MSPCodexOAuthQuotaService.swift */; };
+		A0000000000000000000002C /* MSPCodexOAuthTokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000002C /* MSPCodexOAuthTokenStore.swift */; };
+		A0000000000000000000002D /* MSPCodexOAuthWebLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000002D /* MSPCodexOAuthWebLoginService.swift */; };
+		A0000000000000000000002E /* MSPModelSecretStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000002E /* MSPModelSecretStore.swift */; };
+		A0000000000000000000002F /* ExampleChatWorkspaceShellTranscriptDisplaySupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000002F /* ExampleChatWorkspaceShellTranscriptDisplaySupport.swift */; };
+		A00000000000000000000030 /* ExampleChatTranscriptSupportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000030 /* ExampleChatTranscriptSupportModels.swift */; };
+		A00000000000000000000031 /* ExampleChatTranscriptSupportBlockProjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000031 /* ExampleChatTranscriptSupportBlockProjector.swift */; };
+		A00000000000000000000032 /* ExampleChatShellTranscriptDisplaySupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000032 /* ExampleChatShellTranscriptDisplaySupport.swift */; };
+		A00000000000000000000033 /* ExampleChatStreamingSupportBlockPresentationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000033 /* ExampleChatStreamingSupportBlockPresentationHelper.swift */; };
+		A00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift */; };
+		A00000000000000000000035 /* PhotoLibraryMount.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000035 /* PhotoLibraryMount.swift */; };
+		A00000000000000000000053 /* PhotoSorterMediaCacheTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000052 /* PhotoSorterMediaCacheTypes.swift */; };
+		A00000000000000000000054 /* PhotoSorterMediaOCRCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000053 /* PhotoSorterMediaOCRCache.swift */; };
+		A00000000000000000000055 /* PhotoSorterMediaVLMSummaryCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000054 /* PhotoSorterMediaVLMSummaryCache.swift */; };
+		A00000000000000000000056 /* PhotoSorterMediaAskExclusionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000055 /* PhotoSorterMediaAskExclusionCache.swift */; };
+		A00000000000000000000057 /* PhotoSorterMediaPlaceCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000056 /* PhotoSorterMediaPlaceCache.swift */; };
+		A00000000000000000000036 /* PhotoLibraryWorkspaceFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000036 /* PhotoLibraryWorkspaceFileSystem.swift */; };
+		A00000000000000000000043 /* PhotoLibraryWorkspaceOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000043 /* PhotoLibraryWorkspaceOverlay.swift */; };
+		A00000000000000000000046 /* PhotoSorterFastVLMSummaryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000046 /* PhotoSorterFastVLMSummaryProvider.swift */; };
+		A0000000000000000000004F /* PhotoSorterVisionOCRExceptionGuard.m in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000004A /* PhotoSorterVisionOCRExceptionGuard.m */; };
+		A00000000000000000000037 /* PhotoSorterDiagnosticsLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000037 /* PhotoSorterDiagnosticsLog.swift */; };
+		A00000000000000000000044 /* PhotoSorterDiagnosticsSystemLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000044 /* PhotoSorterDiagnosticsSystemLog.swift */; };
+		A00000000000000000000040 /* PhotoLibraryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000040 /* PhotoLibraryIndex.swift */; };
+		A00000000000000000000041 /* WorkspaceMediaThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000041 /* WorkspaceMediaThumbnail.swift */; };
+		A00000000000000000000042 /* PhotoSorterPlaceCacheTaskStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000042 /* PhotoSorterPlaceCacheTaskStore.swift */; };
+		A00000000000000000000039 /* MSPTerminalOutputPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000039 /* MSPTerminalOutputPreview.swift */; };
+		A0000000000000000000003A /* PhotoSorterTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000003A /* PhotoSorterTypography.swift */; };
+		A0000000000000000000003B /* PhotoSorterCommandPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000003B /* PhotoSorterCommandPack.swift */; };
+		A00000000000000000000058 /* PhotoSorterMediaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000057 /* PhotoSorterMediaModels.swift */; };
+		A00000000000000000000059 /* PhotoSorterMediaVLMConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000058 /* PhotoSorterMediaVLMConfiguration.swift */; };
+		A0000000000000000000005A /* PhotoSorterMediaProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000059 /* PhotoSorterMediaProviders.swift */; };
+		A0000000000000000000005B /* PhotoLibraryMount+PhotoSorterCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000005A /* PhotoLibraryMount+PhotoSorterCommands.swift */; };
+		A0000000000000000000005C /* PhotoSorterRmCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000005B /* PhotoSorterRmCommand.swift */; };
+		A0000000000000000000005D /* PhotoSorterFileTreeCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000005C /* PhotoSorterFileTreeCommand.swift */; };
+		A0000000000000000000005E /* PhotoSorterAlbumCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000005D /* PhotoSorterAlbumCommand.swift */; };
+		A0000000000000000000005F /* PhotoSorterMediaCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000005E /* PhotoSorterMediaCommand.swift */; };
+		A00000000000000000000060 /* PhotoSorterMediaBatchMutationCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000005F /* PhotoSorterMediaBatchMutationCommand.swift */; };
+		A00000000000000000000061 /* PhotoSorterMediaHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000060 /* PhotoSorterMediaHelp.swift */; };
+		A00000000000000000000062 /* PhotoSorterMediaImageEncoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000061 /* PhotoSorterMediaImageEncoding.swift */; };
+		A00000000000000000000063 /* PhotoSorterMediaListShowCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000062 /* PhotoSorterMediaListShowCommand.swift */; };
+		A00000000000000000000064 /* PhotoSorterMediaParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000063 /* PhotoSorterMediaParsing.swift */; };
+		A00000000000000000000065 /* PhotoSorterMediaPathIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000064 /* PhotoSorterMediaPathIO.swift */; };
+		A00000000000000000000066 /* PhotoSorterMediaRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000065 /* PhotoSorterMediaRendering.swift */; };
+		A00000000000000000000067 /* PhotoSorterMediaReviewCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000066 /* PhotoSorterMediaReviewCommand.swift */; };
+		A00000000000000000000068 /* PhotoSorterMediaSearchCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000067 /* PhotoSorterMediaSearchCommand.swift */; };
+		A00000000000000000000069 /* PhotoSorterMediaStatusCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000068 /* PhotoSorterMediaStatusCommand.swift */; };
+		A0000000000000000000006A /* PhotoSorterMediaArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000069 /* PhotoSorterMediaArguments.swift */; };
+		A0000000000000000000006B /* PhotoSorterMediaSearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000006A /* PhotoSorterMediaSearchTypes.swift */; };
+		A0000000000000000000006C /* PhotoSorterMediaReviewTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000006B /* PhotoSorterMediaReviewTypes.swift */; };
+		A0000000000000000000003C /* PhotoSorterAgentAccessMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000003C /* PhotoSorterAgentAccessMode.swift */; };
+		A10000000000000000000001 /* MSPCodexOAuthConfigurationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* MSPCodexOAuthConfigurationStoreTests.swift */; };
+		A10000000000000000000002 /* MSPModelConfigurationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* MSPModelConfigurationStoreTests.swift */; };
+		A10000000000000000000003 /* MSPPlaygroundShellRuntimePreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* MSPPlaygroundShellRuntimePreviewTests.swift */; };
+		A10000000000000000000004 /* MSPPlaygroundViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* MSPPlaygroundViewModelTests.swift */; };
+		A10000000000000000000005 /* MSPPlaygroundWorkspaceBootstrapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000005 /* MSPPlaygroundWorkspaceBootstrapTests.swift */; };
+		A10000000000000000000006 /* MSPTerminalOutputPreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000006 /* MSPTerminalOutputPreviewTests.swift */; };
+		A10000000000000000000007 /* PhotoLibraryIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000007 /* PhotoLibraryIndexTests.swift */; };
+		A10000000000000000000008 /* PhotoLibraryWorkspaceFileSystemPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* PhotoLibraryWorkspaceFileSystemPathTests.swift */; };
+		A10000000000000000000009 /* PhotoSorterAgentAccessModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* PhotoSorterAgentAccessModeTests.swift */; };
+		A1000000000000000000000A /* PhotoSorterMediaCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000A /* PhotoSorterMediaCommandTests.swift */; };
+		A1000000000000000000000B /* PhotoSorterPythonRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000B /* PhotoSorterPythonRuntimeTests.swift */; };
+		A1000000000000000000000C /* PhotoSorterTypographyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* PhotoSorterTypographyTests.swift */; };
+		A10000000000000000000010 /* ExampleChatTranscriptPayloadFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* ExampleChatTranscriptPayloadFactoryTests.swift */; };
+		A10000000000000000000015 /* PhotoSorterChatPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000015 /* PhotoSorterChatPersistenceTests.swift */; };
+		A10000000000000000000011 /* ModelShellProxy in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000002 /* ModelShellProxy */; };
+		A10000000000000000000012 /* MSPCore in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000009 /* MSPCore */; };
+		A10000000000000000000013 /* MSPAgentBridge in Frameworks */ = {isa = PBXBuildFile; productRef = E00000000000000000000006 /* MSPAgentBridge */; };
+		A10000000000000000000014 /* PhotoSorterFastVLMLiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* PhotoSorterFastVLMLiveTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E10000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E00000000000000000000004 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E00000000000000000000001;
+			remoteInfo = PhotoSorter;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B00000000000000000000001 /* PhotoSorterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterApp.swift; sourceTree = "<group>"; };
+		B00000000000000000000002 /* MSPPlaygroundViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundViewModel.swift; sourceTree = "<group>"; };
+		B00000000000000000000003 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		B00000000000000000000004 /* MSPPlaygroundShellRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundShellRuntime.swift; sourceTree = "<group>"; };
+		B00000000000000000000005 /* MSPPlaygroundWorkspaceBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundWorkspaceBootstrap.swift; sourceTree = "<group>"; };
+		B00000000000000000000006 /* WorkspaceFileTreeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFileTreeState.swift; sourceTree = "<group>"; };
+		B00000000000000000000007 /* LiquidGlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassSurface.swift; sourceTree = "<group>"; };
+		B00000000000000000000008 /* MSPDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPDesignTokens.swift; sourceTree = "<group>"; };
+		B00000000000000000000009 /* WorkspaceFileNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFileNode.swift; sourceTree = "<group>"; };
+		B0000000000000000000000A /* WorkspaceFileTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFileTreeView.swift; sourceTree = "<group>"; };
+		B0000000000000000000000B /* WorkspaceFileNodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFileNodeRow.swift; sourceTree = "<group>"; };
+		B00000000000000000000010 /* WorkspaceDrawerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDrawerContainer.swift; sourceTree = "<group>"; };
+		B00000000000000000000011 /* WorkspaceDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDrawerView.swift; sourceTree = "<group>"; };
+		B00000000000000000000012 /* PhotoSorter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoSorter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00000000000000000000013 /* MSPModelConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPModelConfiguration.swift; sourceTree = "<group>"; };
+		B00000000000000000000018 /* MSPPlaygroundAgentRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundAgentRuntime.swift; sourceTree = "<group>"; };
+		B00000000000000000000051 /* PhotoSorterChatPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterChatPersistence.swift; sourceTree = "<group>"; };
+		B00000000000000000000019 /* MSPAgentTimelineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPAgentTimelineItem.swift; sourceTree = "<group>"; };
+		B0000000000000000000001A /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		B0000000000000000000001B /* ChatComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatComposerView.swift; sourceTree = "<group>"; };
+		B0000000000000000000001D /* RuntimeResources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = RuntimeResources; sourceTree = "<group>"; };
+		B00000000000000000000045 /* FastVLM */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/FastVLM; sourceTree = "<group>"; };
+		B0000000000000000000001E /* ExampleChatTranscriptRendererShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatTranscriptRendererShell.swift; sourceTree = "<group>"; };
+		B0000000000000000000001F /* ExampleChatTranscriptWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatTranscriptWebView.swift; sourceTree = "<group>"; };
+		B00000000000000000000020 /* ExampleChatTranscriptPayloadFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatTranscriptPayloadFactory.swift; sourceTree = "<group>"; };
+		B00000000000000000000021 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B00000000000000000000022 /* ExampleChatTranscriptThemePreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatTranscriptThemePreset.swift; sourceTree = "<group>"; };
+		B00000000000000000000050 /* ExampleChatPlanProgressPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatPlanProgressPill.swift; sourceTree = "<group>"; };
+		B00000000000000000000023 /* ExampleChatRuntimeJSONValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatRuntimeJSONValue.swift; sourceTree = "<group>"; };
+		B00000000000000000000028 /* MSPPlaygroundE2EEventLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundE2EEventLog.swift; sourceTree = "<group>"; };
+		B00000000000000000000070 /* ExampleSigning.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = ExampleSigning.xcconfig; path = ../../Shared/Signing/ExampleSigning.xcconfig; sourceTree = SOURCE_ROOT; };
+		B0000000000000000000002A /* MSPCodexOAuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPCodexOAuthModels.swift; sourceTree = "<group>"; };
+		B0000000000000000000002B /* MSPCodexOAuthQuotaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPCodexOAuthQuotaService.swift; sourceTree = "<group>"; };
+		B0000000000000000000002C /* MSPCodexOAuthTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPCodexOAuthTokenStore.swift; sourceTree = "<group>"; };
+		B0000000000000000000002D /* MSPCodexOAuthWebLoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPCodexOAuthWebLoginService.swift; sourceTree = "<group>"; };
+		B0000000000000000000002E /* MSPModelSecretStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPModelSecretStore.swift; sourceTree = "<group>"; };
+		B0000000000000000000002F /* ExampleChatWorkspaceShellTranscriptDisplaySupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatWorkspaceShellTranscriptDisplaySupport.swift; sourceTree = "<group>"; };
+		B00000000000000000000030 /* ExampleChatTranscriptSupportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatTranscriptSupportModels.swift; sourceTree = "<group>"; };
+		B00000000000000000000031 /* ExampleChatTranscriptSupportBlockProjector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatTranscriptSupportBlockProjector.swift; sourceTree = "<group>"; };
+		B00000000000000000000032 /* ExampleChatShellTranscriptDisplaySupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatShellTranscriptDisplaySupport.swift; sourceTree = "<group>"; };
+		B00000000000000000000033 /* ExampleChatStreamingSupportBlockPresentationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatStreamingSupportBlockPresentationHelper.swift; sourceTree = "<group>"; };
+		B00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatStreamingToolPresentationHelper.swift; sourceTree = "<group>"; };
+		B00000000000000000000035 /* PhotoLibraryMount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryMount.swift; sourceTree = "<group>"; };
+		B00000000000000000000052 /* PhotoSorterMediaCacheTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaCacheTypes.swift; sourceTree = "<group>"; };
+		B00000000000000000000053 /* PhotoSorterMediaOCRCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaOCRCache.swift; sourceTree = "<group>"; };
+		B00000000000000000000054 /* PhotoSorterMediaVLMSummaryCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaVLMSummaryCache.swift; sourceTree = "<group>"; };
+		B00000000000000000000055 /* PhotoSorterMediaAskExclusionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaAskExclusionCache.swift; sourceTree = "<group>"; };
+		B00000000000000000000056 /* PhotoSorterMediaPlaceCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaPlaceCache.swift; sourceTree = "<group>"; };
+		B00000000000000000000036 /* PhotoLibraryWorkspaceFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryWorkspaceFileSystem.swift; sourceTree = "<group>"; };
+		B00000000000000000000043 /* PhotoLibraryWorkspaceOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryWorkspaceOverlay.swift; sourceTree = "<group>"; };
+		B00000000000000000000046 /* PhotoSorterFastVLMSummaryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterFastVLMSummaryProvider.swift; sourceTree = "<group>"; };
+		B00000000000000000000049 /* PhotoSorterVisionOCRExceptionGuard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = include/PhotoSorterVisionSupport/PhotoSorterVisionOCRExceptionGuard.h; sourceTree = "<group>"; };
+		B0000000000000000000004A /* PhotoSorterVisionOCRExceptionGuard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PhotoSorterVisionOCRExceptionGuard.m; sourceTree = "<group>"; };
+		B0000000000000000000004B /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = include/module.modulemap; sourceTree = "<group>"; };
+		B00000000000000000000037 /* PhotoSorterDiagnosticsLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterDiagnosticsLog.swift; sourceTree = "<group>"; };
+		B00000000000000000000044 /* PhotoSorterDiagnosticsSystemLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterDiagnosticsSystemLog.swift; sourceTree = "<group>"; };
+		B00000000000000000000040 /* PhotoLibraryIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryIndex.swift; sourceTree = "<group>"; };
+		B00000000000000000000041 /* WorkspaceMediaThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceMediaThumbnail.swift; sourceTree = "<group>"; };
+		B00000000000000000000042 /* PhotoSorterPlaceCacheTaskStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterPlaceCacheTaskStore.swift; sourceTree = "<group>"; };
+		B00000000000000000000039 /* MSPTerminalOutputPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPTerminalOutputPreview.swift; sourceTree = "<group>"; };
+		B0000000000000000000003A /* PhotoSorterTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterTypography.swift; sourceTree = "<group>"; };
+		B0000000000000000000003B /* PhotoSorterCommandPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterCommandPack.swift; sourceTree = "<group>"; };
+		B00000000000000000000057 /* PhotoSorterMediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaModels.swift; sourceTree = "<group>"; };
+		B00000000000000000000058 /* PhotoSorterMediaVLMConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaVLMConfiguration.swift; sourceTree = "<group>"; };
+		B00000000000000000000059 /* PhotoSorterMediaProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaProviders.swift; sourceTree = "<group>"; };
+		B0000000000000000000005A /* PhotoLibraryMount+PhotoSorterCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PhotoLibraryMount+PhotoSorterCommands.swift"; sourceTree = "<group>"; };
+		B0000000000000000000005B /* PhotoSorterRmCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterRmCommand.swift; sourceTree = "<group>"; };
+		B0000000000000000000005C /* PhotoSorterFileTreeCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterFileTreeCommand.swift; sourceTree = "<group>"; };
+		B0000000000000000000005D /* PhotoSorterAlbumCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterAlbumCommand.swift; sourceTree = "<group>"; };
+		B0000000000000000000005E /* PhotoSorterMediaCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaCommand.swift; sourceTree = "<group>"; };
+		B0000000000000000000005F /* PhotoSorterMediaBatchMutationCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaBatchMutationCommand.swift; sourceTree = "<group>"; };
+		B00000000000000000000060 /* PhotoSorterMediaHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaHelp.swift; sourceTree = "<group>"; };
+		B00000000000000000000061 /* PhotoSorterMediaImageEncoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaImageEncoding.swift; sourceTree = "<group>"; };
+		B00000000000000000000062 /* PhotoSorterMediaListShowCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaListShowCommand.swift; sourceTree = "<group>"; };
+		B00000000000000000000063 /* PhotoSorterMediaParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaParsing.swift; sourceTree = "<group>"; };
+		B00000000000000000000064 /* PhotoSorterMediaPathIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaPathIO.swift; sourceTree = "<group>"; };
+		B00000000000000000000065 /* PhotoSorterMediaRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaRendering.swift; sourceTree = "<group>"; };
+		B00000000000000000000066 /* PhotoSorterMediaReviewCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaReviewCommand.swift; sourceTree = "<group>"; };
+		B00000000000000000000067 /* PhotoSorterMediaSearchCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaSearchCommand.swift; sourceTree = "<group>"; };
+		B00000000000000000000068 /* PhotoSorterMediaStatusCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaStatusCommand.swift; sourceTree = "<group>"; };
+		B00000000000000000000069 /* PhotoSorterMediaArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaArguments.swift; sourceTree = "<group>"; };
+		B0000000000000000000006A /* PhotoSorterMediaSearchTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaSearchTypes.swift; sourceTree = "<group>"; };
+		B0000000000000000000006B /* PhotoSorterMediaReviewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaReviewTypes.swift; sourceTree = "<group>"; };
+		B0000000000000000000003C /* PhotoSorterAgentAccessMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterAgentAccessMode.swift; sourceTree = "<group>"; };
+		B10000000000000000000000 /* PhotoSorterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PhotoSorterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000001 /* MSPCodexOAuthConfigurationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPCodexOAuthConfigurationStoreTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000002 /* MSPModelConfigurationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPModelConfigurationStoreTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000003 /* MSPPlaygroundShellRuntimePreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundShellRuntimePreviewTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000004 /* MSPPlaygroundViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundViewModelTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000005 /* MSPPlaygroundWorkspaceBootstrapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPPlaygroundWorkspaceBootstrapTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000006 /* MSPTerminalOutputPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSPTerminalOutputPreviewTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000007 /* PhotoLibraryIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryIndexTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000008 /* PhotoLibraryWorkspaceFileSystemPathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryWorkspaceFileSystemPathTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000009 /* PhotoSorterAgentAccessModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterAgentAccessModeTests.swift; sourceTree = "<group>"; };
+		B1000000000000000000000A /* PhotoSorterMediaCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaCommandTests.swift; sourceTree = "<group>"; };
+		B1000000000000000000000B /* PhotoSorterPythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterPythonRuntimeTests.swift; sourceTree = "<group>"; };
+		B1000000000000000000000C /* PhotoSorterTypographyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterTypographyTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000010 /* ExampleChatTranscriptPayloadFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatTranscriptPayloadFactoryTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000015 /* PhotoSorterChatPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterChatPersistenceTests.swift; sourceTree = "<group>"; };
+		B10000000000000000000014 /* PhotoSorterFastVLMLiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterFastVLMLiveTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C00000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+						files = (
+							A00000000000000000000012 /* ModelShellProxy in Frameworks */,
+							A0000000000000000000003F /* MSPCore in Frameworks */,
+							A00000000000000000000035 /* MSPAgentBridge in Frameworks */,
+							A00000000000000000000051 /* MSPAgentChatStore in Frameworks */,
+							A0000000000000000000006D /* MSPChatCommands in Frameworks */,
+						A00000000000000000000013 /* MSPApple in Frameworks */,
+							A0000000000000000000003D /* MSPPythonEmbeddedRuntime in Frameworks */,
+						A0000000000000000000003E /* MSPPythonRuntime in Frameworks */,
+					);
+				runOnlyForDeploymentPostprocessing = 0;
+			};
+		C10000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000011 /* ModelShellProxy in Frameworks */,
+				A10000000000000000000012 /* MSPCore in Frameworks */,
+				A10000000000000000000013 /* MSPAgentBridge in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D00000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000002 /* .. */,
+				D00000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D00000000000000000000002 /* .. */ = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000004 /* App */,
+					D00000000000000000000011 /* Agent */,
+					D00000000000000000000005 /* Shell */,
+					D00000000000000000000006 /* Workspace */,
+					D00000000000000000000025 /* VisionSupport */,
+					D00000000000000000000021 /* Diagnostics */,
+				D00000000000000000000007 /* DesignSystem */,
+				D0000000000000000000001C /* Adapters */,
+				D00000000000000000000008 /* Features */,
+				B00000000000000000000045 /* FastVLM */,
+				D00000000000000000000019 /* Vendor */,
+				D10000000000000000000001 /* Tests */,
+				B00000000000000000000070 /* ExampleSigning.xcconfig */,
+			);
+			path = ..;
+			sourceTree = SOURCE_ROOT;
+		};
+		D00000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000012 /* PhotoSorter.app */,
+				B10000000000000000000000 /* PhotoSorterTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000004 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000001 /* PhotoSorterApp.swift */,
+				B00000000000000000000028 /* MSPPlaygroundE2EEventLog.swift */,
+				B00000000000000000000002 /* MSPPlaygroundViewModel.swift */,
+				B00000000000000000000003 /* RootView.swift */,
+				B00000000000000000000021 /* Info.plist */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000005 /* Shell */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000004 /* MSPPlaygroundShellRuntime.swift */,
+				B0000000000000000000003B /* PhotoSorterCommandPack.swift */,
+				D00000000000000000000026 /* Commands */,
+			);
+			path = Shell;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000026 /* Commands */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000057 /* PhotoSorterMediaModels.swift */,
+				B00000000000000000000058 /* PhotoSorterMediaVLMConfiguration.swift */,
+				B00000000000000000000059 /* PhotoSorterMediaProviders.swift */,
+				B0000000000000000000005A /* PhotoLibraryMount+PhotoSorterCommands.swift */,
+				B0000000000000000000005B /* PhotoSorterRmCommand.swift */,
+				B0000000000000000000005C /* PhotoSorterFileTreeCommand.swift */,
+				B0000000000000000000005D /* PhotoSorterAlbumCommand.swift */,
+				B0000000000000000000005E /* PhotoSorterMediaCommand.swift */,
+				D00000000000000000000027 /* Media */,
+			);
+			path = Commands;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000027 /* Media */ = {
+			isa = PBXGroup;
+			children = (
+				B0000000000000000000005F /* PhotoSorterMediaBatchMutationCommand.swift */,
+				B00000000000000000000060 /* PhotoSorterMediaHelp.swift */,
+				B00000000000000000000061 /* PhotoSorterMediaImageEncoding.swift */,
+				B00000000000000000000062 /* PhotoSorterMediaListShowCommand.swift */,
+				B00000000000000000000063 /* PhotoSorterMediaParsing.swift */,
+				B00000000000000000000064 /* PhotoSorterMediaPathIO.swift */,
+				B00000000000000000000065 /* PhotoSorterMediaRendering.swift */,
+				B00000000000000000000066 /* PhotoSorterMediaReviewCommand.swift */,
+				B00000000000000000000067 /* PhotoSorterMediaSearchCommand.swift */,
+				B00000000000000000000068 /* PhotoSorterMediaStatusCommand.swift */,
+				B00000000000000000000069 /* PhotoSorterMediaArguments.swift */,
+				B0000000000000000000006A /* PhotoSorterMediaSearchTypes.swift */,
+				B0000000000000000000006B /* PhotoSorterMediaReviewTypes.swift */,
+			);
+			path = Media;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000006 /* Workspace */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000005 /* MSPPlaygroundWorkspaceBootstrap.swift */,
+				B00000000000000000000006 /* WorkspaceFileTreeState.swift */,
+				B00000000000000000000040 /* PhotoLibraryIndex.swift */,
+				B00000000000000000000035 /* PhotoLibraryMount.swift */,
+				B00000000000000000000052 /* PhotoSorterMediaCacheTypes.swift */,
+				B00000000000000000000053 /* PhotoSorterMediaOCRCache.swift */,
+				B00000000000000000000054 /* PhotoSorterMediaVLMSummaryCache.swift */,
+				B00000000000000000000055 /* PhotoSorterMediaAskExclusionCache.swift */,
+				B00000000000000000000056 /* PhotoSorterMediaPlaceCache.swift */,
+				B00000000000000000000036 /* PhotoLibraryWorkspaceFileSystem.swift */,
+				B00000000000000000000043 /* PhotoLibraryWorkspaceOverlay.swift */,
+				B00000000000000000000046 /* PhotoSorterFastVLMSummaryProvider.swift */,
+				B00000000000000000000041 /* WorkspaceMediaThumbnail.swift */,
+				B00000000000000000000042 /* PhotoSorterPlaceCacheTaskStore.swift */,
+			);
+			path = Workspace;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000025 /* VisionSupport */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000049 /* PhotoSorterVisionOCRExceptionGuard.h */,
+				B0000000000000000000004A /* PhotoSorterVisionOCRExceptionGuard.m */,
+				B0000000000000000000004B /* module.modulemap */,
+			);
+			path = VisionSupport;
+			sourceTree = "<group>";
+		};
+			D00000000000000000000007 /* DesignSystem */ = {
+				isa = PBXGroup;
+				children = (
+					B00000000000000000000007 /* LiquidGlassSurface.swift */,
+				B00000000000000000000008 /* MSPDesignTokens.swift */,
+				B0000000000000000000003A /* PhotoSorterTypography.swift */,
+			);
+				path = DesignSystem;
+				sourceTree = "<group>";
+			};
+		D00000000000000000000021 /* Diagnostics */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000037 /* PhotoSorterDiagnosticsLog.swift */,
+				B00000000000000000000044 /* PhotoSorterDiagnosticsSystemLog.swift */,
+			);
+			path = Diagnostics;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000008 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000017 /* Chat */,
+				D00000000000000000000009 /* Files */,
+				D0000000000000000000000F /* WorkspaceDrawer */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000009 /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				D0000000000000000000000A /* Models */,
+				D0000000000000000000000B /* Views */,
+			);
+			path = Files;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000000A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000009 /* WorkspaceFileNode.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000000B /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B0000000000000000000000A /* WorkspaceFileTreeView.swift */,
+				B0000000000000000000000B /* WorkspaceFileNodeRow.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000000F /* WorkspaceDrawer */ = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000010 /* Views */,
+			);
+			path = WorkspaceDrawer;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000010 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000010 /* WorkspaceDrawerContainer.swift */,
+				B00000000000000000000011 /* WorkspaceDrawerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000011 /* Agent */ = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000022 /* AccessControl */,
+				D00000000000000000000012 /* ModelConfig */,
+				D0000000000000000000001F /* CodexOAuth */,
+				D00000000000000000000014 /* ToolLoop */,
+				D00000000000000000000015 /* Transcript */,
+			);
+			path = Agent;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000022 /* AccessControl */ = {
+			isa = PBXGroup;
+			children = (
+				B0000000000000000000003C /* PhotoSorterAgentAccessMode.swift */,
+			);
+			path = AccessControl;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000012 /* ModelConfig */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000013 /* MSPModelConfiguration.swift */,
+				B0000000000000000000002E /* MSPModelSecretStore.swift */,
+			);
+			path = ModelConfig;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000014 /* ToolLoop */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000018 /* MSPPlaygroundAgentRuntime.swift */,
+				B00000000000000000000051 /* PhotoSorterChatPersistence.swift */,
+			);
+			path = ToolLoop;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000015 /* Transcript */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000019 /* MSPAgentTimelineItem.swift */,
+				B00000000000000000000039 /* MSPTerminalOutputPreview.swift */,
+			);
+			path = Transcript;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000017 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000018 /* Views */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000018 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B0000000000000000000001A /* ChatView.swift */,
+				B0000000000000000000001B /* ChatComposerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000019 /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				D0000000000000000000001A /* ExampleChatTranscriptRenderer */,
+			);
+			path = Vendor;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000001A /* ExampleChatTranscriptRenderer */ = {
+			isa = PBXGroup;
+			children = (
+				D0000000000000000000001B /* Swift */,
+				B0000000000000000000001D /* RuntimeResources */,
+			);
+			path = ExampleChatTranscriptRenderer;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000001B /* Swift */ = {
+			isa = PBXGroup;
+			children = (
+				D0000000000000000000001E /* AgentRuntime */,
+				D00000000000000000000020 /* Transcript */,
+				B0000000000000000000001E /* ExampleChatTranscriptRendererShell.swift */,
+				B0000000000000000000001F /* ExampleChatTranscriptWebView.swift */,
+				B00000000000000000000022 /* ExampleChatTranscriptThemePreset.swift */,
+				B00000000000000000000050 /* ExampleChatPlanProgressPill.swift */,
+			);
+			path = Swift;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000001C /* Adapters */ = {
+			isa = PBXGroup;
+			children = (
+				D0000000000000000000001D /* ExampleChatTranscriptRenderer */,
+			);
+			path = Adapters;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000001D /* ExampleChatTranscriptRenderer */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000020 /* ExampleChatTranscriptPayloadFactory.swift */,
+				B0000000000000000000002F /* ExampleChatWorkspaceShellTranscriptDisplaySupport.swift */,
+			);
+			path = ExampleChatTranscriptRenderer;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000001E /* AgentRuntime */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000023 /* ExampleChatRuntimeJSONValue.swift */,
+			);
+			path = AgentRuntime;
+			sourceTree = "<group>";
+		};
+		D0000000000000000000001F /* CodexOAuth */ = {
+			isa = PBXGroup;
+			children = (
+				B0000000000000000000002A /* MSPCodexOAuthModels.swift */,
+				B0000000000000000000002B /* MSPCodexOAuthQuotaService.swift */,
+				B0000000000000000000002C /* MSPCodexOAuthTokenStore.swift */,
+				B0000000000000000000002D /* MSPCodexOAuthWebLoginService.swift */,
+			);
+			path = CodexOAuth;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000020 /* Transcript */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000030 /* ExampleChatTranscriptSupportModels.swift */,
+				B00000000000000000000031 /* ExampleChatTranscriptSupportBlockProjector.swift */,
+				B00000000000000000000032 /* ExampleChatShellTranscriptDisplaySupport.swift */,
+				B00000000000000000000033 /* ExampleChatStreamingSupportBlockPresentationHelper.swift */,
+				B00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift */,
+			);
+			path = Transcript;
+			sourceTree = "<group>";
+		};
+		D10000000000000000000001 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				D10000000000000000000002 /* PhotoSorterTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		D10000000000000000000002 /* PhotoSorterTests */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000001 /* MSPCodexOAuthConfigurationStoreTests.swift */,
+				B10000000000000000000002 /* MSPModelConfigurationStoreTests.swift */,
+				B10000000000000000000003 /* MSPPlaygroundShellRuntimePreviewTests.swift */,
+				B10000000000000000000004 /* MSPPlaygroundViewModelTests.swift */,
+				B10000000000000000000005 /* MSPPlaygroundWorkspaceBootstrapTests.swift */,
+				B10000000000000000000006 /* MSPTerminalOutputPreviewTests.swift */,
+				B10000000000000000000007 /* PhotoLibraryIndexTests.swift */,
+				B10000000000000000000008 /* PhotoLibraryWorkspaceFileSystemPathTests.swift */,
+				B10000000000000000000009 /* PhotoSorterAgentAccessModeTests.swift */,
+				B10000000000000000000014 /* PhotoSorterFastVLMLiveTests.swift */,
+				B1000000000000000000000A /* PhotoSorterMediaCommandTests.swift */,
+				B1000000000000000000000B /* PhotoSorterPythonRuntimeTests.swift */,
+				B1000000000000000000000C /* PhotoSorterTypographyTests.swift */,
+					B10000000000000000000010 /* ExampleChatTranscriptPayloadFactoryTests.swift */,
+					B10000000000000000000015 /* PhotoSorterChatPersistenceTests.swift */,
+				);
+			path = PhotoSorterTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E00000000000000000000001 /* PhotoSorter */ = {
+			isa = PBXNativeTarget;
+				buildConfigurationList = F00000000000000000000003 /* Build configuration list for PBXNativeTarget "PhotoSorter" */;
+				buildPhases = (
+					C00000000000000000000002 /* Sources */,
+					C00000000000000000000001 /* Frameworks */,
+					C00000000000000000000003 /* Resources */,
+					C00000000000000000000005 /* Materialize RuntimeResources */,
+					C00000000000000000000004 /* Embed CPython Runtime */,
+				);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PhotoSorter;
+					packageProductDependencies = (
+						E00000000000000000000002 /* ModelShellProxy */,
+							E00000000000000000000009 /* MSPCore */,
+							E00000000000000000000006 /* MSPAgentBridge */,
+							E00000000000000000000013 /* MSPAgentChatStore */,
+							E00000000000000000000014 /* MSPChatCommands */,
+							E00000000000000000000003 /* MSPApple */,
+						E00000000000000000000007 /* MSPPythonEmbeddedRuntime */,
+						E00000000000000000000008 /* MSPPythonRuntime */,
+					);
+			productName = PhotoSorter;
+			productReference = B00000000000000000000012 /* PhotoSorter.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E10000000000000000000001 /* PhotoSorterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F10000000000000000000003 /* Build configuration list for PBXNativeTarget "PhotoSorterTests" */;
+			buildPhases = (
+				C10000000000000000000001 /* Sources */,
+				C10000000000000000000002 /* Frameworks */,
+				C10000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E10000000000000000000002 /* PBXTargetDependency */,
+			);
+			name = PhotoSorterTests;
+			packageProductDependencies = (
+				E00000000000000000000002 /* ModelShellProxy */,
+				E00000000000000000000009 /* MSPCore */,
+				E00000000000000000000006 /* MSPAgentBridge */,
+			);
+			productName = PhotoSorterTests;
+			productReference = B10000000000000000000000 /* PhotoSorterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E00000000000000000000004 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2605;
+				LastUpgradeCheck = 2605;
+				TargetAttributes = {
+					E00000000000000000000001 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					E10000000000000000000001 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = E00000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = F00000000000000000000004 /* Build configuration list for PBXProject "PhotoSorter" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+				mainGroup = D00000000000000000000001;
+				packageReferences = (
+					E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */,
+				);
+			productRefGroup = D00000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E00000000000000000000001 /* PhotoSorter */,
+				E10000000000000000000001 /* PhotoSorterTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C00000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0000000000000000000001E /* RuntimeResources in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C10000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+			C00000000000000000000004 /* Embed CPython Runtime */ = {
+				isa = PBXShellScriptBuildPhase;
+				alwaysOutOfDate = 1;
+				buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed CPython Runtime";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Python.framework",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/python",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+				shellPath = /bin/sh;
+				shellScript = "bash \"${PROJECT_DIR}/../Tools/Python/embed-cpython-runtime.sh\"\n";
+			};
+			C00000000000000000000005 /* Materialize RuntimeResources */ = {
+				isa = PBXShellScriptBuildPhase;
+				alwaysOutOfDate = 1;
+				buildActionMask = 2147483647;
+				files = (
+				);
+				inputFileListPaths = (
+				);
+				inputPaths = (
+					"$(PROJECT_DIR)/../Vendor/ExampleChatTranscriptRenderer/RuntimeResources",
+					"$(PROJECT_DIR)/../../Shared/ExampleChatTranscriptRenderer/Tools/materialize-runtime-resources.sh",
+				);
+				name = "Materialize RuntimeResources";
+				outputFileListPaths = (
+				);
+				outputPaths = (
+				);
+				runOnlyForDeploymentPostprocessing = 0;
+				shellPath = /bin/sh;
+				shellScript = "bash \"${PROJECT_DIR}/../../Shared/ExampleChatTranscriptRenderer/Tools/materialize-runtime-resources.sh\"\n";
+			};
+	/* End PBXShellScriptBuildPhase section */
+
+	/* Begin PBXSourcesBuildPhase section */
+		C00000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000001 /* PhotoSorterApp.swift in Sources */,
+				A00000000000000000000002 /* MSPPlaygroundViewModel.swift in Sources */,
+				A00000000000000000000028 /* MSPPlaygroundE2EEventLog.swift in Sources */,
+				A00000000000000000000003 /* RootView.swift in Sources */,
+				A00000000000000000000004 /* MSPPlaygroundShellRuntime.swift in Sources */,
+				A0000000000000000000003B /* PhotoSorterCommandPack.swift in Sources */,
+				A00000000000000000000058 /* PhotoSorterMediaModels.swift in Sources */,
+				A00000000000000000000059 /* PhotoSorterMediaVLMConfiguration.swift in Sources */,
+				A0000000000000000000005A /* PhotoSorterMediaProviders.swift in Sources */,
+				A0000000000000000000005B /* PhotoLibraryMount+PhotoSorterCommands.swift in Sources */,
+				A0000000000000000000005C /* PhotoSorterRmCommand.swift in Sources */,
+				A0000000000000000000005D /* PhotoSorterFileTreeCommand.swift in Sources */,
+				A0000000000000000000005E /* PhotoSorterAlbumCommand.swift in Sources */,
+				A0000000000000000000005F /* PhotoSorterMediaCommand.swift in Sources */,
+				A00000000000000000000060 /* PhotoSorterMediaBatchMutationCommand.swift in Sources */,
+				A00000000000000000000061 /* PhotoSorterMediaHelp.swift in Sources */,
+				A00000000000000000000062 /* PhotoSorterMediaImageEncoding.swift in Sources */,
+				A00000000000000000000063 /* PhotoSorterMediaListShowCommand.swift in Sources */,
+				A00000000000000000000064 /* PhotoSorterMediaParsing.swift in Sources */,
+				A00000000000000000000065 /* PhotoSorterMediaPathIO.swift in Sources */,
+				A00000000000000000000066 /* PhotoSorterMediaRendering.swift in Sources */,
+				A00000000000000000000067 /* PhotoSorterMediaReviewCommand.swift in Sources */,
+				A00000000000000000000068 /* PhotoSorterMediaSearchCommand.swift in Sources */,
+				A00000000000000000000069 /* PhotoSorterMediaStatusCommand.swift in Sources */,
+				A0000000000000000000006A /* PhotoSorterMediaArguments.swift in Sources */,
+				A0000000000000000000006B /* PhotoSorterMediaSearchTypes.swift in Sources */,
+				A0000000000000000000006C /* PhotoSorterMediaReviewTypes.swift in Sources */,
+				A00000000000000000000005 /* MSPPlaygroundWorkspaceBootstrap.swift in Sources */,
+				A00000000000000000000006 /* WorkspaceFileTreeState.swift in Sources */,
+				A00000000000000000000040 /* PhotoLibraryIndex.swift in Sources */,
+				A00000000000000000000035 /* PhotoLibraryMount.swift in Sources */,
+				A00000000000000000000053 /* PhotoSorterMediaCacheTypes.swift in Sources */,
+				A00000000000000000000054 /* PhotoSorterMediaOCRCache.swift in Sources */,
+				A00000000000000000000055 /* PhotoSorterMediaVLMSummaryCache.swift in Sources */,
+				A00000000000000000000056 /* PhotoSorterMediaAskExclusionCache.swift in Sources */,
+				A00000000000000000000057 /* PhotoSorterMediaPlaceCache.swift in Sources */,
+				A00000000000000000000036 /* PhotoLibraryWorkspaceFileSystem.swift in Sources */,
+					A00000000000000000000043 /* PhotoLibraryWorkspaceOverlay.swift in Sources */,
+					A00000000000000000000046 /* PhotoSorterFastVLMSummaryProvider.swift in Sources */,
+					A00000000000000000000041 /* WorkspaceMediaThumbnail.swift in Sources */,
+					A00000000000000000000042 /* PhotoSorterPlaceCacheTaskStore.swift in Sources */,
+					A0000000000000000000004F /* PhotoSorterVisionOCRExceptionGuard.m in Sources */,
+					A00000000000000000000037 /* PhotoSorterDiagnosticsLog.swift in Sources */,
+				A00000000000000000000044 /* PhotoSorterDiagnosticsSystemLog.swift in Sources */,
+				A00000000000000000000007 /* LiquidGlassSurface.swift in Sources */,
+				A00000000000000000000008 /* MSPDesignTokens.swift in Sources */,
+				A0000000000000000000003A /* PhotoSorterTypography.swift in Sources */,
+				A00000000000000000000014 /* MSPModelConfiguration.swift in Sources */,
+				A0000000000000000000002E /* MSPModelSecretStore.swift in Sources */,
+				A0000000000000000000002A /* MSPCodexOAuthModels.swift in Sources */,
+				A0000000000000000000002B /* MSPCodexOAuthQuotaService.swift in Sources */,
+				A0000000000000000000002C /* MSPCodexOAuthTokenStore.swift in Sources */,
+				A0000000000000000000002D /* MSPCodexOAuthWebLoginService.swift in Sources */,
+					A0000000000000000000003C /* PhotoSorterAgentAccessMode.swift in Sources */,
+					A00000000000000000000019 /* MSPPlaygroundAgentRuntime.swift in Sources */,
+					A00000000000000000000052 /* PhotoSorterChatPersistence.swift in Sources */,
+					A0000000000000000000001A /* MSPAgentTimelineItem.swift in Sources */,
+				A00000000000000000000039 /* MSPTerminalOutputPreview.swift in Sources */,
+				A00000000000000000000021 /* ExampleChatTranscriptPayloadFactory.swift in Sources */,
+				A0000000000000000000002F /* ExampleChatWorkspaceShellTranscriptDisplaySupport.swift in Sources */,
+				A0000000000000000000001F /* ExampleChatTranscriptRendererShell.swift in Sources */,
+				A00000000000000000000020 /* ExampleChatTranscriptWebView.swift in Sources */,
+				A00000000000000000000022 /* ExampleChatTranscriptThemePreset.swift in Sources */,
+				A00000000000000000000050 /* ExampleChatPlanProgressPill.swift in Sources */,
+				A00000000000000000000030 /* ExampleChatTranscriptSupportModels.swift in Sources */,
+				A00000000000000000000031 /* ExampleChatTranscriptSupportBlockProjector.swift in Sources */,
+				A00000000000000000000032 /* ExampleChatShellTranscriptDisplaySupport.swift in Sources */,
+				A00000000000000000000033 /* ExampleChatStreamingSupportBlockPresentationHelper.swift in Sources */,
+				A00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift in Sources */,
+				A00000000000000000000023 /* ExampleChatRuntimeJSONValue.swift in Sources */,
+				A0000000000000000000001B /* ChatView.swift in Sources */,
+				A0000000000000000000001C /* ChatComposerView.swift in Sources */,
+				A00000000000000000000009 /* WorkspaceFileNode.swift in Sources */,
+				A0000000000000000000000A /* WorkspaceFileTreeView.swift in Sources */,
+				A0000000000000000000000B /* WorkspaceFileNodeRow.swift in Sources */,
+				A00000000000000000000010 /* WorkspaceDrawerContainer.swift in Sources */,
+				A00000000000000000000011 /* WorkspaceDrawerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C10000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* MSPCodexOAuthConfigurationStoreTests.swift in Sources */,
+				A10000000000000000000002 /* MSPModelConfigurationStoreTests.swift in Sources */,
+				A10000000000000000000003 /* MSPPlaygroundShellRuntimePreviewTests.swift in Sources */,
+				A10000000000000000000004 /* MSPPlaygroundViewModelTests.swift in Sources */,
+				A10000000000000000000005 /* MSPPlaygroundWorkspaceBootstrapTests.swift in Sources */,
+				A10000000000000000000006 /* MSPTerminalOutputPreviewTests.swift in Sources */,
+				A10000000000000000000007 /* PhotoLibraryIndexTests.swift in Sources */,
+				A10000000000000000000008 /* PhotoLibraryWorkspaceFileSystemPathTests.swift in Sources */,
+				A10000000000000000000009 /* PhotoSorterAgentAccessModeTests.swift in Sources */,
+				A10000000000000000000014 /* PhotoSorterFastVLMLiveTests.swift in Sources */,
+				A1000000000000000000000A /* PhotoSorterMediaCommandTests.swift in Sources */,
+				A1000000000000000000000B /* PhotoSorterPythonRuntimeTests.swift in Sources */,
+				A1000000000000000000000C /* PhotoSorterTypographyTests.swift in Sources */,
+					A10000000000000000000010 /* ExampleChatTranscriptPayloadFactoryTests.swift in Sources */,
+					A10000000000000000000015 /* PhotoSorterChatPersistenceTests.swift in Sources */,
+				);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E10000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E00000000000000000000001 /* PhotoSorter */;
+			targetProxy = E10000000000000000000003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		F00000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F00000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F00000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B00000000000000000000070 /* ExampleSigning.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "$(MSP_EXAMPLE_DEVELOPMENT_TEAM)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+					"$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../VisionSupport/include",
+				);
+				INFOPLIST_FILE = ../App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MSP_EXAMPLE_BUNDLE_ID_PREFIX).photosorter";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = ../VisionSupport/include/PhotoSorterVisionSupport/PhotoSorterVisionOCRExceptionGuard.h;
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F00000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B00000000000000000000070 /* ExampleSigning.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "$(MSP_EXAMPLE_DEVELOPMENT_TEAM)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+					"$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../VisionSupport/include",
+				);
+				INFOPLIST_FILE = ../App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MSP_EXAMPLE_BUNDLE_ID_PREFIX).photosorter";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = ../VisionSupport/include/PhotoSorterVisionSupport/PhotoSorterVisionOCRExceptionGuard.h;
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/../../../../build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F10000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B00000000000000000000070 /* ExampleSigning.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(MSP_EXAMPLE_DEVELOPMENT_TEAM)";
+					GENERATE_INFOPLIST_FILE = YES;
+					INFOPLIST_KEY_CFBundlePackageType = BNDL;
+					INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "PhotoSorter tests need permission to create temporary photos for OCR verification.";
+					INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSorter tests need photo library access to verify OCR against simulator photos.";
+					IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+					LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MSP_EXAMPLE_BUNDLE_ID_PREFIX).photosorter.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoSorter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoSorter";
+			};
+			name = Debug;
+		};
+		F10000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B00000000000000000000070 /* ExampleSigning.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(MSP_EXAMPLE_DEVELOPMENT_TEAM)";
+					GENERATE_INFOPLIST_FILE = YES;
+					INFOPLIST_KEY_CFBundlePackageType = BNDL;
+					INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "PhotoSorter tests need permission to create temporary photos for OCR verification.";
+					INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "PhotoSorter tests need photo library access to verify OCR against simulator photos.";
+					IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+					LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MSP_EXAMPLE_BUNDLE_ID_PREFIX).photosorter.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PhotoSorter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PhotoSorter";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F00000000000000000000003 /* Build configuration list for PBXNativeTarget "PhotoSorter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F00000000000000000000005 /* Debug */,
+				F00000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F00000000000000000000004 /* Build configuration list for PBXProject "PhotoSorter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F00000000000000000000001 /* Debug */,
+				F00000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F10000000000000000000003 /* Build configuration list for PBXNativeTarget "PhotoSorterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F10000000000000000000001 /* Debug */,
+				F10000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../../Implementations/Swift;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E00000000000000000000002 /* ModelShellProxy */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = ModelShellProxy;
+		};
+		E00000000000000000000003 /* MSPApple */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = MSPApple;
+		};
+		E00000000000000000000006 /* MSPAgentBridge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = MSPAgentBridge;
+		};
+		E00000000000000000000013 /* MSPAgentChatStore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = MSPAgentChatStore;
+		};
+		E00000000000000000000014 /* MSPChatCommands */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = MSPChatCommands;
+		};
+		E00000000000000000000007 /* MSPPythonEmbeddedRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = MSPPythonEmbeddedRuntime;
+		};
+		E00000000000000000000008 /* MSPPythonRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = MSPPythonRuntime;
+		};
+		E00000000000000000000009 /* MSPCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000000000000000000005 /* XCLocalSwiftPackageReference "../../../../Implementations/Swift" */;
+			productName = MSPCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E00000000000000000000004 /* Project object */;
+}

@@ -1,0 +1,12 @@
+{
+  "name": "msp-chat-lightweight-reader-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:ui": "node tests/lightweight-reader.spec.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1"
+  }
+}

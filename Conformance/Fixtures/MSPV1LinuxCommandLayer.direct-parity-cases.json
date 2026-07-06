@@ -1,0 +1,460 @@
+{
+  "profile": "msp-v1-linux-command-layer",
+  "case_type": "direct-linux-command-observable-behavior",
+  "cases": [
+    { "command": ":", "command_line": ":", "stdout": "", "stderr": "", "exit_code": 0 },
+    { "command": "[", "command_line": "[ 2 -lt 3 ]", "stdout": "", "stderr": "", "exit_code": 0 },
+    { "command": "[[", "command_line": "[[ value = value ]]", "stdout": "", "stderr": "", "exit_code": 0 },
+    {
+      "command": "awk",
+      "setup_files": [
+        { "path": "awk.txt", "content": "a 1\nb 2\n" },
+        { "path": "awk-patterns.txt", "content": "a\nb\na\n游戏\n游戏\n" },
+        { "path": "awk-rules.txt", "content": "\none\ntwo\n" },
+        { "path": "awk-keep.txt", "content": "keep 1\ndrop 2\nkeep 3\n" },
+        { "path": "awk-regex.txt", "content": "game ui\nphoto\nsteam sale\n" }
+      ],
+      "command_line": "awk '{sum += $2} END {print sum}' awk.txt; printf -- '---\\n'; awk '!seen[$0]++' awk-patterns.txt; printf -- '---\\n'; awk 'NF; NR % 2 == 0' awk-rules.txt; printf -- '---\\n'; awk '$1 == \"keep\" {print $2}' awk-keep.txt; printf -- '---\\n'; awk '/game|steam/' awk-regex.txt",
+      "stdout": "3\n---\na\nb\n游戏\n---\none\none\ntwo\n---\n1\n3\n---\ngame ui\nsteam sale\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "b2sum",
+      "setup_files": [{ "path": "bytes.txt", "content": "hello" }],
+      "command_line": "b2sum bytes.txt",
+      "stdout_matches": "^[0-9a-f]{128}  bytes\\.txt\\n$",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "base32", "command_line": "printf hello | base32", "stdout": "NBSWY3DP\n", "stderr": "", "exit_code": 0 },
+    { "command": "basenc", "command_line": "printf hello | basenc --base64", "stdout": "aGVsbG8=\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "base64",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "base64 bytes.txt; printf '/w==' | base64 -d | od -An -tx1",
+      "stdout": "YWJj\n ff\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "basename", "command_line": "basename /tmp/example.txt .txt", "stdout": "example\n", "stderr": "", "exit_code": 0 },
+    { "command": "bc", "command_line": "printf '2+3*4\\n' | bc", "stdout": "14\n", "stderr": "", "exit_code": 0 },
+    { "command": "builtin", "command_line": "builtin printf 'ok\\n'", "stdout": "ok\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "cat",
+      "setup_files": [{ "path": "cat.txt", "content": "alpha\n" }],
+      "command_line": "cat cat.txt",
+      "stdout": "alpha\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "cd", "setup_script": ["mkdir -p sub"], "command_line": "cd sub; pwd", "stdout": "/sub\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "chmod",
+      "setup_files": [{ "path": "mode.txt", "content": "x" }],
+      "command_line": "chmod 600 mode.txt; stat -c %a mode.txt",
+      "stdout": "600\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "cksum",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "cksum bytes.txt",
+      "stdout": "1219131554 3 bytes.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "cmp",
+      "setup_files": [
+        { "path": "same-a.txt", "content": "same\n" },
+        { "path": "same-b.txt", "content": "same\n" }
+      ],
+      "command_line": "cmp same-a.txt same-b.txt",
+      "stdout": "",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "comm",
+      "setup_files": [
+        { "path": "comm-a.txt", "content": "a\nb\n" },
+        { "path": "comm-b.txt", "content": "b\nc\n" }
+      ],
+      "command_line": "comm -12 comm-a.txt comm-b.txt",
+      "stdout": "b\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "command", "command_line": "command -v printf", "stdout": "printf\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "cp",
+      "setup_files": [{ "path": "source.txt", "content": "copy-me\n" }],
+      "command_line": "cp source.txt copied.txt; cat copied.txt",
+      "stdout": "copy-me\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "cut",
+      "setup_files": [{ "path": "fields.txt", "content": "left:right\n" }],
+      "command_line": "cut -d : -f2 fields.txt",
+      "stdout": "right\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "date",
+      "command_line": "date -u -d @0 '+%F %T %z %:z %e %D %j %u %w %y'; date -u -d @0 -Iseconds; date --utc --date=@0 --iso-8601=ns; date -u --date @0 --rfc-3339=seconds; date -u -d @0 '+%Z %::z %:::z'",
+      "stdout": "1970-01-01 00:00:00 +0000 +00:00  1 01/01/70 001 4 4 70\n1970-01-01T00:00:00+00:00\n1970-01-01T00:00:00,000000000+00:00\n1970-01-01 00:00:00+00:00\nUTC +00:00:00 +00\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "dd", "command_line": "printf abcdef | dd bs=2 count=2 status=none", "stdout": "abcd", "stderr": "", "exit_code": 0 },
+    {
+      "command": "diff",
+      "setup_files": [
+        { "path": "diff-a.txt", "content": "same\n" },
+        { "path": "diff-b.txt", "content": "same\n" },
+        { "path": "bin-a", "content": "a\u0000b" },
+        { "path": "bin-b", "content": "a\u0000c" }
+      ],
+      "command_line": "diff -s diff-a.txt diff-b.txt; diff bin-a bin-b; printf 'binary:%s\\n' \"$?\"",
+      "stdout": "Files diff-a.txt and diff-b.txt are identical\nBinary files bin-a and bin-b differ\nbinary:1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "dirname", "command_line": "dirname /a/b.txt", "stdout": "/a\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "du",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "du -b bytes.txt",
+      "stdout": "3\tbytes.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "echo", "command_line": "echo hello", "stdout": "hello\n", "stderr": "", "exit_code": 0 },
+    { "command": "env", "command_line": "env -i FOO=bar env", "stdout": "FOO=bar\n", "stderr": "", "exit_code": 0 },
+    { "command": "expand", "command_line": "printf 'a\\tb\\n' | expand -t 4", "stdout": "a   b\n", "stderr": "", "exit_code": 0 },
+    { "command": "expr", "command_line": "expr 2 + 3", "stdout": "5\n", "stderr": "", "exit_code": 0 },
+    { "command": "factor", "command_line": "factor 0 1 2 12 97 1001", "stdout": "0:\n1:\n2: 2\n12: 2 2 3\n97: 97\n1001: 7 11 13\n", "stderr": "", "exit_code": 0 },
+    { "command": "false", "command_line": "false", "stdout": "", "stderr": "", "exit_code": 1 },
+    {
+      "command": "file",
+      "setup_files": [
+        { "path": "text.txt", "content": "hello\n" },
+        { "path": "bin", "content": "a\u0000b" }
+      ],
+      "command_line": "file -b text.txt; file -i text.txt; file --mime-type text.txt; file bin; file -b bin; file -i bin; file --mime-type bin; file missing",
+      "stdout": "ASCII text\ntext.txt: text/plain; charset=us-ascii\ntext.txt: text/plain\nbin: data\ndata\nbin: application/octet-stream; charset=binary\nbin: application/octet-stream\nmissing: cannot open `missing' (No such file or directory)\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "find",
+      "setup_files": [
+        { "path": "docs/a.txt", "content": "a\n" },
+        { "path": "docs/empty.dat", "content": "" },
+        { "path": "docs/b.md", "content": "b\n" }
+      ],
+      "command_line": "find /docs -maxdepth 1 ! -name '*.md' -type f -exec printf '<%s>\\n' {} \\; -printf '%10f|%-8.3f|%04s|%p:%y\\n'",
+      "stdout": "</docs/a.txt>\n     a.txt|a.t     |0002|/docs/a.txt:f\n</docs/empty.dat>\n empty.dat|emp     |0000|/docs/empty.dat:f\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "fmt", "command_line": "printf 'alpha beta gamma delta\\n' | fmt -w 12", "stdout": "alpha beta\ngamma delta\n", "stderr": "", "exit_code": 0 },
+    { "command": "fold", "command_line": "printf abcdef | fold -w 3", "stdout": "abc\ndef", "stderr": "", "exit_code": 0 },
+    {
+      "command": "grep",
+      "setup_files": [{ "path": "grep.txt", "content": "alpha\nbeta\n" }],
+      "command_line": "grep -n beta grep.txt",
+      "stdout": "2:beta\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "groups", "command_line": "groups root nobody missing-user; printf 'status=%s\\n' $?", "stdout": "root : root\nnobody : nogroup\nstatus=1\n", "stderr": "groups: \u2018missing-user\u2019: no such user\n", "exit_code": 0 },
+    {
+      "command": "head",
+      "setup_files": [{ "path": "lines.txt", "content": "one\ntwo\n" }],
+      "command_line": "head -n 1 lines.txt",
+      "stdout": "one\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "hostname", "command_line": "hostname", "stdout": "happy-swan-1.localdomain\n", "stderr": "", "exit_code": 0 },
+    { "command": "id", "command_line": "id -u; id -un; id -gn", "stdout": "65534\nnobody\nnogroup\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "install",
+      "setup_files": [{ "path": "src", "content": "abc" }],
+      "command_line": "install src dst; stat -c '%a %s' dst; cat dst",
+      "stdout": "755 3\nabc",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "join",
+      "setup_files": [
+        { "path": "join-a.txt", "content": "1 apple\n2 banana\n" },
+        { "path": "join-b.txt", "content": "1 red\n2 yellow\n" }
+      ],
+      "command_line": "join join-a.txt join-b.txt",
+      "stdout": "1 apple red\n2 banana yellow\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "ldd",
+      "setup_files": [{ "path": "plain.txt", "content": "x" }],
+      "command_line": "ldd --version; ldd plain.txt",
+      "stdout": "ldd (Debian GLIBC 2.36-9+deb12u14) 2.36\n",
+      "stderr": "\tnot a dynamic executable\n",
+      "exit_code": 1
+    },
+    {
+      "command": "link",
+      "setup_files": [{ "path": "src.txt", "content": "data\n" }],
+      "command_line": "link src.txt hard.txt; cat hard.txt",
+      "stdout": "data\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "ln",
+      "setup_files": [{ "path": "target.txt", "content": "target\n" }],
+      "command_line": "ln target.txt hard.txt; printf 'changed\\n' > hard.txt; cat target.txt; ln -s target.txt link.txt; readlink link.txt",
+      "stdout": "changed\ntarget.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "ls",
+      "setup_files": [
+        { "path": "list/b.txt", "content": "b\n" },
+        { "path": "list/a.txt", "content": "a\n" }
+      ],
+      "command_line": "ls list; printf -- '--\\n'; ln -s a.txt list/link.txt; ls -la list",
+      "stdout_matches": "^a\\.txt\\nb\\.txt\\n--\\ntotal [0-9]+\\ndrwxr-xr-x +[0-9]+ nobody nogroup +4096 [A-Z][a-z]{2} +[0-9]{1,2} +([0-9]{2}:[0-9]{2}|[0-9]{4}) \\.\\ndrwxr-xr-x +[0-9]+ nobody nogroup +4096 [A-Z][a-z]{2} +[0-9]{1,2} +([0-9]{2}:[0-9]{2}|[0-9]{4}) \\.\\.\\n-rw-r--r-- +1 nobody nogroup +2 [A-Z][a-z]{2} +[0-9]{1,2} +([0-9]{2}:[0-9]{2}|[0-9]{4}) a\\.txt\\n-rw-r--r-- +1 nobody nogroup +2 [A-Z][a-z]{2} +[0-9]{1,2} +([0-9]{2}:[0-9]{2}|[0-9]{4}) b\\.txt\\nlrwxrwxrwx +1 nobody nogroup +5 [A-Z][a-z]{2} +[0-9]{1,2} +([0-9]{2}:[0-9]{2}|[0-9]{4}) link\\.txt -> a\\.txt\\n$",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "md5sum",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "md5sum bytes.txt > bytes.md5; cat bytes.md5; md5sum -b bytes.txt; md5sum -c bytes.md5",
+      "stdout": "900150983cd24fb0d6963f7d28e17f72  bytes.txt\n900150983cd24fb0d6963f7d28e17f72 *bytes.txt\nbytes.txt: OK\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "mkdir", "command_line": "mkdir -p made/sub; test -d made/sub", "stdout": "", "stderr": "", "exit_code": 0 },
+    { "command": "mktemp", "command_line": "mktemp case.XXXXXX", "stdout_matches": "^case\\.[A-Za-z0-9]{6}\\n$", "stderr": "", "exit_code": 0 },
+    {
+      "command": "mv",
+      "setup_files": [{ "path": "old.txt", "content": "moved\n" }],
+      "command_line": "mv old.txt new.txt; cat new.txt",
+      "stdout": "moved\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "nl",
+      "setup_files": [{ "path": "nl.txt", "content": "a\nb\n" }],
+      "command_line": "nl -ba nl.txt",
+      "stdout": "     1\ta\n     2\tb\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "nproc", "command_line": "nproc; nproc --all; nproc --ignore=9999; printf 'ignore_status=%s\\n' $?", "stdout": "3\n3\n1\nignore_status=0\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "numfmt",
+      "command_line": "printf '1500\\n' | numfmt --to=si; printf 'aa 1500 zz\\n' | numfmt --field=2 --to=si",
+      "stdout": "1.5K\naa 1.5K zz\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "od",
+      "setup_files": [
+        { "path": "bytes.txt", "content": "abc" },
+        { "path": "repeat.txt", "content": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }
+      ],
+      "command_line": "od bytes.txt; od -An -tx1c bytes.txt; od -Ad -tx1 bytes.txt; od -Ax -tx1 bytes.txt; od -An -tx1 -j1 -N2 bytes.txt; od -An -tx1 -w2 bytes.txt; od -An -b bytes.txt; od -An -d bytes.txt; od -An -o bytes.txt; od -An -x bytes.txt; od -An -tu1 bytes.txt; od -An -tx1z bytes.txt; od -An -tx1 -tc bytes.txt; od -An -tx1 repeat.txt",
+      "stdout": "0000000 061141 000143\n0000003\n  61  62  63\n   a   b   c\n0000000 61 62 63\n0000003\n000000 61 62 63\n000003\n 62 63\n 61 62\n 63\n 141 142 143\n 25185    99\n 061141 000143\n 6261 0063\n  97  98  99\n 61 62 63                                         >abc<\n  61  62  63\n   a   b   c\n 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41\n*\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "paste",
+      "setup_files": [
+        { "path": "paste-a.txt", "content": "a\nb\n" },
+        { "path": "paste-b.txt", "content": "1\n2\n" }
+      ],
+      "command_line": "paste paste-a.txt paste-b.txt",
+      "stdout": "a\t1\nb\t2\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "pathchk", "command_line": "pathchk ok dir/file; printf 'ok_status=%s\\n' $?; pathchk ''; printf 'empty_status=%s\\n' $?", "stdout": "ok_status=0\nempty_status=1\n", "stderr": "pathchk: '': No such file or directory\n", "exit_code": 0 },
+    { "command": "printf", "command_line": "printf '%s\\n' ok", "stdout": "ok\n", "stderr": "", "exit_code": 0 },
+    { "command": "printenv", "command_line": "FOO=bar EMPTY= printenv FOO EMPTY MISSING; printf 'status=%s\\n' $?", "stdout": "bar\n\nstatus=1\n", "stderr": "", "exit_code": 0 },
+    { "command": "ps", "command_line": "ps -o pid,comm", "stdout": "    PID COMMAND\n  12345 bash\n", "stderr": "", "exit_code": 0 },
+    { "command": "pwd", "command_line": "pwd", "stdout": "/\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "readlink",
+      "setup_script": ["printf 'target\\n' > target.txt", "ln -s target.txt link.txt"],
+      "command_line": "readlink link.txt",
+      "stdout": "target.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "realpath",
+      "setup_files": [{ "path": "path.txt", "content": "path\n" }],
+      "command_line": "realpath path.txt",
+      "stdout": "/path.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "rg",
+      "setup_files": [{ "path": "docs/a.txt", "content": "alpha\nbeta\n" }],
+      "command_line": "rg -n beta docs; rg --files docs",
+      "stdout": "docs/a.txt:2:beta\ndocs/a.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "rm",
+      "setup_files": [{ "path": "remove.txt", "content": "remove\n" }],
+      "command_line": "rm remove.txt; test ! -e remove.txt",
+      "stdout": "",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "rmdir", "command_line": "mkdir empty-dir; rmdir empty-dir; test ! -e empty-dir", "stdout": "", "stderr": "", "exit_code": 0 },
+    { "command": "sed", "command_line": "printf 'abc\\n' | sed 's/b/B/'", "stdout": "aBc\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "seq",
+      "command_line": "seq 3; seq 3 1; seq 3 -1 1; seq 0 .1 .3; seq .8 .1 1; seq -s, 1 3; seq -s '' 1 3; seq -f 'item:%04.1f' 1 2; seq -f 'x%g!' 1 3; seq -w 8 10; seq -w 0 .5 1; seq -w -2 2",
+      "stdout": "1\n2\n3\n3\n2\n1\n0.0\n0.1\n0.2\n0.3\n0.8\n0.9\n1.0\n1,2,3\n123\nitem:01.0\nitem:02.0\nx1!\nx2!\nx3!\n08\n09\n10\n0.0\n0.5\n1.0\n-2\n-1\n00\n01\n02\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "sha1sum",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "sha1sum bytes.txt",
+      "stdout": "a9993e364706816aba3e25717850c26c9cd0d89d  bytes.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "sha256sum",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "sha256sum bytes.txt",
+      "stdout": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  bytes.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "sha512sum",
+      "setup_files": [{ "path": "bytes.txt", "content": "hello" }],
+      "command_line": "sha512sum bytes.txt",
+      "stdout_matches": "^[0-9a-f]{128}  bytes\\.txt\\n$",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "shuf", "command_line": "printf '0123456789abcdef' > random.bin; printf 'a\\nb\\nc\\n' | shuf --random-source=random.bin", "stdout": "a\nb\nc\n", "stderr": "", "exit_code": 0 },
+    { "command": "sleep", "command_line": "sleep 0; printf done", "stdout": "done", "stderr": "", "exit_code": 0 },
+    { "command": "split", "command_line": "printf abcdef | split -b 2 - chunk-; find . -maxdepth 1 -name 'chunk-*' -printf '%f:%s\\n' | sort", "stdout": "chunk-aa:2\nchunk-ab:2\nchunk-ac:2\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "sort",
+      "setup_files": [{ "path": "nums.txt", "content": "2\n10\n1\n" }],
+      "command_line": "sort -n nums.txt",
+      "stdout": "1\n2\n10\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "stat",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "stat -c '%F %s' bytes.txt",
+      "stdout": "regular file 3\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "strings", "command_line": "printf 'abcde\\n' > strings.txt; strings strings.txt", "stdout": "abcde\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "sum",
+      "setup_files": [{ "path": "sum.txt", "content": "alpha\nbeta\n" }],
+      "command_line": "sum sum.txt; sum -r sum.txt; sum -s sum.txt",
+      "stdout": "41645     1 sum.txt\n41645     1 sum.txt\n950 1 sum.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "tac",
+      "setup_files": [{ "path": "lines.txt", "content": "one\ntwo\n" }],
+      "command_line": "tac lines.txt",
+      "stdout": "two\none\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "tail",
+      "setup_files": [{ "path": "lines.txt", "content": "one\ntwo\n" }],
+      "command_line": "tail -n 1 lines.txt",
+      "stdout": "two\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "tee", "command_line": "printf 'tee\\n' | tee tee.out", "stdout": "tee\n", "stderr": "", "exit_code": 0 },
+    { "command": "test", "command_line": "test -z ''", "stdout": "", "stderr": "", "exit_code": 0 },
+    {
+      "command": "timeout",
+      "command_line": "timeout bad printf hi; printf 'bad:%s\\n' \"$?\"; timeout 1 no-such-cmd; printf 'missing:%s\\n' \"$?\"; timeout 1 false; printf 'false:%s\\n' \"$?\"; timeout 1 printf ok",
+      "stdout": "bad:125\nmissing:127\nfalse:1\nok",
+      "stderr": "timeout: invalid time interval \u2018bad\u2019\nTry 'timeout --help' for more information.\ntimeout: failed to run command \u2018no-such-cmd\u2019: No such file or directory\n",
+      "exit_code": 0
+    },
+    { "command": "touch", "command_line": "touch touched.txt; test -f touched.txt", "stdout": "", "stderr": "", "exit_code": 0 },
+    { "command": "tr", "command_line": "printf abc | tr a-z A-Z", "stdout": "ABC", "stderr": "", "exit_code": 0 },
+    { "command": "tree", "command_line": "mkdir -p a; : > a/file; tree --charset ascii", "stdout": ".\n`-- a\n    `-- file\n\n2 directories, 1 file\n", "stderr": "", "exit_code": 0 },
+    { "command": "true", "command_line": "true", "stdout": "", "stderr": "", "exit_code": 0 },
+    { "command": "truncate", "command_line": "truncate -s 5 f.bin; stat -c '%s' f.bin", "stdout": "5\n", "stderr": "", "exit_code": 0 },
+    { "command": "tsort", "command_line": "printf 'a b\\nb c\\n' | tsort", "stdout": "a\nb\nc\n", "stderr": "", "exit_code": 0 },
+    { "command": "tty", "command_line": "tty; printf 'status=%s\\n' $?; tty -s; printf 'silent=%s\\n' $?", "stdout": "not a tty\nstatus=1\nsilent=1\n", "stderr": "", "exit_code": 0 },
+    { "command": "type", "command_line": "type -t cd", "stdout": "builtin\n", "stderr": "", "exit_code": 0 },
+    { "command": "uname", "command_line": "uname", "stdout": "Linux\n", "stderr": "", "exit_code": 0 },
+    { "command": "unexpand", "command_line": "printf '        x\\n' | unexpand", "stdout": "\tx\n", "stderr": "", "exit_code": 0 },
+    { "command": "unlink", "command_line": ": > f.txt; unlink f.txt; test ! -e f.txt", "stdout": "", "stderr": "", "exit_code": 0 },
+    {
+      "command": "uniq",
+      "setup_files": [{ "path": "uniq.txt", "content": "alpha\nalpha\nbeta\n" }],
+      "command_line": "uniq uniq.txt",
+      "stdout": "alpha\nbeta\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "command": "wc",
+      "setup_files": [{ "path": "wc.txt", "content": "a\nbb\n" }],
+      "command_line": "wc -l wc.txt",
+      "stdout": "2 wc.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "which", "command_line": "which awk", "stdout": "/usr/bin/awk\n", "stderr": "", "exit_code": 0 },
+    { "command": "whoami", "command_line": "whoami", "stdout": "nobody\n", "stderr": "", "exit_code": 0 },
+    { "command": "xargs", "command_line": "printf 'a b\\n' | xargs printf '<%s>\\n'", "stdout": "<a>\n<b>\n", "stderr": "", "exit_code": 0 },
+    {
+      "command": "xxd",
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "xxd -p bytes.txt; xxd -c4 bytes.txt",
+      "stdout": "616263\n00000000: 6162 63    abc\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    { "command": "yes", "command_line": "yes ok | head -n 2", "stdout": "ok\nok\n", "stderr": "", "exit_code": 0 }
+  ]
+}

@@ -1,0 +1,4 @@
+module PhotoSorterVisionSupport {
+  header "PhotoSorterVisionSupport/PhotoSorterVisionOCRExceptionGuard.h"
+  export *
+}

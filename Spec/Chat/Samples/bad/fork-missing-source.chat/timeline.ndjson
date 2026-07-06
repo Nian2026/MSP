@@ -1,0 +1,1 @@
+{"id":"evt_bad_fork_001","type":"conversation_fork","seq":1,"created_at":"2026-06-30T00:23:00Z","durability":"durable_replay","payload":{"source_seq_boundary":1,"new_package_id":"chatpkg_bad_fork_child","fork_reason":"missing source package"}}

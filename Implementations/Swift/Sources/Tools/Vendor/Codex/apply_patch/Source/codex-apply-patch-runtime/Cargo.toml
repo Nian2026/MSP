@@ -1,0 +1,21 @@
+[package]
+name = "codex-apply-patch"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "codex_apply_patch"
+path = "../codex-rs/apply-patch/src/lib.rs"
+doctest = false
+
+[dependencies]
+anyhow = "1"
+codex-exec-server = { path = "../codex-exec-server-compat" }
+codex-utils-absolute-path = { path = "../codex-utils-absolute-path-runtime" }
+similar = "2.7.0"
+thiserror = "2.0.17"
+tokio = { version = "1", features = ["macros", "rt"] }
+tree-sitter = "0.25.10"
+tree-sitter-bash = "0.25"

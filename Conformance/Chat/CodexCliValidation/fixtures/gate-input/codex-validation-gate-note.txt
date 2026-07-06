@@ -1,0 +1,5 @@
+Public-safe placeholder for the historical Codex CLI validation gate note.
+
+The original validation runs recorded a local Codex attachment path in their
+evidence metadata. Public evidence should point at this repository fixture
+instead of a developer-machine attachment path.

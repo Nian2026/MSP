@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MSP .chat Lightweight Reader</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="Package controls">
+        <div class="brand">
+          <div class="mark">.chat</div>
+          <div>
+            <h1>Lightweight Reader</h1>
+            <p id="package-subtitle">Canonical timeline viewer</p>
+          </div>
+        </div>
+
+        <label class="field">
+          <span>Package</span>
+          <select id="package-select">
+            <option value="fixtures/ui-conformance.chat">UI conformance fixture</option>
+            <option value="../../Samples/good/interleaved-command.chat">Interleaved command sample</option>
+            <option value="../../Samples/good/unknown-preserved.chat">Unknown event sample</option>
+            <option value="../../Samples/good/long-output-truncation.chat">Long output sample</option>
+            <option value="../../Samples/good/pure-chat.chat">Pure chat sample</option>
+          </select>
+        </label>
+
+        <label class="file-picker">
+          <span>Open local .chat</span>
+          <input id="directory-input" type="file" webkitdirectory multiple>
+        </label>
+
+        <label class="field">
+          <span>Search</span>
+          <input id="search-input" type="search" placeholder="message, stdout, artifact...">
+        </label>
+
+        <section class="stats" aria-label="Package statistics">
+          <div><strong id="event-count">0</strong><span>events</span></div>
+          <div><strong id="match-count">0</strong><span>matches</span></div>
+          <div><strong id="unknown-count">0</strong><span>unknown</span></div>
+        </section>
+
+        <section class="composer" aria-label="Append message">
+          <label class="field">
+            <span>Continue</span>
+            <textarea id="composer-input" rows="4" placeholder="Append a normal message event"></textarea>
+          </label>
+          <div class="composer-actions">
+            <button id="append-user" type="button">User</button>
+            <button id="append-assistant" type="button">Assistant</button>
+          </div>
+        </section>
+
+        <button id="export-button" class="primary" type="button">Export Bundle</button>
+      </aside>
+
+      <section class="workspace">
+        <header class="workspace-header">
+          <div>
+            <h2 id="package-title">No package loaded</h2>
+            <p id="package-meta">Waiting for manifest.json and timeline.ndjson</p>
+          </div>
+          <div id="capability-strip" class="capability-strip" aria-label="Capabilities"></div>
+        </header>
+
+        <div id="projection-warning" class="projection-warning" hidden>
+          Projection is truncated; canonical timeline data remains intact.
+        </div>
+
+        <ol id="timeline" class="timeline" aria-label="Canonical timeline"></ol>
+
+        <section class="export-panel" aria-label="Exported package" hidden>
+          <div class="export-header">
+            <h2>Exported Package Bundle</h2>
+            <a id="download-link" download="lightweight-reader-export.chat.json">Download</a>
+          </div>
+          <textarea id="export-output" readonly rows="12"></textarea>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

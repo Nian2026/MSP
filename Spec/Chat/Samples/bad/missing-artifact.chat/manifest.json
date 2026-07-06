@@ -1,0 +1,10 @@
+{
+  "format": "msp.chat",
+  "version": 1,
+  "package_id": "chatpkg_bad_missing_artifact",
+  "created_at": "2026-06-30T00:16:00Z",
+  "updated_at": "2026-06-30T00:16:02Z",
+  "profiles": ["core-timeline"],
+  "capabilities": ["read_core"],
+  "timeline": {"path": "timeline.ndjson", "encoding": "utf-8", "record_format": "ndjson"}
+}

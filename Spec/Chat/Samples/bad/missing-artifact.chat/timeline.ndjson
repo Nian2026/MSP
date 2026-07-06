@@ -1,0 +1,2 @@
+{"id":"evt_bad_artifact_001","type":"message","seq":1,"created_at":"2026-06-30T00:16:00Z","durability":"durable_replay","payload":{"role":"user","content":"Show the artifact."}}
+{"id":"evt_bad_artifact_002","type":"artifact_ref","seq":2,"created_at":"2026-06-30T00:16:01Z","durability":"durable_replay","payload":{"blob_id":"blob_missing","source_event_id":"evt_bad_artifact_001","kind":"text","media_type":"text/plain","display_name":"Missing blob","status":"available","path":"blobs/blob_missing.txt"}}

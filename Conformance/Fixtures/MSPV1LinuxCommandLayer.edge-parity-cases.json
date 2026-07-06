@@ -1,0 +1,404 @@
+{
+  "profile": "msp-v1-linux-command-layer",
+  "case_type": "vps-edge-linux-observable-behavior",
+  "cases": [
+    {
+      "id": "cat-missing-file-diagnostic",
+      "covered_commands": ["cat"],
+      "command_line": "cat missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "cat: missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "head-invalid-line-count",
+      "covered_commands": ["head"],
+      "command_line": "head -n nope; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "head: invalid number of lines: \u2018nope\u2019\n",
+      "exit_code": 0
+    },
+    {
+      "id": "tail-invalid-byte-count",
+      "covered_commands": ["tail"],
+      "command_line": "tail -c nope; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "tail: invalid number of bytes: \u2018nope\u2019\n",
+      "exit_code": 0
+    },
+    {
+      "id": "wc-missing-file-diagnostic",
+      "covered_commands": ["wc"],
+      "command_line": "wc missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "wc: missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "sort-check-disorder-diagnostic",
+      "covered_commands": ["sort"],
+      "setup_files": [{ "path": "unsorted.txt", "content": "b\na\n" }],
+      "command_line": "sort -c unsorted.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "sort: unsorted.txt:2: disorder: a\n",
+      "exit_code": 0
+    },
+    {
+      "id": "uniq-invalid-width-diagnostic",
+      "covered_commands": ["uniq"],
+      "command_line": "uniq -w nope; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "uniq: nope: invalid number of bytes to compare\n",
+      "exit_code": 0
+    },
+    {
+      "id": "tac-missing-file-diagnostic",
+      "covered_commands": ["tac"],
+      "command_line": "tac missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "tac: failed to open 'missing' for reading: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "tee-directory-diagnostic",
+      "covered_commands": ["tee"],
+      "setup_script": ["mkdir dir"],
+      "command_line": "printf x | tee dir; printf 'status:%s\\n' \"$?\"",
+      "stdout": "xstatus:1\n",
+      "stderr": "tee: dir: Is a directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "paste-missing-file-diagnostic",
+      "covered_commands": ["paste"],
+      "command_line": "paste missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "paste: missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "tr-missing-translation-operand",
+      "covered_commands": ["tr"],
+      "command_line": "tr a-z; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "tr: missing operand after \u2018a-z\u2019\nTwo strings must be given when translating.\nTry 'tr --help' for more information.\n",
+      "exit_code": 0
+    },
+    {
+      "id": "comm-missing-file-diagnostic",
+      "covered_commands": ["comm"],
+      "setup_files": [{ "path": "right.txt", "content": "b\nc\nd\n" }],
+      "command_line": "comm missing right.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "comm: missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "grep-invalid-regular-expression",
+      "covered_commands": ["grep"],
+      "setup_files": [{ "path": "grep.txt", "content": "alpha\n" }],
+      "command_line": "grep '[' grep.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:2\n",
+      "stderr": "grep: Invalid regular expression\n",
+      "exit_code": 0
+    },
+    {
+      "id": "sed-missing-file-diagnostic",
+      "covered_commands": ["sed"],
+      "command_line": "sed p /missing.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:2\n",
+      "stderr": "sed: can't read /missing.txt: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "cut-delimiter-width-diagnostic",
+      "covered_commands": ["cut"],
+      "setup_files": [{ "path": "cut.txt", "content": "a:b:c\n" }],
+      "command_line": "cut -d :: -f1 cut.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "cut: the delimiter must be a single character\nTry 'cut --help' for more information.\n",
+      "exit_code": 0
+    },
+    {
+      "id": "join-invalid-field-number",
+      "covered_commands": ["join"],
+      "setup_files": [
+        { "path": "left.txt", "content": "1 apple\n" },
+        { "path": "right.txt", "content": "1 red\n" }
+      ],
+      "command_line": "join -1 0 left.txt right.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "join: invalid field number: \u20180\u2019\n",
+      "exit_code": 0
+    },
+    {
+      "id": "nl-invalid-width",
+      "covered_commands": ["nl"],
+      "setup_files": [{ "path": "nl.txt", "content": "a\n" }],
+      "command_line": "nl -w 0 nl.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "nl: invalid line number field width: \u20180\u2019: Numerical result out of range\n",
+      "exit_code": 0
+    },
+    {
+      "id": "xargs-unmatched-quote",
+      "covered_commands": ["xargs"],
+      "command_line": "printf \"'\\n\" | xargs echo; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "xargs: unmatched single quote; by default quotes are special to xargs unless you use the -0 option\n",
+      "exit_code": 0
+    },
+    {
+      "id": "printf-partial-integer-conversion",
+      "covered_commands": ["printf"],
+      "command_line": "env printf '%d\\n' 12x; printf 'status:%s\\n' \"$?\"",
+      "stdout": "12\nstatus:1\n",
+      "stderr": "printf: \u201812x\u2019: value not completely converted\n",
+      "exit_code": 0
+    },
+    {
+      "id": "echo-escape-mode",
+      "covered_commands": ["echo"],
+      "command_line": "echo -e 'a\\nb'",
+      "stdout": "a\nb\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "seq-zero-increment-diagnostic",
+      "covered_commands": ["seq"],
+      "command_line": "seq 1 0 2; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "seq: invalid Zero increment value: \u20180\u2019\nTry 'seq --help' for more information.\n",
+      "exit_code": 0
+    },
+    {
+      "id": "copy-and-move-missing-source-diagnostics",
+      "covered_commands": ["cp", "mv"],
+      "command_line": "cp missing copy.txt; printf 'cp:%s\\n' \"$?\"; mv missing moved.txt; printf 'mv:%s\\n' \"$?\"",
+      "stdout": "cp:1\nmv:1\n",
+      "stderr": "cp: cannot stat 'missing': No such file or directory\nmv: cannot stat 'missing': No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "od-skip-past-end",
+      "covered_commands": ["od"],
+      "setup_files": [{ "path": "abc.txt", "content": "abc" }],
+      "command_line": "od -j9 abc.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "od: cannot skip past end of combined input\n",
+      "exit_code": 0
+    },
+    {
+      "id": "xxd-missing-file-diagnostic",
+      "covered_commands": ["xxd"],
+      "command_line": "xxd missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:2\n",
+      "stderr": "xxd: missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "base64-missing-file-diagnostic",
+      "covered_commands": ["base64"],
+      "command_line": "base64 missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "base64: missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "base64-invalid-wrap-diagnostic",
+      "covered_commands": ["base64"],
+      "setup_files": [{ "path": "bytes.txt", "content": "abc" }],
+      "command_line": "base64 -w nope bytes.txt; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "base64: invalid wrap size: \u2018nope\u2019\n",
+      "exit_code": 0
+    },
+    {
+      "id": "digest-check-empty-and-read-error-diagnostics",
+      "covered_commands": ["md5sum"],
+      "setup_files": [
+        { "path": "empty", "content": "" },
+        { "path": "malformed.md5", "content": "badline\n" },
+        { "path": "missing.md5", "content": "900150983cd24fb0d6963f7d28e17f72  missing\n" }
+      ],
+      "command_line": "md5sum empty; md5sum -c malformed.md5; printf 'malformed:%s\\n' \"$?\"; md5sum -c missing.md5; printf 'missing:%s\\n' \"$?\"",
+      "stdout": "d41d8cd98f00b204e9800998ecf8427e  empty\nmalformed:1\nmissing: FAILED open or read\nmissing:1\n",
+      "stderr": "md5sum: malformed.md5: no properly formatted checksum lines found\nmd5sum: missing: No such file or directory\nmd5sum: WARNING: 1 listed file could not be read\n",
+      "exit_code": 0
+    },
+    {
+      "id": "digest-shared-check-and-tagged-output-options",
+      "covered_commands": ["md5sum"],
+      "setup_files": [
+        { "path": "abc.txt", "content": "abc" },
+        { "path": "ok.md5", "content": "900150983cd24fb0d6963f7d28e17f72  abc.txt\n" },
+        { "path": "bad.md5", "content": "00000000000000000000000000000000  abc.txt\n" },
+        { "path": "mixed.md5", "content": "bad line\n900150983cd24fb0d6963f7d28e17f72  abc.txt\n" },
+        { "path": "missing.md5", "content": "900150983cd24fb0d6963f7d28e17f72  missing.txt\n" },
+        { "path": "tagged.md5", "content": "MD5 (abc.txt) = 900150983cd24fb0d6963f7d28e17f72\n" }
+      ],
+      "command_line": "md5sum --tag abc.txt; md5sum -c --quiet ok.md5; printf 'quiet:%s\\n' \"$?\"; md5sum -c --quiet bad.md5; printf 'badquiet:%s\\n' \"$?\"; md5sum -c --warn mixed.md5; printf 'warn:%s\\n' \"$?\"; md5sum -c --strict mixed.md5; printf 'strict:%s\\n' \"$?\"; md5sum -c --ignore-missing missing.md5; printf 'ignore:%s\\n' \"$?\"; md5sum -c --status bad.md5; printf 'status:%s\\n' \"$?\"; md5sum -c tagged.md5; printf 'tagcheck:%s\\n' \"$?\"",
+      "stdout": "MD5 (abc.txt) = 900150983cd24fb0d6963f7d28e17f72\nquiet:0\nabc.txt: FAILED\nbadquiet:1\nabc.txt: OK\nwarn:0\nabc.txt: OK\nstrict:1\nignore:1\nstatus:1\nabc.txt: OK\ntagcheck:0\n",
+      "stderr": "md5sum: WARNING: 1 computed checksum did NOT match\nmd5sum: mixed.md5: 1: improperly formatted MD5 checksum line\nmd5sum: WARNING: 1 line is improperly formatted\nmd5sum: WARNING: 1 line is improperly formatted\nmd5sum: missing.md5: no file was verified\n",
+      "exit_code": 0
+    },
+    {
+      "id": "cmp-and-diff-missing-file-diagnostics",
+      "covered_commands": ["cmp", "diff"],
+      "setup_files": [{ "path": "present.txt", "content": "abc\n" }],
+      "command_line": "cmp missing present.txt; printf 'cmp:%s\\n' \"$?\"; diff missing present.txt; printf 'diff:%s\\n' \"$?\"",
+      "stdout": "cmp:2\ndiff:2\n",
+      "stderr": "cmp: missing: No such file or directory\ndiff: missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "cmp-empty-eof-diagnostic",
+      "covered_commands": ["cmp"],
+      "setup_files": [
+        { "path": "empty", "content": "" },
+        { "path": "one", "content": "x" }
+      ],
+      "command_line": "cmp empty one; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "cmp: EOF on empty which is empty\n",
+      "exit_code": 0
+    },
+    {
+      "id": "diff-binary-nul-diagnostic",
+      "covered_commands": ["diff"],
+      "setup_files": [
+        { "path": "bin-a", "content": "a\u0000b" },
+        { "path": "bin-b", "content": "a\u0000c" }
+      ],
+      "command_line": "diff bin-a bin-b; printf 'status:%s\\n' \"$?\"",
+      "stdout": "Binary files bin-a and bin-b differ\nstatus:1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "file-binary-nul-classification",
+      "covered_commands": ["file"],
+      "setup_files": [{ "path": "bin", "content": "a\u0000b" }],
+      "command_line": "file bin; file -b bin; file -i bin; file --mime-type bin",
+      "stdout": "bin: data\ndata\nbin: application/octet-stream; charset=binary\nbin: application/octet-stream\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "stat-missing-file-diagnostic",
+      "covered_commands": ["stat"],
+      "command_line": "stat -c %n missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "stat: cannot statx 'missing': No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "od-invalid-argument-diagnostics",
+      "covered_commands": ["od"],
+      "setup_files": [{ "path": "abc.txt", "content": "abc" }],
+      "command_line": "od -A q abc.txt; printf 'radix:%s\\n' \"$?\"; od -N nope abc.txt; printf 'read:%s\\n' \"$?\"",
+      "stdout": "radix:1\nread:1\n",
+      "stderr": "od: invalid output address radix 'q'; it must be one character from [doxn]\nod: invalid -N argument 'nope'\n",
+      "exit_code": 0
+    },
+    {
+      "id": "env-option-and-command-diagnostics",
+      "covered_commands": ["env"],
+      "command_line": "env -Z; printf 'short:%s\\n' \"$?\"; env --bad; printf 'long:%s\\n' \"$?\"; env -u; printf 'unset:%s\\n' \"$?\"; env -i -0 FOO=bar env; printf 'null:%s\\n' \"$?\"; env no-such-cmd; printf 'missing:%s\\n' \"$?\"",
+      "stdout": "short:125\nlong:125\nunset:125\nnull:125\nmissing:127\n",
+      "stderr": "env: invalid option -- 'Z'\nTry 'env --help' for more information.\nenv: unrecognized option '--bad'\nTry 'env --help' for more information.\nenv: option requires an argument -- 'u'\nTry 'env --help' for more information.\nenv: cannot specify --null (-0) with command\nTry 'env --help' for more information.\nenv: \u2018no-such-cmd\u2019: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "type-path-only-builtin-edge",
+      "covered_commands": ["type"],
+      "command_line": "type -p cd; printf 'soft:%s\\n' \"$?\"; type -P cd; printf 'forced:%s\\n' \"$?\"",
+      "stdout": "soft:0\nforced:1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "which-invalid-option",
+      "covered_commands": ["which"],
+      "command_line": "which --bad; printf 'status:%s\\n' \"$?\"",
+      "stdout": "Usage: /usr/bin/which [-a] args\nstatus:2\n",
+      "stderr": "Illegal option --\n",
+      "exit_code": 0
+    },
+    {
+      "id": "basename-extra-operand",
+      "covered_commands": ["basename"],
+      "command_line": "basename a b c; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "basename: extra operand \u2018c\u2019\nTry 'basename --help' for more information.\n",
+      "exit_code": 0
+    },
+    {
+      "id": "realpath-quiet-existing-mode",
+      "covered_commands": ["realpath"],
+      "command_line": "realpath -q -e /missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "date-invalid-date-diagnostic",
+      "covered_commands": ["date"],
+      "command_line": "date foo; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "date: invalid date \u2018foo\u2019\n",
+      "exit_code": 0
+    },
+    {
+      "id": "timeout-invalid-option",
+      "covered_commands": ["timeout"],
+      "command_line": "timeout --bad 1 true; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:125\n",
+      "stderr": "timeout: unrecognized option '--bad'\nTry 'timeout --help' for more information.\n",
+      "exit_code": 0
+    },
+    {
+      "id": "ldd-missing-file-diagnostic",
+      "covered_commands": ["ldd"],
+      "command_line": "ldd missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:1\n",
+      "stderr": "ldd: ./missing: No such file or directory\n",
+      "exit_code": 0
+    },
+    {
+      "id": "rg-missing-path-diagnostic",
+      "covered_commands": ["rg"],
+      "command_line": "rg alpha missing; printf 'status:%s\\n' \"$?\"",
+      "stdout": "status:2\n",
+      "stderr": "missing: No such file or directory (os error 2)\n",
+      "exit_code": 0
+    },
+    {
+      "id": "rg-glob-files",
+      "covered_commands": ["rg"],
+      "setup_files": [
+        { "path": "a.txt", "content": "alpha\n" },
+        { "path": "sub/b.md", "content": "alpha\n" },
+        { "path": "sub/c.txt", "content": "alpha\n" }
+      ],
+      "command_line": "rg --files --glob=*.txt | sort",
+      "stdout": "a.txt\nsub/c.txt\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "cksum-modern-digest-frontend-options",
+      "covered_commands": ["cksum"],
+      "setup_files": [
+        { "path": "abc.txt", "content": "abc" },
+        { "path": "md5.cks", "content": "900150983cd24fb0d6963f7d28e17f72  abc.txt\n" },
+        { "path": "crc.cks", "content": "1219131554 3 abc.txt\n" }
+      ],
+      "command_line": "cksum abc.txt; cksum --algorithm=bsd abc.txt; cksum --algorithm=sysv abc.txt; cksum --algorithm=md5 abc.txt; cksum --algorithm=md5 --untagged abc.txt; cksum --algorithm=sha224 abc.txt; cksum --algorithm=sha384 abc.txt; cksum --algorithm=sm3 abc.txt; cksum --algorithm=blake2b --length=256 abc.txt; cksum --algorithm=md5 -c md5.cks; printf 'md5:%s\\n' \"$?\"; cksum -c crc.cks; printf 'default-check:%s\\n' \"$?\"; cksum --algorithm=crc -c crc.cks; printf 'crc-check:%s\\n' \"$?\"; cksum --algorithm=md5 --zero -c md5.cks; printf 'zero-check:%s\\n' \"$?\"",
+      "stdout": "1219131554 3 abc.txt\n16556     1 abc.txt\n294 1 abc.txt\nMD5 (abc.txt) = 900150983cd24fb0d6963f7d28e17f72\n900150983cd24fb0d6963f7d28e17f72  abc.txt\nSHA224 (abc.txt) = 23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7\nSHA384 (abc.txt) = cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7\nSM3 (abc.txt) = 66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0\nBLAKE2b-256 (abc.txt) = bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319\nabc.txt: OK\nmd5:0\ndefault-check:1\ncrc-check:1\nzero-check:1\n",
+      "stderr": "cksum: crc.cks: no properly formatted checksum lines found\ncksum: --check is not supported with --algorithm={bsd,sysv,crc}\ncksum: the --zero option is not supported when verifying checksums\nTry 'cksum --help' for more information.\n",
+      "exit_code": 0
+    }
+  ]
+}

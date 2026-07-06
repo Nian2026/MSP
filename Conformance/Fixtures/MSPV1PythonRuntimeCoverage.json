@@ -1,0 +1,52 @@
+{
+  "artifact_kind": "msp-v1-python-runtime-coverage",
+  "schema_version": 1,
+  "oracle": "MSPV1Debian12Oracle",
+  "current_ios_embedded_cpython_gate": {
+    "description": "Python noninteractive cases that do not require Node and are expected to pass in the iOS Simulator app with an app-supplied CPython runtime.",
+    "selector": {
+      "fixture": "noninteractive-cases.json",
+      "include_commands": [
+        "python3"
+      ],
+      "exclude_commands": [
+        "node"
+      ]
+    },
+    "expected_case_ids": [
+      "python-subprocess-file-side-effects",
+      "python-binary-stdout-stderr-bytes",
+      "python-error-branch-permissions",
+      "python-pathlib-glob-stat-chmod",
+      "python-nonzero-stderr-binary-side-effect",
+      "pipeline-binary-stderr-pipefail-group",
+      "python-pathlib-stat-rglob-writeback",
+      "binary-stdout-stderr-null-bytes"
+    ]
+  },
+  "blocked_until_node_runtime": {
+    "description": "Noninteractive Python-related cases that also require Node or Node version metadata.",
+    "case_ids": [
+      "existing-userland-version-metadata",
+      "python-node-cross-runtime-pressure-group",
+      "overlong-nested-pipeline-runtime-pressure-group"
+    ]
+  },
+  "current_pty_runtime_gate": {
+    "description": "Python-related PTY byte-stream cases executed by the Debian/Linux PTY oracle gate. These require the PTY runtime path, not the ordinary exec_command stdout/stderr runner.",
+    "case_ids": [
+      "pty_python_heredoc_exit",
+      "pty_output_large_16k",
+      "pty_python_inline_stdout",
+      "pty_python_inline_stderr_exit",
+      "pty_python_stdin_pipe",
+      "pty_python_heredoc_json",
+      "pty_python_large_output_4k",
+      "pty_live_broken_pipe_python_head",
+      "pty_live_python_c_stdin_filter",
+      "pty_live_python_c_stderr_exit",
+      "pty_live_python_stdin_script_split",
+      "pty_live_python_stdin_script_stderr_exit"
+    ]
+  }
+}

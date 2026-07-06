@@ -1,0 +1,429 @@
+{
+  "binary_checks": {
+    "chat-backend": {
+      "artifact": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-chat-backend/codex-rs/target/debug/codex",
+      "artifact_exists": true,
+      "artifact_size_bytes": 640793320,
+      "built": false,
+      "cargo_target_dir": "<temporary-cargo-target-root>/chat-backend",
+      "external_artifact": "<temporary-cargo-target-root>/chat-backend/debug/codex",
+      "external_artifact_exists": false
+    },
+    "original": {
+      "artifact": "<repo-root>/Conformance/Chat/CodexCliValidation/source-snapshots/openai-codex-original/codex-rs/target/debug/codex",
+      "artifact_exists": true,
+      "artifact_size_bytes": 635865528,
+      "built": false,
+      "cargo_target_dir": "<temporary-cargo-target-root>/original",
+      "external_artifact": "<temporary-cargo-target-root>/original/debug/codex",
+      "external_artifact_exists": false
+    }
+  },
+  "chat_backend_final_list_exit_ok": true,
+  "chat_backend_final_read_exit_ok": true,
+  "chat_backend_mock_server_summary": {
+    "first_response_input_contains_running_user_text": false,
+    "first_response_input_contains_seed_user_text": true,
+    "first_response_model": "mock-model",
+    "paths": [
+      "/v1/responses",
+      "/v1/responses"
+    ],
+    "request_count": 2,
+    "response_request_count": 2,
+    "second_response_input_contains_running_user_text": true,
+    "second_response_input_contains_seed_assistant_text": true,
+    "second_response_input_contains_seed_user_text": true,
+    "second_response_model": "mock-model"
+  },
+  "chat_backend_normalized_final_list": {
+    "backwards_cursor_present": true,
+    "contains_started_thread": true,
+    "has_error": false,
+    "listed_thread_ephemeral": false,
+    "listed_thread_model": null,
+    "listed_thread_model_provider": "mock_provider",
+    "listed_thread_name": null,
+    "listed_thread_preview": "Seed history before running rejoin.",
+    "listed_thread_source": "vscode",
+    "listed_thread_status_type": "idle",
+    "listed_thread_turn_count": 0,
+    "next_cursor_present": false,
+    "thread_count": 1
+  },
+  "chat_backend_normalized_final_read": {
+    "contains_running_assistant_text": true,
+    "contains_running_user_text": true,
+    "contains_seed_assistant_text": true,
+    "contains_seed_user_text": true,
+    "has_error": false,
+    "item_count_by_turn": [
+      2,
+      2
+    ],
+    "item_types_by_turn": [
+      [
+        "userMessage",
+        "agentMessage"
+      ],
+      [
+        "userMessage",
+        "agentMessage"
+      ]
+    ],
+    "model": null,
+    "model_provider": "mock_provider",
+    "path_present": true,
+    "preview": "Seed history before running rejoin.",
+    "thread_ephemeral": false,
+    "thread_history_mode": "legacy",
+    "thread_id_matches": true,
+    "thread_source": "vscode",
+    "thread_status_type": "idle",
+    "turn_count": 2,
+    "turn_statuses": [
+      "completed",
+      "completed"
+    ]
+  },
+  "chat_backend_normalized_override_warning": {
+    "contains_active_workspace": true,
+    "contains_cwd_mismatch": true,
+    "contains_model_mismatch": true,
+    "has_override_warning": true
+  },
+  "chat_backend_normalized_running_resume": {
+    "contains_running_assistant_text": false,
+    "contains_running_user_text": false,
+    "contains_seed_assistant_text": true,
+    "contains_seed_user_text": true,
+    "has_error": false,
+    "initial_turns_page_backwards_cursor_present": true,
+    "initial_turns_page_contains_running_turn": true,
+    "initial_turns_page_count": 2,
+    "initial_turns_page_items_views": [
+      "summary",
+      "summary"
+    ],
+    "initial_turns_page_next_cursor_present": false,
+    "initial_turns_page_present": true,
+    "initial_turns_page_statuses": [
+      "inProgress",
+      "completed"
+    ],
+    "item_count_by_turn": [
+      2,
+      0
+    ],
+    "item_types_by_turn": [
+      [
+        "userMessage",
+        "agentMessage"
+      ],
+      []
+    ],
+    "model": "mock-model",
+    "model_provider": "mock_provider",
+    "path_present": true,
+    "preview": "Seed history before running rejoin.",
+    "running_turn_item_count": 0,
+    "running_turn_items_view": "summary",
+    "running_turn_status": "inProgress",
+    "thread_ephemeral": false,
+    "thread_history_mode": "legacy",
+    "thread_id_matches": true,
+    "thread_source": "vscode",
+    "thread_status_type": "active",
+    "turn_count": 2,
+    "turn_statuses": [
+      "completed",
+      "inProgress"
+    ]
+  },
+  "chat_backend_normalized_stale_resume_error": {
+    "code": -32600,
+    "has_error": true,
+    "message_contains_cannot_resume": true,
+    "message_contains_running_thread": true,
+    "message_contains_stale_path": true
+  },
+  "chat_backend_override_warning_ok": true,
+  "chat_backend_running_resume_exit_ok": true,
+  "chat_backend_running_resume_saw_in_progress_turn": true,
+  "chat_backend_running_turn_exit_ok": true,
+  "chat_backend_seed_turn_exit_ok": true,
+  "chat_backend_stale_resume_error_ok": true,
+  "chat_backend_stale_resume_rejected": true,
+  "chat_journal_line_count": 20,
+  "chat_package_running_rejoin_ok": true,
+  "chat_package_summary": {
+    "chat_root": "<codex-chat-validation-run-root>/app-server-running-rejoin-smoke-2026-07-03-phase-close/chat-backend/chat-store",
+    "package_count": 1,
+    "packages": [
+      {
+        "conversation_id": "019f27be-8c44-7a23-b1f6-e9ed8081fc3d",
+        "files": [
+          "indexes/thread-metadata.json",
+          "journal.ndjson",
+          "manifest.json",
+          "projections/audit.ndjson",
+          "projections/chat-read.ndjson",
+          "projections/model-context.ndjson",
+          "timeline.ndjson"
+        ],
+        "index_exists": true,
+        "index_rollout_path": "<codex-chat-validation-run-root>/app-server-running-rejoin-smoke-2026-07-03-phase-close/chat-backend/chat-store/019f27be-8c44-7a23-b1f6-e9ed8081fc3d.chat",
+        "index_thread_id": "019f27be-8c44-7a23-b1f6-e9ed8081fc3d",
+        "journal_exists": true,
+        "journal_line_count": 20,
+        "journal_source_schemas": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "manifest_capabilities": [
+          "read_core",
+          "write_core",
+          "generate_projection",
+          "replay_journal",
+          "preserve_unknown_events"
+        ],
+        "manifest_exists": true,
+        "manifest_format": "msp.chat",
+        "manifest_profiles": [
+          "core-timeline",
+          "agent-timeline",
+          "projection-cache",
+          "resumable-context",
+          "runtime-journal"
+        ],
+        "package": "<codex-chat-validation-run-root>/app-server-running-rejoin-smoke-2026-07-03-phase-close/chat-backend/chat-store/019f27be-8c44-7a23-b1f6-e9ed8081fc3d.chat",
+        "timeline_event_types": [
+          "runtime_context_snapshot",
+          "status_changed",
+          "message",
+          "message",
+          "state_snapshot",
+          "runtime_context_snapshot",
+          "message",
+          "status_changed",
+          "status_changed",
+          "message",
+          "status_changed",
+          "status_changed",
+          "status_changed",
+          "runtime_context_snapshot",
+          "message",
+          "status_changed",
+          "status_changed",
+          "message",
+          "status_changed",
+          "status_changed"
+        ],
+        "timeline_exists": true,
+        "timeline_line_count": 20
+      }
+    ]
+  },
+  "chat_timeline_line_count": 20,
+  "generated_at": "2026-07-03T11:30:32.145632Z",
+  "journal_line_count_matches_original": true,
+  "mock_response_request_counts_equal": true,
+  "mock_second_turn_context_ok": true,
+  "normalized_final_list_equal": true,
+  "normalized_final_read_equal": true,
+  "normalized_override_warning_equal": true,
+  "normalized_running_resume_equal": true,
+  "normalized_stale_resume_error_equal": true,
+  "not_yet_proven": [
+    "fork/rollback/compaction parity",
+    "command/tool execution parity",
+    "search/archive/delete parity",
+    "crash recovery parity",
+    "complete data fidelity",
+    "user-indistinguishability under normal Codex usage"
+  ],
+  "original_final_list_exit_ok": true,
+  "original_final_read_exit_ok": true,
+  "original_mock_server_summary": {
+    "first_response_input_contains_running_user_text": false,
+    "first_response_input_contains_seed_user_text": true,
+    "first_response_model": "mock-model",
+    "paths": [
+      "/v1/responses",
+      "/v1/responses"
+    ],
+    "request_count": 2,
+    "response_request_count": 2,
+    "second_response_input_contains_running_user_text": true,
+    "second_response_input_contains_seed_assistant_text": true,
+    "second_response_input_contains_seed_user_text": true,
+    "second_response_model": "mock-model"
+  },
+  "original_normalized_final_list": {
+    "backwards_cursor_present": true,
+    "contains_started_thread": true,
+    "has_error": false,
+    "listed_thread_ephemeral": false,
+    "listed_thread_model": null,
+    "listed_thread_model_provider": "mock_provider",
+    "listed_thread_name": null,
+    "listed_thread_preview": "Seed history before running rejoin.",
+    "listed_thread_source": "vscode",
+    "listed_thread_status_type": "idle",
+    "listed_thread_turn_count": 0,
+    "next_cursor_present": false,
+    "thread_count": 1
+  },
+  "original_normalized_final_read": {
+    "contains_running_assistant_text": true,
+    "contains_running_user_text": true,
+    "contains_seed_assistant_text": true,
+    "contains_seed_user_text": true,
+    "has_error": false,
+    "item_count_by_turn": [
+      2,
+      2
+    ],
+    "item_types_by_turn": [
+      [
+        "userMessage",
+        "agentMessage"
+      ],
+      [
+        "userMessage",
+        "agentMessage"
+      ]
+    ],
+    "model": null,
+    "model_provider": "mock_provider",
+    "path_present": true,
+    "preview": "Seed history before running rejoin.",
+    "thread_ephemeral": false,
+    "thread_history_mode": "legacy",
+    "thread_id_matches": true,
+    "thread_source": "vscode",
+    "thread_status_type": "idle",
+    "turn_count": 2,
+    "turn_statuses": [
+      "completed",
+      "completed"
+    ]
+  },
+  "original_normalized_override_warning": {
+    "contains_active_workspace": true,
+    "contains_cwd_mismatch": true,
+    "contains_model_mismatch": true,
+    "has_override_warning": true
+  },
+  "original_normalized_running_resume": {
+    "contains_running_assistant_text": false,
+    "contains_running_user_text": false,
+    "contains_seed_assistant_text": true,
+    "contains_seed_user_text": true,
+    "has_error": false,
+    "initial_turns_page_backwards_cursor_present": true,
+    "initial_turns_page_contains_running_turn": true,
+    "initial_turns_page_count": 2,
+    "initial_turns_page_items_views": [
+      "summary",
+      "summary"
+    ],
+    "initial_turns_page_next_cursor_present": false,
+    "initial_turns_page_present": true,
+    "initial_turns_page_statuses": [
+      "inProgress",
+      "completed"
+    ],
+    "item_count_by_turn": [
+      2,
+      0
+    ],
+    "item_types_by_turn": [
+      [
+        "userMessage",
+        "agentMessage"
+      ],
+      []
+    ],
+    "model": "mock-model",
+    "model_provider": "mock_provider",
+    "path_present": true,
+    "preview": "Seed history before running rejoin.",
+    "running_turn_item_count": 0,
+    "running_turn_items_view": "summary",
+    "running_turn_status": "inProgress",
+    "thread_ephemeral": false,
+    "thread_history_mode": "legacy",
+    "thread_id_matches": true,
+    "thread_source": "vscode",
+    "thread_status_type": "active",
+    "turn_count": 2,
+    "turn_statuses": [
+      "completed",
+      "inProgress"
+    ]
+  },
+  "original_normalized_stale_resume_error": {
+    "code": -32600,
+    "has_error": true,
+    "message_contains_cannot_resume": true,
+    "message_contains_running_thread": true,
+    "message_contains_stale_path": true
+  },
+  "original_override_warning_ok": true,
+  "original_rollout_line_count": 20,
+  "original_running_resume_exit_ok": true,
+  "original_running_resume_saw_in_progress_turn": true,
+  "original_running_turn_exit_ok": true,
+  "original_seed_turn_exit_ok": true,
+  "original_stale_resume_error_ok": true,
+  "original_stale_resume_rejected": true,
+  "original_storage_summary": {
+    "codex_home": "<codex-chat-validation-run-root>/app-server-running-rejoin-smoke-2026-07-03-phase-close/original/codex-home",
+    "file_count": 93,
+    "rollout_files": [
+      "sessions/2026/07/03/rollout-2026-07-03T19-30-22-019f27be-7c41-7393-bf8e-cfec54906bfa.jsonl"
+    ],
+    "rollouts": [
+      {
+        "line_count": 20,
+        "path": "sessions/2026/07/03/rollout-2026-07-03T19-30-22-019f27be-7c41-7393-bf8e-cfec54906bfa.jsonl"
+      }
+    ]
+  },
+  "scope": "app-server-running-rejoin-smoke",
+  "stale_resume_path_observations": {
+    "chat-backend": "<codex-chat-validation-run-root>/app-server-running-rejoin-smoke-2026-07-03-phase-close/chat-backend/stale-chat-store/629ace7b-daef-4ace-98cb-2ef3c4b5e2a7.chat",
+    "original": "<codex-chat-validation-run-root>/app-server-running-rejoin-smoke-2026-07-03-phase-close/original/codex-home/sessions/2025/01/01/rollout-2025-01-01T00-00-00-58204c8a-ba50-440c-9110-88c67b8f1aac.jsonl"
+  },
+  "thread_read_path_observations": {
+    "chat-backend": {
+      "path_present": true,
+      "path_suffix": ".chat",
+      "thread_id": "019f27be-8c44-7a23-b1f6-e9ed8081fc3d"
+    },
+    "original": {
+      "path_present": true,
+      "path_suffix": ".jsonl",
+      "thread_id": "019f27be-7c41-7393-bf8e-cfec54906bfa"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{"id":"evt_progress_001","type":"message","seq":1,"created_at":"2026-06-30T00:04:00Z","durability":"durable_replay","payload":{"role":"user","content":"Think out loud briefly, then answer."}}
+{"id":"evt_progress_002","type":"message_delta","seq":2,"created_at":"2026-06-30T00:04:01Z","durability":"live_stream","correlation_id":"msg_progress_1","payload":{"message_id":"msg_progress_1","role":"assistant","text":"Checking the timeline contract."}}
+{"id":"evt_progress_003","type":"message_commit","seq":3,"created_at":"2026-06-30T00:04:02Z","durability":"durable_replay","correlation_id":"msg_progress_1","payload":{"message_id":"msg_progress_1"}}
+{"id":"evt_progress_004","type":"message","seq":4,"created_at":"2026-06-30T00:04:03Z","durability":"durable_replay","payload":{"role":"assistant","phase":"final","content":"The final answer follows the committed intermediate progress."}}

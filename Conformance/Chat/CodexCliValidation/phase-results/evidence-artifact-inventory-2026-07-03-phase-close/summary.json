@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-07-05T04:03:54+00:00",
+  "validation_root": "<repo-root>/Conformance/Chat/CodexCliValidation",
+  "public_evidence_doc": "<repo-root>/Conformance/Chat/CodexCliValidation/PUBLIC_EVIDENCE.md",
+  "scan_all_docs": false,
+  "status": "pass",
+  "docs_scanned_count": 1,
+  "referencing_docs_count": 1,
+  "results_dir_exists": false,
+  "source_results_dir_exists": false,
+  "phase_results_dir_exists": true,
+  "out_of_tree_results_dir": "<validation-results-root>",
+  "out_of_tree_results_dir_exists": false,
+  "referenced_result_count": 6,
+  "existing_result_count": 6,
+  "missing_result_count": 0,
+  "phase_result_file_count": 6,
+  "unlisted_phase_result_count": 0,
+  "unlisted_phase_results": [],
+  "raw_identity_marker_count": 0,
+  "raw_identity_findings": [],
+  "existing_results": [
+    "phase-results/app-server-running-rejoin-smoke-2026-07-03-phase-close/report.md",
+    "phase-results/app-server-running-rejoin-smoke-2026-07-03-phase-close/summary.json",
+    "phase-results/cli-build-source-snapshots-2026-07-03-phase-close/report.md",
+    "phase-results/cli-build-source-snapshots-2026-07-03-phase-close/summary.json",
+    "phase-results/evidence-artifact-inventory-2026-07-03-phase-close/summary.json",
+    "phase-results/source-snapshot-integrity-2026-07-03-phase-close/summary.json"
+  ],
+  "missing_results": [],
+  "references_by_doc": {
+    "PUBLIC_EVIDENCE.md": [
+      "phase-results/app-server-running-rejoin-smoke-2026-07-03-phase-close/report.md",
+      "phase-results/app-server-running-rejoin-smoke-2026-07-03-phase-close/summary.json",
+      "phase-results/cli-build-source-snapshots-2026-07-03-phase-close/report.md",
+      "phase-results/cli-build-source-snapshots-2026-07-03-phase-close/summary.json",
+      "phase-results/evidence-artifact-inventory-2026-07-03-phase-close/summary.json",
+      "phase-results/source-snapshot-integrity-2026-07-03-phase-close/summary.json"
+    ]
+  },
+  "stale_upstream_reference_count": 0,
+  "stale_upstream_references_by_doc": {}
+}

@@ -1,0 +1,10 @@
+{
+  "format": "msp.chat",
+  "version": 1,
+  "package_id": "chatpkg_bad_stale_projection",
+  "created_at": "2026-06-30T00:14:00Z",
+  "updated_at": "2026-06-30T00:14:02Z",
+  "profiles": ["core-timeline", "projection-cache"],
+  "capabilities": ["read_core", "generate_projection"],
+  "timeline": {"path": "timeline.ndjson", "encoding": "utf-8", "record_format": "ndjson"}
+}

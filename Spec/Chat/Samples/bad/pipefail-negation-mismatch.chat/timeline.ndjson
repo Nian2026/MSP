@@ -1,0 +1,2 @@
+{"id":"evt_bad_formula_001","type":"command_call","seq":1,"created_at":"2026-06-30T00:13:00Z","durability":"durable_replay","payload":{"command_id":"cmd_bad_formula","raw_command":"! first | second","parse_status":"success"}}
+{"id":"evt_bad_formula_002","type":"command_complete","seq":2,"created_at":"2026-06-30T00:13:01Z","durability":"durable_replay","payload":{"command_id":"cmd_bad_formula","exit_status":1,"stage_exit_codes":[0,2],"pipefail":true,"negated":true,"final_exit_formula":"not(pipefail rightmost nonzero)","duration_ms":4}}
