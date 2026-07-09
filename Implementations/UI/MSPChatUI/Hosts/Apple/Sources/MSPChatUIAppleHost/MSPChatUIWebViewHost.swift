@@ -14,6 +14,10 @@ public final class MSPChatUIWebViewHost: NSObject, WKScriptMessageHandler {
     installBridgeHandlers(on: webView.configuration.userContentController)
   }
 
+  deinit {
+    removeBridgeHandlers(on: webView.configuration.userContentController)
+  }
+
   public static func makeWebView() -> WKWebView {
     let configuration = WKWebViewConfiguration()
     configuration.defaultWebpagePreferences.allowsContentJavaScript = true
@@ -21,8 +25,9 @@ public final class MSPChatUIWebViewHost: NSObject, WKScriptMessageHandler {
     return WKWebView(frame: .zero, configuration: configuration)
   }
 
-  public func load(rendererHTMLURL: URL) {
-    webView.loadFileURL(rendererHTMLURL, allowingReadAccessTo: rendererHTMLURL.deletingLastPathComponent())
+  public func load(rendererHTMLURL: URL, allowingReadAccessTo readAccessURL: URL? = nil) {
+    let accessRoot = readAccessURL ?? Self.defaultReadAccessRoot(for: rendererHTMLURL)
+    webView.loadFileURL(rendererHTMLURL, allowingReadAccessTo: accessRoot)
   }
 
   public func renderTimelineJSON(_ json: String) {
@@ -40,7 +45,13 @@ public final class MSPChatUIWebViewHost: NSObject, WKScriptMessageHandler {
   private func installBridgeHandlers(on controller: WKUserContentController) {
     for channel in Self.bridgeChannels {
       controller.removeScriptMessageHandler(forName: channel)
-      controller.add(self, name: channel)
+      controller.add(WeakScriptMessageHandler(self), name: channel)
+    }
+  }
+
+  private func removeBridgeHandlers(on controller: WKUserContentController) {
+    for channel in Self.bridgeChannels {
+      controller.removeScriptMessageHandler(forName: channel)
     }
   }
 
@@ -61,6 +72,13 @@ public final class MSPChatUIWebViewHost: NSObject, WKScriptMessageHandler {
     return String(encoded.dropFirst().dropLast())
   }
 
+  private static func defaultReadAccessRoot(for rendererHTMLURL: URL) -> URL {
+    rendererHTMLURL
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+  }
+
   private static let bridgeChannels = [
     "messageAction",
     "openAttachment",
@@ -71,4 +89,16 @@ public final class MSPChatUIWebViewHost: NSObject, WKScriptMessageHandler {
     "explanationAnchor",
     "__CHAT_TRANSCRIPT_SELECTION_CONTEXT_MENU_HANDLER_NAME__"
   ]
+}
+
+private final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
+  private weak var target: WKScriptMessageHandler?
+
+  init(_ target: WKScriptMessageHandler) {
+    self.target = target
+  }
+
+  func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    target?.userContentController(userContentController, didReceive: message)
+  }
 }

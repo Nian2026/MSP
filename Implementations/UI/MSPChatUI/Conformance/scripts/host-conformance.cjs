@@ -35,6 +35,9 @@ const forbiddenCopies = hostFiles.filter((filePath) => (
 assert(apple.includes("WKWebView"), "Apple host must wrap WKWebView");
 assert(apple.includes("waitForRenderer"), "Apple host must call public Web renderer API");
 assert(apple.includes("applyRuntimeEvent"), "Apple host must expose runtime event entrypoint");
+assert(apple.includes("defaultReadAccessRoot"), "Apple host must grant the packaged renderer asset root");
+assert(apple.includes("WeakScriptMessageHandler"), "Apple host must not retain itself through WKScriptMessageHandler");
+assert(apple.includes("deinit"), "Apple host must remove WKScriptMessageHandler registrations");
 assert(windows.includes("CoreWebView2"), "Windows host must wrap WebView2");
 assert(windows.includes("waitForRenderer"), "Windows host must call public Web renderer API");
 assert(windows.includes("applyRuntimeEvent"), "Windows host must expose runtime event entrypoint");

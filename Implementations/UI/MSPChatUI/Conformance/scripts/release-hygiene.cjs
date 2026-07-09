@@ -36,12 +36,20 @@ function checkIgnored(relativePath) {
   return output.status === 0;
 }
 
+function pathParts(filePath) {
+  return filePath.split(/[\\/]+/).filter(Boolean);
+}
+
+function hasForbiddenPathPart(filePath) {
+  return pathParts(filePath).some((part) => part === ".DS_Store" || part === "app.asar");
+}
+
 function lineCount(filePath) {
   return fs.readFileSync(filePath, "utf8").split("\n").length;
 }
 
 const authoredFiles = walk(root);
-const badNames = authoredFiles.filter((filePath) => /(^|\/)(\.DS_Store|app\.asar)(\/|$)/.test(filePath));
+const badNames = authoredFiles.filter(hasForbiddenPathPart);
 const oversized = authoredFiles
   .filter((filePath) => /\.(js|cjs|json|md|ts)$/.test(filePath))
   .map((filePath) => ({ filePath, lines: lineCount(filePath) }))

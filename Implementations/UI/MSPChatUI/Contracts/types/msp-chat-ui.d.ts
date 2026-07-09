@@ -51,9 +51,11 @@ export type MSPChatUIBlock =
   | MSPChatUIProgressBlock
   | MSPChatUIVideoProgressBlock
   | MSPChatUIProposedPlanBlock
+  | MSPChatUIAttachmentBlock
   | MSPChatUIImageBlock
   | MSPChatUINoticeBlock
   | MSPChatUISearchResultsBlock
+  | MSPChatUISearchProgressBlock
   | MSPChatUISourcesBlock
   | MSPChatUITextSelectionBlock
   | MSPChatUIFooterBlock;
@@ -145,6 +147,8 @@ export interface MSPChatUIProposedPlanBlock extends MSPChatUIBaseBlock {
   phaseTitle?: string;
 }
 
+export interface MSPChatUIAttachmentBlock extends MSPChatUIBaseBlock { type: "attachment"; attachments: Array<string | Record<string, unknown>>; }
+
 export interface MSPChatUIImageBlock extends MSPChatUIBaseBlock {
   type: "image";
   images: Array<string | Record<string, unknown>>;
@@ -161,6 +165,8 @@ export interface MSPChatUISearchResultsBlock extends MSPChatUIBaseBlock {
   searchReferences?: unknown[];
   webSearchActions?: unknown[];
 }
+
+export interface MSPChatUISearchProgressBlock extends MSPChatUIBaseBlock { type: "searchProgress"; title?: string; detailText?: string; searchQueries?: string[]; webSearchActions?: unknown[]; }
 
 export interface MSPChatUISourcesBlock extends MSPChatUIBaseBlock {
   type: "sources";

@@ -77,6 +77,7 @@ const supportRendererSource = fs.readFileSync(
   path.join(root, "Renderers/Default/runtime/assets/Math/chat-transcript-message-block-support-renderer.js"),
   "utf8"
 );
+const typeDeclarations = fs.readFileSync(path.join(root, "Contracts/types/msp-chat-ui.d.ts"), "utf8");
 const first = projection.planTimeline(null, fixture, { defaultPresentation: {} });
 const second = projection.planTimeline(first.projection, appendStreamingText(fixture), {
   defaultPresentation: {}
@@ -189,6 +190,11 @@ assert(
     /codexShimmerIntervalMilliseconds\s*=\s*4000/.test(supportRendererSource) &&
     /codexShimmerInitialDelayMilliseconds\s*=\s*600/.test(supportRendererSource),
   "Default shimmer cadence must preserve Readex timing constants"
+);
+assert(
+  typeDeclarations.includes('type: "attachment"') &&
+    typeDeclarations.includes('type: "searchProgress"'),
+  "public TypeScript declarations must cover every runtime-supported timeline block"
 );
 
 console.log(JSON.stringify({

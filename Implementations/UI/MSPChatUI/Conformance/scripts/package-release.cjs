@@ -13,16 +13,47 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function packFiles() {
-  const result = childProcess.spawnSync("npm", ["pack", "--dry-run", "--json"], {
+function runPack(command, args) {
+  if (process.platform === "win32") {
+    return childProcess.spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", [command, ...args].join(" ")], {
+      cwd: root,
+      encoding: "utf8"
+    });
+  }
+  return childProcess.spawnSync(command, args, {
     cwd: root,
     encoding: "utf8"
   });
+}
+
+function parsePackFiles(stdout) {
+  const records = JSON.parse(stdout || "[]");
+  const record = Array.isArray(records) ? records[0] : records;
+  return (record?.files || []).map((entry) => entry.path).sort();
+}
+
+function isCommandUnavailable(result) {
+  return Boolean(result.error) || /not recognized|not found|ENOENT/i.test(result.stderr || "");
+}
+
+function packFiles() {
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  const result = runPack(npmCommand, ["pack", "--dry-run", "--json"]);
+  if (isCommandUnavailable(result)) {
+    const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+    const fallback = runPack(pnpmCommand, ["pack", "--dry-run", "--json"]);
+    if (isCommandUnavailable(fallback)) {
+      throw new Error(`failed to run ${npmCommand} or ${pnpmCommand}: ${fallback.error?.message || fallback.stderr}`);
+    }
+    if (fallback.status !== 0) {
+      throw new Error(fallback.stderr || fallback.stdout || "pnpm pack --dry-run failed");
+    }
+    return parsePackFiles(fallback.stdout);
+  }
   if (result.status !== 0) {
     throw new Error(result.stderr || result.stdout || "npm pack --dry-run failed");
   }
-  const records = JSON.parse(result.stdout || "[]");
-  return (records[0]?.files || []).map((entry) => entry.path).sort();
+  return parsePackFiles(result.stdout);
 }
 
 const pkg = readJSON("package.json");

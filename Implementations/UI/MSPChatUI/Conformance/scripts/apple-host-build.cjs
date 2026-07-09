@@ -17,6 +17,10 @@ try {
 } catch (_) {}
 
 if (result.status !== 0) {
+  if (result.error) {
+    process.stderr.write(`failed to run swift: ${result.error.message}\n`);
+    process.exit(1);
+  }
   process.stderr.write(result.stderr || result.stdout);
   process.exit(result.status || 1);
 }
