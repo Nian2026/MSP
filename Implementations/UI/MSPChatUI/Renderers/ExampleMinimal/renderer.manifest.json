@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "msp.chat-ui.renderers.example-minimal",
+  "name": "ExampleMinimal",
+  "description": "Minimal renderer contribution example using MSP canonical timelines and runtime events.",
+  "capabilities": {
+    "timeline": true,
+    "runtimeEvents": true,
+    "streamingDelta": true,
+    "payloadPatch": false,
+    "presentationUpdate": true
+  },
+  "contractScripts": [
+    "../../Contracts/runtime/status.js",
+    "../../Contracts/runtime/timeline.js",
+    "../../Contracts/runtime/events.js"
+  ],
+  "projectionScripts": [
+    "../../Projection/runtime/stream-delta.js",
+    "../../Projection/runtime/timeline-store.js"
+  ],
+  "rendererAPIScripts": [
+    "runtime/api/example-minimal-renderer-api.js"
+  ]
+}

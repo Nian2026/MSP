@@ -1,0 +1,55 @@
+{
+  "name": "@msp/chat-ui",
+  "version": "0.1.0-alpha.0",
+  "private": false,
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js",
+      "default": "./index.js"
+    },
+    "./contracts": {
+      "types": "./Contracts/types/msp-chat-ui.d.ts",
+      "require": "./index.js",
+      "default": "./index.js"
+    },
+    "./renderers/default/manifest": "./Renderers/Default/renderer.manifest.json",
+    "./hosts/web/default.html": "./Hosts/Web/default.html",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Contracts",
+    "Projection",
+    "Registry",
+    "Renderers",
+    "Hosts",
+    "Conformance",
+    "Docs",
+    "README.md",
+    "API.md",
+    "RELEASE.md",
+    "VERSION",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "check:static": "node Conformance/scripts/static-conformance.cjs",
+    "check:browser": "node Conformance/scripts/browser-smoke.cjs && node Conformance/scripts/browser-rich.cjs && node Conformance/scripts/browser-actions-windowing.cjs && node Conformance/scripts/browser-screenshot-matrix.cjs && node Conformance/scripts/browser-selection-overlay.cjs && node Conformance/scripts/browser-patch-behavior.cjs && node Conformance/scripts/browser-empty-streaming.cjs && node Conformance/scripts/browser-responsive.cjs && node Conformance/scripts/browser-host-bridge.cjs && node Conformance/scripts/browser-reduced-motion.cjs",
+    "check:renderers": "node Conformance/scripts/renderer-contract.cjs",
+    "check:hosts": "node Conformance/scripts/host-conformance.cjs",
+    "check:hygiene": "node Conformance/scripts/release-hygiene.cjs",
+    "check:package": "node Conformance/scripts/package-release.cjs",
+    "check:licenses": "node Conformance/scripts/license-audit.cjs",
+    "check:apple": "node Conformance/scripts/apple-host-build.cjs",
+    "check": "npm run check:static && npm run check:renderers && npm run check:hosts && npm run check:hygiene && npm run check:package && npm run check:licenses && npm run check:browser",
+    "check:release": "npm run check && npm run check:apple"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
+  }
+}

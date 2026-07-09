@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "msp.chat-ui.event.v1",
+  "title": "MSP Chat UI Runtime Event",
+  "type": "object",
+  "required": ["type"],
+  "properties": {
+    "schema": { "const": "msp.chat-ui.event.v1" },
+    "id": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "timeline.replace",
+        "presentation.update",
+        "message.upsert",
+        "message.remove",
+        "message.status",
+        "message.patch",
+        "block.upsert",
+        "block.remove",
+        "block.status",
+        "block.patch",
+        "stream.delta",
+        "tool.lifecycle",
+        "interaction.collapse",
+        "selection.update",
+        "scroll.sync"
+      ]
+    },
+    "messageID": { "type": "string" },
+    "blockID": { "type": "string" },
+    "status": { "type": "string" },
+    "textDelta": { "type": "string" },
+    "collapsed": { "type": "boolean" },
+    "patch": { "type": "object" },
+    "timeline": { "type": "object" },
+    "message": { "type": "object" },
+    "block": { "type": "object" },
+    "toolCall": { "type": "object" },
+    "selection": { "type": ["object", "null"] },
+    "scroll": { "type": "object" },
+    "presentation": { "type": "object" },
+    "timestamp": { "type": "string" }
+  },
+  "additionalProperties": true
+}

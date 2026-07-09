@@ -1,0 +1,5 @@
+# Local source snapshots copied from product repositories for extraction only.
+# Do not publish whole app snapshots as part of MSPChatUI.
+*
+!.gitignore
+!README.md

@@ -1,0 +1,215 @@
+{
+  "schema": "msp.chat-ui.timeline.v1",
+  "id": "default-rich",
+  "title": "MSPChatUI Rich Fixture",
+  "revision": 1,
+  "presentation": {
+    "theme": "light",
+    "markdownProfile": "markstream-readex-fade",
+    "codeTheme": "vitesse",
+    "bottomSlackPx": 32,
+    "assistantModelOptions": [
+      { "id": "msp-default", "resolvedDisplayName": "MSP Default" }
+    ],
+    "messageActions": {
+      "assistantPlacement": "footer",
+      "assistant": ["copy", "branch", "regenerate", "modelPicker", "inspectRenderPatch", "toggleRenderPatch"],
+      "user": ["regenerate", "edit", "branch", "copy"]
+    },
+    "collapsedBlocks": {
+      "assistant-rich:tool-group": true
+    }
+  },
+  "messages": [
+    {
+      "id": "user-rich",
+      "role": "user",
+      "blocks": [
+        {
+          "id": "user-rich:text",
+          "type": "markdown",
+          "text": "请用完整 Default UI 展示复杂回复：处理过程、工具、计划、数学、代码和链接安全。"
+        },
+        {
+          "id": "user-rich:selection",
+          "type": "textSelection",
+          "textSelection": {
+            "id": "selection-rich",
+            "sourceKind": "web",
+            "sourceDisplayName": "MSP UI 设计稿",
+            "sourcePageSummary": "第 12 页",
+            "selectedText": "模型回复不需要气泡，用户消息使用灰色气泡。",
+            "highlightedRanges": [
+              { "start": 0, "length": 6 },
+              { "start": 15, "length": 6 }
+            ],
+            "highlightColor": { "red": 1, "green": 0.78, "blue": 0.2, "alpha": 0.55 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "assistant-rich",
+      "role": "assistant",
+      "status": "running",
+      "modelName": "MSP Default",
+      "timeText": "刚刚",
+      "completedGoalDurationMs": 124000,
+      "memoryCitation": { "source": "fixture", "count": 2 },
+      "hasRenderPatches": true,
+      "hasEnabledRenderPatches": true,
+      "blocks": [
+        {
+          "id": "assistant-rich:processing",
+          "type": "processing",
+          "status": "running",
+          "active": true,
+          "groupID": "rich-process",
+          "startedAtMs": 1760000000000,
+          "items": [
+            {
+              "id": "assistant-rich:thinking",
+              "type": "progress",
+              "status": "running",
+              "text": "正在思考",
+              "detailText": "规划回答结构"
+            },
+            {
+              "id": "assistant-rich:processing-note",
+              "type": "mainText",
+              "status": "running",
+              "text": "我会先检查文档结构，再给出可执行计划。"
+            },
+            {
+              "id": "assistant-rich:scan-tool",
+              "type": "tool",
+              "status": "success",
+              "toolName": "readex.ls",
+              "text": "已查看仓库路径 /Docs",
+              "detailText": "3 个候选文件",
+              "durationMs": 320,
+              "previewItems": [
+                {
+                  "id": "preview-image-1",
+                  "kind": "image_view",
+                  "title": "预览图",
+                  "markdown": "image view preview",
+                  "payload": { "previewKind": "image_view", "imageDataURL": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "imageIndex": 1, "imageCount": 1, "fileName": "preview.png" }
+                }
+              ]
+            },
+            {
+              "id": "assistant-rich:web",
+              "type": "webSearch",
+              "status": "running",
+              "query": "MSP UI SDK",
+              "text": "正在网页中搜索 MSP UI SDK"
+            },
+            {
+              "id": "assistant-rich:subagent",
+              "type": "subagent",
+              "status": "running",
+              "toolName": "collab.agent",
+              "text": "正在让写作智能体整理摘要",
+              "result": {
+                "type": "collabAgentToolCall",
+                "tool": "ask",
+                "receiverThreadIds": ["thread-alpha"],
+                "agentsStates": {
+                  "writer": {
+                    "threadId": "thread-alpha",
+                    "agentNickname": "写作智能体"
+                  }
+                }
+              }
+            },
+            {
+              "id": "assistant-rich:video-inline",
+              "type": "videoProgress",
+              "status": "running",
+              "text": "正在下载视频素材",
+              "detailText": "720p · 1.2 MB/s · ETA 8s",
+              "progress": 0.42
+            }
+          ]
+        },
+        {
+          "id": "assistant-rich:processing-continuation",
+          "type": "processing",
+          "status": "running",
+          "groupID": "rich-process",
+          "chromeRole": "continuation",
+          "items": [
+            {
+              "id": "assistant-rich:continuation-note",
+              "type": "mainText",
+              "status": "running",
+              "text": "这是同组 continuation，不能重复 processing chrome。"
+            }
+          ]
+        },
+        {
+          "id": "assistant-rich:tool-group",
+          "type": "toolGroup",
+          "status": "success",
+          "title": "批量工具调用",
+          "toolCalls": [
+            {
+              "id": "assistant-rich:read",
+              "type": "toolCall",
+              "toolName": "readex.attach_text_file",
+              "title": "已读取文本文件 README.md",
+              "durationMs": 210
+            },
+            {
+              "id": "assistant-rich:patch",
+              "type": "toolCall",
+              "toolName": "apply_patch",
+              "title": "已修改 UI projection",
+              "durationMs": 180
+            },
+            {
+              "id": "assistant-rich:failed",
+              "type": "toolCall",
+              "status": "failed",
+              "toolName": "readex.shell",
+              "title": "未完成执行脚本",
+              "errorText": "exit 1"
+            }
+          ]
+        },
+        {
+          "id": "assistant-rich:plan",
+          "type": "proposedPlan",
+          "phaseTitle": "实现计划",
+          "text": "1. 抽出公共 Timeline。\n2. 用 Default renderer 适配 Readex runtime。\n3. 用跨平台 host 加载同一套资产。"
+        },
+        {
+          "id": "assistant-rich:video",
+          "type": "videoProgress",
+          "status": "running",
+          "text": "正在下载课程视频",
+          "detailText": "1080p · 2.1 MB/s",
+          "progress": 0.58,
+          "items": [
+            { "id": "clip-1", "title": "片段 1", "progress": 1, "status": "success" },
+            { "id": "clip-2", "title": "片段 2", "progress": 0.58, "status": "running" }
+          ]
+        },
+        {
+          "id": "assistant-rich:text",
+          "type": "markdown",
+          "status": "running",
+          "streaming": true,
+          "text": "## 小结\n\n这是复杂回复正文，包含 [安全链接](https://example.com) 和 [危险链接](javascript:alert(1))，并带脚注引用[^1]。\n\n- 第一层列表\n  - 第二层列表\n\n> 这是一段引用，用来锁住 Readex spacing token。\n\n---\n\n$$\n\\int_0^1 x^2 \\, dx = \\frac{1}{3}\n$$\n\n```ts\nexport function createRendererConfig() {\n  return {\n    renderer: \"Default\",\n    timeline: true,\n    runtimeEvents: true,\n    streaming: true,\n    hostBridge: \"shared\",\n    markdown: \"markstream-readex-fade\",\n    theme: \"codex\"\n  };\n}\n```\n\n| 项目 | 结果 |\n| --- | --- |\n| Processing | ready |\n| Host bridge | shared |\n\n[^1]: 脚注用于确认 Markstream 完整 Markdown 结构。"
+        },
+        {
+          "id": "assistant-rich:image",
+          "type": "image",
+          "status": "running",
+          "images": []
+        }
+      ]
+    }
+  ]
+}

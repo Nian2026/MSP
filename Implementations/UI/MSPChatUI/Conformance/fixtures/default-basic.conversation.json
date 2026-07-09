@@ -1,0 +1,84 @@
+{
+  "schema": "msp.chat-ui.timeline.v1",
+  "id": "default-basic",
+  "title": "MSPChatUI Default Fixture",
+  "revision": 1,
+  "presentation": {
+    "theme": "light",
+    "markdownProfile": "markstream-readex-fade",
+    "codeTheme": "vitesse"
+  },
+  "messages": [
+    {
+      "id": "user-1",
+      "role": "user",
+      "status": "success",
+      "blocks": [
+        {
+          "id": "user-1:text",
+          "type": "markdown",
+          "text": "用 MSP Default UI 展示一下：用户消息应该是灰色气泡，模型回复不要气泡。"
+        }
+      ]
+    },
+    {
+      "id": "assistant-1",
+      "role": "assistant",
+      "status": "success",
+      "modelName": "MSP Default",
+      "blocks": [
+        {
+          "id": "assistant-1:tool-manifest",
+          "type": "toolCall",
+          "toolName": "read_file",
+          "title": "读取 renderer manifest",
+          "detailText": "Renderers/Default/renderer.manifest.json",
+          "durationMs": 420
+        },
+        {
+          "id": "assistant-1:tool-render",
+          "type": "toolCall",
+          "toolName": "render_markdown",
+          "title": "使用 markstream-readex-fade 渲染回复",
+          "durationMs": 280
+        },
+        {
+          "id": "assistant-1:tool-failed",
+          "type": "toolCall",
+          "toolName": "write_file",
+          "status": "failed",
+          "title": "模拟失败工具调用",
+          "errorText": "permission denied"
+        },
+        {
+          "id": "assistant-1:text",
+          "type": "markdown",
+          "text": "这是同一套 **MSP Default Web renderer** 渲染出来的模型回复。\n\n- 助手消息是开放 markdown，不包气泡\n- 用户消息保留灰色气泡\n- 工具调用块、shimmer、Codex fade 动画都属于 Default runtime\n\n| 能力 | 状态 |\n| --- | --- |\n| Markstream | ready |\n| Tool UI | rich |\n\n```ts\nconst renderer = \"Renderers/Default\";\n```\n\n行内数学也应该走 KaTeX：$a^2 + b^2 = c^2$。"
+        }
+      ]
+    },
+    {
+      "id": "assistant-2",
+      "role": "assistant",
+      "status": "running",
+      "modelName": "MSP Default",
+      "blocks": [
+        {
+          "id": "assistant-2:tool-scan",
+          "type": "toolCall",
+          "toolName": "exec_command",
+          "status": "running",
+          "title": "正在执行静态资源检查",
+          "detailText": "node --check"
+        },
+        {
+          "id": "assistant-2:text",
+          "type": "markdown",
+          "status": "running",
+          "streaming": true,
+          "text": "这里保留一个正在流式输出的回复片段，用来验证 shimmer 和 live 状态不会把布局撑乱。"
+        }
+      ]
+    }
+  ]
+}

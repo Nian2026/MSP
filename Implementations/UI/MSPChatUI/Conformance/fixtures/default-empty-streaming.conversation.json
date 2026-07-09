@@ -1,0 +1,30 @@
+{
+  "schema": "msp.chat-ui.timeline.v1",
+  "id": "default-empty-streaming",
+  "title": "MSPChatUI Empty Streaming Fixture",
+  "revision": 1,
+  "presentation": {
+    "theme": "light",
+    "markdownProfile": "markstream-readex-fade"
+  },
+  "messages": [
+    {
+      "id": "user-empty",
+      "role": "user",
+      "blocks": [
+        {
+          "id": "user-empty:text",
+          "type": "markdown",
+          "text": "先不要输出正文，只展示运行中状态。"
+        }
+      ]
+    },
+    {
+      "id": "assistant-empty",
+      "role": "assistant",
+      "status": "running",
+      "modelName": "MSP Default",
+      "blocks": []
+    }
+  ]
+}

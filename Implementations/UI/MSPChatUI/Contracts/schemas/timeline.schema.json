@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://msp.dev/chat-ui/timeline.schema.json",
+  "title": "MSP Chat UI Timeline",
+  "type": "object",
+  "required": ["messages"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": { "const": "msp.chat-ui.timeline.v1" },
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "revision": { "type": "number" },
+    "presentation": { "$ref": "#/$defs/presentation" },
+    "messages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/message" }
+    }
+  },
+  "$defs": {
+    "message": {
+      "type": "object",
+      "required": ["id", "role", "blocks"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "role": { "enum": ["user", "assistant", "system", "tool"] },
+        "status": { "enum": ["pending", "running", "success", "failed", "cancelled"] },
+        "modelName": { "type": "string" },
+        "timeText": { "type": "string" },
+        "completedGoalDurationMs": { "type": "number" },
+        "memoryCitation": { "type": "object" },
+        "hasRenderPatches": { "type": "boolean" },
+        "hasEnabledRenderPatches": { "type": "boolean" },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/block" }
+        }
+      }
+    },
+    "block": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": {
+          "enum": [
+            "markdown",
+            "toolCall",
+            "toolGroup",
+            "processing",
+            "reasoning",
+            "progress",
+            "videoProgress",
+            "proposedPlan",
+            "notice",
+            "attachment",
+            "image",
+            "searchResults",
+            "searchProgress",
+            "sources",
+            "textSelection",
+            "footer"
+          ]
+        },
+        "status": { "enum": ["pending", "running", "success", "failed", "cancelled"] },
+        "text": { "type": "string" },
+        "toolName": { "type": "string" }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "theme": { "enum": ["light", "dark"] },
+        "markdownProfile": { "type": "string" },
+        "codeTheme": { "type": "string" },
+        "bottomSlackPx": { "type": "number" },
+        "bottomSafeAreaInsetPx": { "type": "number" },
+        "displayWindow": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": ["startIndex", "displayCount"],
+              "properties": {
+                "startIndex": { "type": "number" },
+                "displayCount": { "type": "number" }
+              },
+              "additionalProperties": true
+            },
+            { "type": "null" }
+          ]
+        },
+        "messageActions": { "type": "object", "additionalProperties": true },
+        "collapsedBlocks": { "type": "object" },
+        "expandedBlocks": { "type": "object" }
+      }
+    }
+  }
+}
