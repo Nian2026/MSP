@@ -1,6 +1,6 @@
 # MSP Playground App
 
-MSP Playground App is the developer-facing iOS proof for Model Shell Protocol.
+MSP Playground App is the developer-facing iOS proof for Model Shell Proxy.
 
 It demonstrates that an iOS app can give an agent a Linux-like virtual
 workspace without exposing a raw host shell.
@@ -96,7 +96,7 @@ One-time setup for direct device runs:
 ```bash
 ../Tools/bootstrap-ios-examples.sh \
   --team ABCDE12345 \
-  --bundle-prefix com.yourname.msp
+  --bundle-prefix com.yourname.modelshellproxy
 ```
 
 The public Xcode project does not contain a personal signing team. The bootstrap
@@ -121,7 +121,7 @@ xcodebuild \
   -sdk iphoneos \
   -destination 'generic/platform=iOS' \
   MSP_EXAMPLE_DEVELOPMENT_TEAM=ABCDE12345 \
-  MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.msp \
+  MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.modelshellproxy \
   build
 ```
 

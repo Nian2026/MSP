@@ -5,6 +5,10 @@ public enum MSPAgentChatStoreError: Error, Equatable, LocalizedError {
     case missingAgentTranscriptItem(String)
     case invalidAgentTranscriptPayload(String)
     case nonFiniteNumber(Double)
+    case missingPackageID
+    case chatIDMismatch(expected: String, actual: String)
+    case invalidTitle
+    case titleRevisionOverflow
 
     public var errorDescription: String? {
         switch self {
@@ -14,6 +18,14 @@ public enum MSPAgentChatStoreError: Error, Equatable, LocalizedError {
             return "Timeline event \(eventID) has an invalid agent transcript payload."
         case .nonFiniteNumber(let value):
             return "Agent JSON number is not finite: \(value)."
+        case .missingPackageID:
+            return "The .chat manifest is missing package_id, so title metadata cannot be addressed by chat ID."
+        case let .chatIDMismatch(expected, actual):
+            return "Title metadata targets chat \(actual), but this session owns chat \(expected)."
+        case .invalidTitle:
+            return "Chat titles must contain non-whitespace text."
+        case .titleRevisionOverflow:
+            return "The chat title revision can no longer be advanced."
         }
     }
 }

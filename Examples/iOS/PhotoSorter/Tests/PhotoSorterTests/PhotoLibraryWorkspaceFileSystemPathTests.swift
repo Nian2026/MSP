@@ -1834,7 +1834,7 @@ final class PhotoLibraryWorkspaceFileSystemPathTests: XCTestCase {
         )
         let persistedVLMEntries = try XCTUnwrap(persistedVLMCache["entries"] as? [String: Any])
         let persistedVLMEntry = try XCTUnwrap(persistedVLMEntries.values.first as? [String: Any])
-        XCTAssertEqual(Set(persistedVLMEntry.keys), ["summary"])
+        XCTAssertEqual(Set(persistedVLMEntry.keys), ["summary", "updatedAt", "assetVersion"])
         XCTAssertEqual(persistedVLMEntry["summary"] as? String, "summary updated")
     }
 
@@ -2220,6 +2220,244 @@ final class PhotoLibraryWorkspaceFileSystemPathTests: XCTestCase {
         XCTAssertNil(texts[2])
         XCTAssertEqual(texts[3], "alpha text")
         XCTAssertEqual(texts[4], "beta text")
+    }
+
+    func testOCRCacheMigratesLegacyModificationDateVersionWithoutLosingText() throws {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+        }
+        try FileManager.default.createDirectory(
+            at: temporaryDirectory,
+            withIntermediateDirectories: true
+        )
+        let cacheURL = temporaryDirectory.appendingPathComponent("ocr-cache.json")
+        let legacyCache: [String: Any] = [
+            "schemaVersion": 1,
+            "entries": [
+                "asset-a": [
+                    "localIdentifier": "asset-a",
+                    "assetVersion": "modified:123.000000|size:100x200|ocr-config:1",
+                    "configurationVersion": 1,
+                    "text": "legacy text",
+                    "updatedAt": 0.0
+                ]
+            ]
+        ]
+        try JSONSerialization.data(withJSONObject: legacyCache).write(to: cacheURL)
+
+        let cache = PhotoSorterMediaOCRCache(fileURL: cacheURL)
+        XCTAssertEqual(
+            cache.text(
+                localIdentifier: "asset-a",
+                assetVersion: "size:100x200|ocr-config:1"
+            ),
+            "legacy text"
+        )
+
+        let persisted = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+        )
+        XCTAssertEqual(persisted["schemaVersion"] as? Int, 3)
+        let entries = try XCTUnwrap(persisted["entries"] as? [String: Any])
+        let entry = try XCTUnwrap(entries["asset-a"] as? [String: Any])
+        XCTAssertEqual(
+            entry["assetVersion"] as? String,
+            "modified:123.000000|size:100x200|ocr-config:1"
+        )
+        XCTAssertTrue(FileManager.default.fileExists(atPath: cacheURL.appendingPathExtension("bak").path))
+    }
+
+    func testVLMSummaryCacheMigratesLegacyKeysAndKeepsNewestResult() throws {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+        }
+        try FileManager.default.createDirectory(
+            at: temporaryDirectory,
+            withIntermediateDirectories: true
+        )
+        let cacheURL = temporaryDirectory.appendingPathComponent("vlm-cache.json")
+        let keySuffix = "|bundled-local|FastVLM-0.5B|stage3|processor|prompt|zh-Hans|1"
+        let legacyCache: [String: Any] = [
+            "schemaVersion": 1,
+            "entries": [
+                "asset-a|modified:100.000000%7Csize:100x200%7Cvlm-cache:2\(keySuffix)": [
+                    "summary": "older summary"
+                ],
+                "asset-a|modified:200.000000%7Csize:100x200%7Cvlm-cache:2\(keySuffix)": [
+                    "summary": "newer summary"
+                ]
+            ]
+        ]
+        try JSONSerialization.data(withJSONObject: legacyCache).write(to: cacheURL)
+        let currentKey = PhotoSorterMediaVLMSummaryCacheKey(
+            localIdentifier: "asset-a",
+            assetVersion: "size:100x200|vlm-cache:2",
+            providerKind: "bundled-local",
+            modelID: "FastVLM-0.5B",
+            modelVersion: "stage3",
+            processorConfigFingerprint: "processor",
+            promptVersion: "prompt",
+            language: "zh-Hans",
+            summarySchemaVersion: 1
+        )
+
+        let cache = PhotoSorterMediaVLMSummaryCache(fileURL: cacheURL)
+        XCTAssertEqual(cache.summary(for: currentKey), "newer summary")
+        let persisted = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any]
+        )
+        XCTAssertEqual(persisted["schemaVersion"] as? Int, 3)
+        let entries = try XCTUnwrap(persisted["entries"] as? [String: Any])
+        XCTAssertEqual(entries.count, 1)
+        XCTAssertFalse(try XCTUnwrap(entries.keys.first).contains("modified:"))
+        let migratedEntry = try XCTUnwrap(entries.values.first as? [String: Any])
+        XCTAssertEqual(
+            migratedEntry["assetVersion"] as? String,
+            "modified:200.000000|size:100x200|vlm-cache:2"
+        )
+        XCTAssertTrue(FileManager.default.fileExists(atPath: cacheURL.appendingPathExtension("bak").path))
+    }
+
+    func testVisualFingerprintsRequireValidationOnlyWhenObservedAssetVersionChanges() throws {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+        }
+
+        let firstOCRVersion = "modified:100.000000|size:100x200|ocr-config:1"
+        let secondOCRVersion = "modified:200.000000|size:100x200|ocr-config:1"
+        let ocrCache = PhotoSorterMediaOCRCache(
+            fileURL: temporaryDirectory.appendingPathComponent("ocr-cache.json")
+        )
+        try ocrCache.store(
+            text: "cached text",
+            localIdentifier: "asset-a",
+            assetVersion: firstOCRVersion,
+            contentFingerprint: "fingerprint-a"
+        )
+        XCTAssertEqual(
+            ocrCache.text(localIdentifier: "asset-a", assetVersion: firstOCRVersion),
+            "cached text"
+        )
+        XCTAssertEqual(
+            ocrCache.text(localIdentifier: "asset-a", assetVersion: secondOCRVersion),
+            "cached text"
+        )
+        XCTAssertEqual(
+            ocrCache.lookup(
+                localIdentifier: "asset-a",
+                assetVersion: secondOCRVersion
+            ),
+            PhotoSorterMediaOCRCache.Lookup(
+                text: "cached text",
+                contentFingerprint: "fingerprint-a",
+                requiresContentValidation: true
+            )
+        )
+        try ocrCache.store(
+            text: "fresh text",
+            localIdentifier: "asset-a",
+            assetVersion: secondOCRVersion,
+            contentFingerprint: "fingerprint-b"
+        )
+        XCTAssertFalse(try ocrCache.remove(
+            localIdentifier: "asset-a",
+            assetVersion: secondOCRVersion,
+            expectedContentFingerprint: "fingerprint-a"
+        ))
+        XCTAssertEqual(
+            ocrCache.text(localIdentifier: "asset-a", assetVersion: secondOCRVersion),
+            "fresh text"
+        )
+
+        let firstVLMKey = PhotoSorterMediaVLMSummaryCacheKey(
+            localIdentifier: "asset-a",
+            assetVersion: "modified:100.000000|size:100x200|vlm-cache:2",
+            providerKind: "local",
+            modelID: "model",
+            modelVersion: "1",
+            processorConfigFingerprint: "processor",
+            promptVersion: "prompt",
+            language: "zh-Hans",
+            summarySchemaVersion: 1
+        )
+        var secondVLMKey = firstVLMKey
+        secondVLMKey.assetVersion = "modified:200.000000|size:100x200|vlm-cache:2"
+        let vlmCache = PhotoSorterMediaVLMSummaryCache(
+            fileURL: temporaryDirectory.appendingPathComponent("vlm-cache.json")
+        )
+        try vlmCache.store(
+            summary: "cached summary",
+            for: firstVLMKey,
+            contentFingerprint: "fingerprint-a"
+        )
+        XCTAssertEqual(vlmCache.summary(for: firstVLMKey), "cached summary")
+        XCTAssertEqual(vlmCache.summary(for: secondVLMKey), "cached summary")
+        XCTAssertEqual(
+            vlmCache.lookup(for: secondVLMKey),
+            PhotoSorterMediaVLMSummaryCache.Lookup(
+                summary: "cached summary",
+                contentFingerprint: "fingerprint-a",
+                requiresContentValidation: true
+            )
+        )
+        try vlmCache.store(
+            summary: "fresh summary",
+            for: secondVLMKey,
+            contentFingerprint: "fingerprint-b"
+        )
+        XCTAssertFalse(try vlmCache.remove(
+            for: secondVLMKey,
+            expectedContentFingerprint: "fingerprint-a"
+        ))
+        XCTAssertEqual(vlmCache.summary(for: secondVLMKey), "fresh summary")
+    }
+
+    func testUnreadableMediaCachesAreNeverOverwritten() throws {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+        }
+        try FileManager.default.createDirectory(
+            at: temporaryDirectory,
+            withIntermediateDirectories: true
+        )
+        let corruptData = Data("not-json".utf8)
+        let ocrURL = temporaryDirectory.appendingPathComponent("ocr-cache.json")
+        let vlmURL = temporaryDirectory.appendingPathComponent("vlm-cache.json")
+        try corruptData.write(to: ocrURL)
+        try corruptData.write(to: vlmURL)
+
+        let ocrCache = PhotoSorterMediaOCRCache(fileURL: ocrURL)
+        XCTAssertNil(ocrCache.text(localIdentifier: "asset-a", assetVersion: "v1"))
+        XCTAssertThrowsError(try ocrCache.store(
+            text: "replacement",
+            localIdentifier: "asset-a",
+            assetVersion: "v1"
+        ))
+        XCTAssertEqual(try Data(contentsOf: ocrURL), corruptData)
+
+        let vlmCache = PhotoSorterMediaVLMSummaryCache(fileURL: vlmURL)
+        let vlmKey = PhotoSorterMediaVLMSummaryCacheKey(
+            localIdentifier: "asset-a",
+            assetVersion: "v1",
+            providerKind: "local",
+            modelID: "model",
+            modelVersion: "1",
+            processorConfigFingerprint: "processor",
+            promptVersion: "prompt",
+            language: "zh-Hans",
+            summarySchemaVersion: 1
+        )
+        XCTAssertNil(vlmCache.summary(for: vlmKey))
+        XCTAssertThrowsError(try vlmCache.store(summary: "replacement", for: vlmKey))
+        XCTAssertEqual(try Data(contentsOf: vlmURL), corruptData)
     }
 
     func testPhotoLibraryMountCachedOCRBatchLookupPreservesOrderAndDoesNotRunLiveOCR() async throws {

@@ -10,6 +10,8 @@ This directory contains AgentBridge-facing MSP design notes.
   Swift AgentBridge implementation.
 - `CapabilityProfiles.md`: optional AgentBridge capability groups such as plan
   progress, goal tracking, plan mode, turn interrupt, and turn steering.
+- `ChatNaming.md`: developer-facing automatic Chat title and search-description
+  lifecycle, Responses adapter, persistence, and UI event integration.
 
 ## Release Boundary
 

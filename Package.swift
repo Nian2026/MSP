@@ -236,7 +236,7 @@ let package = Package(
         ),
         .testTarget(
             name: "MSPExternalRunnerTests",
-            dependencies: ["MSPExternalRunner", "MSPCore"],
+            dependencies: ["MSPExternalRunner", "MSPCore", "MSPApple"],
             path: "Tests/Swift/Unit/MSPExternalRunner"
         ),
         .testTarget(

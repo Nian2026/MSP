@@ -3,6 +3,6 @@
 // or pass them to xcodebuild as build settings.
 
 MSP_EXAMPLE_DEVELOPMENT_TEAM =
-MSP_EXAMPLE_BUNDLE_ID_PREFIX = com.modelshellprotocol.examples
+MSP_EXAMPLE_BUNDLE_ID_PREFIX = com.modelshellproxy.examples
 
 #include? "ExampleSigning.local.xcconfig"

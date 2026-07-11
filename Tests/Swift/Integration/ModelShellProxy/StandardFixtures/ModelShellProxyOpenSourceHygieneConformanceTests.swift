@@ -225,6 +225,49 @@ extension ModelShellProxyFinalGateVerifierConformanceTests {
         XCTAssertTrue(reportText.contains(runtimePath), reportText)
     }
 
+    func testOpenSourceHygieneScriptAllowsAuditedMSPChatUIMarkstreamSurface() throws {
+        guard FileManager.default.fileExists(atPath: "/usr/bin/python3") else {
+            throw XCTSkip("/usr/bin/python3 is required for open-source hygiene tests.")
+        }
+
+        let rootURL = makeTemporaryURL("open-source-hygiene-audited-msp-chat-ui-markstream")
+        defer { removeTemporaryURL(rootURL) }
+        try writeAuditedMSPChatUIMarkstreamFixture(rootURL: rootURL)
+
+        let reportURL = rootURL.appendingPathComponent("open-source-hygiene-report.json")
+        let result = try runOpenSourceHygiene(rootURL: rootURL, reportURL: reportURL)
+
+        XCTAssertEqual(result.exitCode, 0, result.stderr)
+        let report = try ModelShellProxyPressureGateFixtureSupport.readJSONObject(reportURL)
+        XCTAssertEqual(report["passed"] as? Bool, true)
+        XCTAssertEqual(report["blocked_path_count"] as? Int, 0)
+        let ruleIDs = report["required_rule_ids"] as? [String]
+        XCTAssertTrue(ruleIDs?.contains("msp-chat-ui-markstream-vendor-hygiene") == true)
+    }
+
+    func testOpenSourceHygieneScriptRejectsTamperedMSPChatUIMarkstreamBundle() throws {
+        guard FileManager.default.fileExists(atPath: "/usr/bin/python3") else {
+            throw XCTSkip("/usr/bin/python3 is required for open-source hygiene tests.")
+        }
+
+        let rootURL = makeTemporaryURL("open-source-hygiene-tampered-msp-chat-ui-markstream")
+        defer { removeTemporaryURL(rootURL) }
+        try writeAuditedMSPChatUIMarkstreamFixture(rootURL: rootURL)
+        try writeFile(
+            rootURL: rootURL,
+            relativePath: "Implementations/UI/MSPChatUI/Renderers/Default/runtime/assets/Math/readex-markstream-sdk.js",
+            contents: "window.markstream = null;\n"
+        )
+
+        let reportURL = rootURL.appendingPathComponent("open-source-hygiene-report.json")
+        let result = try runOpenSourceHygiene(rootURL: rootURL, reportURL: reportURL)
+
+        XCTAssertNotEqual(result.exitCode, 0)
+        let reportText = try String(contentsOf: reportURL, encoding: .utf8)
+        XCTAssertTrue(reportText.contains("msp-chat-ui-markstream-vendor-hygiene"), reportText)
+        XCTAssertTrue(reportText.contains("checksum does not match"), reportText)
+    }
+
     func testOpenSourceHygieneScriptRejectsForceTrackedPrivateAndBuildState() throws {
         guard FileManager.default.fileExists(atPath: "/usr/bin/python3") else {
             throw XCTSkip("/usr/bin/python3 is required for open-source hygiene tests.")
@@ -1099,6 +1142,64 @@ extension ModelShellProxyFinalGateVerifierConformanceTests {
         XCTAssertTrue(
             failed.stderr.contains("open-source release dry-run publish_root is outside report directory"),
             failed.stderr
+        )
+    }
+
+    private func writeAuditedMSPChatUIMarkstreamFixture(rootURL: URL) throws {
+        let uiRoot = "Implementations/UI/MSPChatUI"
+        try writeFile(
+            rootURL: rootURL,
+            relativePath: "\(uiRoot)/Renderers/Default/runtime/assets/Math/readex-markstream-sdk.js",
+            contents: "window.markstream = true;\n"
+        )
+        try writeFile(
+            rootURL: rootURL,
+            relativePath: "\(uiRoot)/Renderers/Default/runtime/markstream/README.md",
+            contents: "The runtime is tracked by the Markstream bundle audit.\n"
+        )
+        try writeFile(
+            rootURL: rootURL,
+            relativePath: "\(uiRoot)/Renderers/Default/VENDOR_MANIFEST.md",
+            contents: "readex-markstream-sdk.js is audited by markstream-bundle-license-audit.json.\n"
+        )
+        try writeFile(
+            rootURL: rootURL,
+            relativePath: "\(uiRoot)/THIRD_PARTY_NOTICES.md",
+            contents: "readex-markstream-sdk.js is audited by markstream-bundle-license-audit.json.\n"
+        )
+        try writeFile(
+            rootURL: rootURL,
+            relativePath: "\(uiRoot)/package.json",
+            contents: """
+            {
+              "scripts": {
+                "check": "npm run check:licenses",
+                "check:licenses": "node Conformance/scripts/license-audit.cjs"
+              }
+            }
+            """
+        )
+        try writeFile(
+            rootURL: rootURL,
+            relativePath: "\(uiRoot)/Conformance/fixtures/markstream-bundle-license-audit.json",
+            contents: """
+            {
+              "schemaVersion": 1,
+              "bundle": {
+                "path": "Renderers/Default/runtime/assets/Math/readex-markstream-sdk.js",
+                "sha256": "98cb4fb5e5864ca0c413be4c895b2b663b96dedfb0a52b69646dbaf6720d2253",
+                "bytes": 26
+              },
+              "source": {
+                "packageLock": "Tools/ReadexMarkstreamRenderer/package-lock.json"
+              },
+              "allowedLicenses": ["MIT", "ISC", "(MPL-2.0 OR Apache-2.0)", "BSD-2-Clause", "BSD-3-Clause"],
+              "licenseCounts": {"MIT": 1},
+              "packages": [
+                {"path": "node_modules/markstream-vue", "version": "1.0.3-beta.2", "license": "MIT"}
+              ]
+            }
+            """
         )
     }
 

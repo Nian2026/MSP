@@ -15,6 +15,10 @@ Current code evidence:
   owns turn interruption.
 - `Implementations/Swift/Sources/MSPAgentBridge/Capabilities/TurnSteer/` owns
   turn steering.
+- `Implementations/Swift/Sources/MSPAgentBridge/Capabilities/ChatNaming/`
+  owns independent Chat-title generation, fallback, race protection, historical
+  backfill, derived-Chat inheritance, and metadata events. See
+  `Spec/AgentBridge/ChatNaming.md`.
 - `Tests/Swift/Unit/MSPAgentBridge/` contains focused tests for each capability
   being enabled, disabled, declared, and rejected when unavailable.
 

@@ -16,8 +16,14 @@ public actor MSPAgentConversation {
         }
     }
 
-    public nonisolated let threadID: String
+    public nonisolated let chatID: String
+
+    /// Compatibility identifier for the existing Goal, Plan, steer, and
+    /// interrupt capability APIs. Chat-facing integrations should use
+    /// ``chatID``.
+    public nonisolated var threadID: String { chatID }
     var configuration: MSPAgentConversationConfiguration
+    let modelCatalog: any MSPModelCatalogResolving
     let modelClient: any MSPAgentModelTurnClient
     let execCommandBridge: MSPExecCommandBridge
     let applyPatchExecutor: (any MSPApplyPatchExecuting)?
@@ -29,6 +35,7 @@ public actor MSPAgentConversation {
     let planModeController: MSPPlanModeController
     let compactionHooks: any MSPCompactionLifecycleHookRuntime
     let compactionPersistenceAdapter: any MSPCompactionPersistenceAdapter
+    let chatNamingCoordinator: MSPChatNamingCoordinator?
     let toolCallLimit: MSPAgentToolCallLimit
     var transcriptItems: [MSPAgentJSONValue] {
         didSet {
@@ -43,12 +50,16 @@ public actor MSPAgentConversation {
     var previousContextWindowID: String?
     var contextWindowNumber: Int
     var latestContextUsage: MSPAgentContextUsageRecord?
+    var resolvedModelProfile: MSPResolvedModelProfile?
+    var previousResolvedModelProfile: MSPResolvedModelProfile?
     var currentWindowPrefillTokens: CurrentWindowPrefillTokens?
+    var didScheduleInitialChatNaming = false
     var activeUserTurnResultWaiters:
         [CheckedContinuation<MSPAgentRunResult, Error>] = []
 
     init(
         configuration: MSPAgentConversationConfiguration,
+        modelCatalog: any MSPModelCatalogResolving = MSPModelCatalogManager.bundledOnly(),
         modelClient: any MSPAgentModelTurnClient,
         execCommandBridge: MSPExecCommandBridge,
         applyPatchExecutor: (any MSPApplyPatchExecuting)? = nil,
@@ -56,12 +67,15 @@ public actor MSPAgentConversation {
         toolCallLimit: MSPAgentToolCallLimit,
         compactionHooks: any MSPCompactionLifecycleHookRuntime = MSPNoopCompactionLifecycleHookRuntime(),
         compactionPersistenceAdapter: any MSPCompactionPersistenceAdapter = MSPNoopCompactionPersistenceAdapter(),
+        chatNamingCoordinator: MSPChatNamingCoordinator? = nil,
+        schedulesInitialChatNamingOnFirstSend: Bool = true,
         transcriptItems: [MSPAgentJSONValue] = [],
-        threadID: String = UUID().uuidString
+        chatID: String = UUID().uuidString
     ) {
         let initialLineage = MSPContextWindowLineageState()
-        self.threadID = threadID
+        self.chatID = chatID
         self.configuration = configuration
+        self.modelCatalog = modelCatalog
         self.modelClient = modelClient
         self.execCommandBridge = execCommandBridge
         self.applyPatchExecutor = applyPatchExecutor
@@ -81,6 +95,9 @@ public actor MSPAgentConversation {
         )
         self.compactionHooks = compactionHooks
         self.compactionPersistenceAdapter = compactionPersistenceAdapter
+        self.chatNamingCoordinator = chatNamingCoordinator
+        self.didScheduleInitialChatNaming =
+            !schedulesInitialChatNamingOnFirstSend
         self.transcriptItems = transcriptItems
         self.contextWindowLineage = initialLineage
         self.currentContextWindowID = initialLineage.currentWindowID
@@ -88,11 +105,31 @@ public actor MSPAgentConversation {
         self.contextWindowNumber = initialLineage.windowNumber
     }
 
+    @discardableResult
+    func resolveModelProfileForCurrentTurn() async throws -> MSPResolvedModelProfile {
+        let nextProfile = await modelCatalog.resolve(
+            modelID: configuration.model,
+            refreshPolicy: .onlineIfUncached
+        )
+        try Task.checkCancellation()
+        if let currentProfile = resolvedModelProfile,
+           currentProfile != nextProfile {
+            previousResolvedModelProfile = currentProfile
+        }
+        resolvedModelProfile = nextProfile
+        return nextProfile
+    }
+
+    func acknowledgeResolvedModelProfileTransition() {
+        previousResolvedModelProfile = nil
+    }
+
     public func send(
         _ userMessage: String,
         additionalDeveloperContextBlocks: [String] = [],
         dynamicDeveloperContextBlocks: [MSPAgentDynamicDeveloperContextBlock] = [],
         additionalEnvironmentNotes: [String] = [],
+        chatNamingInput: MSPChatNamingInput? = nil,
         onRequestBuilt: RequestBuiltHandler? = nil,
         onTranscriptSnapshotUpdated: (@Sendable ([MSPAgentJSONValue]) async -> Void)? = nil,
         onEvent: @escaping EventHandler = { _ in }
@@ -111,7 +148,7 @@ public actor MSPAgentConversation {
         await waitForTurnSlot()
         try Task.checkCancellation()
         let turnID = UUID()
-        var currentUserItemsForCancellation = try currentUserTranscriptItems(
+        let currentUserItemsForCancellation = try currentUserTranscriptItems(
             userMessage: userMessage
         )
         let earlyTranscriptRecorder = MSPAgentTurnTranscriptRecorder(
@@ -126,6 +163,9 @@ public actor MSPAgentConversation {
             onEvent: onEvent
         )
         await earlyTranscriptRecorder.emitSnapshotUpdated()
+        startAutomaticChatNaming(
+            input: chatNamingInput ?? MSPChatNamingInput(text: userMessage)
+        )
 
         do {
             let result = try await runActiveTurn(
@@ -137,7 +177,6 @@ public actor MSPAgentConversation {
                 onRequestBuilt: onRequestBuilt,
                 onTranscriptSnapshotUpdated: onTranscriptSnapshotUpdated,
                 onEvent: onEvent,
-                currentUserItemsForCancellation: &currentUserItemsForCancellation,
                 currentUserItemsOverride: currentUserItemsForCancellation
             )
             if result.wasCancelled {
@@ -183,6 +222,32 @@ public actor MSPAgentConversation {
         }
     }
 
+    private func startAutomaticChatNaming(input: MSPChatNamingInput) {
+        guard !didScheduleInitialChatNaming else {
+            return
+        }
+        didScheduleInitialChatNaming = true
+        guard let chatNamingCoordinator else {
+            return
+        }
+        let request = MSPChatNamingRequest(
+            chatID: chatID,
+            input: input,
+            source: .initialUserInput
+        )
+        Task {
+            do {
+                _ = try await chatNamingCoordinator.generateTitleIfNeeded(request)
+            } catch is CancellationError {
+                // Manual naming or host cancellation intentionally wins.
+            } catch {
+                // Chat naming is auxiliary metadata work and must never fail
+                // or delay the main agent turn. The coordinator emits its own
+                // lifecycle events for host diagnostics and UI projection.
+            }
+        }
+    }
+
     public func compactLocal(
         onRequestBuilt: RequestBuiltHandler? = nil,
         onEvent: @escaping EventHandler = { _ in }
@@ -190,6 +255,7 @@ public actor MSPAgentConversation {
         try Task.checkCancellation()
         await waitForTurnSlot()
         try Task.checkCancellation()
+        try await resolveModelProfileForCurrentTurn()
 
         let turnID = UUID()
         await startTrackedTurn(
@@ -214,6 +280,7 @@ public actor MSPAgentConversation {
                 )
             }
             latestContextUsage = result.contextUsage
+            acknowledgeResolvedModelProfileTransition()
             await finishActiveTurn(id: turnID, status: .completed)
             return result
         } catch {
@@ -242,6 +309,7 @@ public actor MSPAgentConversation {
         try Task.checkCancellation()
         await waitForTurnSlot()
         try Task.checkCancellation()
+        try await resolveModelProfileForCurrentTurn()
 
         let turnID = UUID()
         await startTrackedTurn(
@@ -266,6 +334,7 @@ public actor MSPAgentConversation {
                 )
             }
             latestContextUsage = result.contextUsage
+            acknowledgeResolvedModelProfileTransition()
             await finishActiveTurn(id: turnID, status: .completed)
             return result
         } catch {

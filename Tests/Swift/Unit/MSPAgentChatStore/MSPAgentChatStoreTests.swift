@@ -514,6 +514,510 @@ final class MSPAgentChatStoreTests: XCTestCase {
         assertValidPackage(at: packageURL)
     }
 
+    func testTitleMetadataRoundTripsAndPreservesManifestExtensionsWithoutTimelineWrites() throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-round-trip.chat")
+        let store = MSPAgentChatStore()
+        let session = try store.createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_round_trip",
+            createdAt: "2026-07-11T10:00:00Z"
+        )
+        try addManifestExtension(at: packageURL)
+        let timelineBefore = try Data(contentsOf: timelineURL(for: packageURL))
+        let pathBefore = session.packageURL
+        let updatedAt = try XCTUnwrap(iso8601Date("2026-07-11T10:00:01Z"))
+
+        let result = try session.setTitle(
+            "  复刻 Codex 自动标题  ",
+            searchDescription: "  为 MSP 提供可搜索的 Chat 标题摘要  ",
+            source: .model,
+            condition: .onlyIfUntitled,
+            updatedAt: updatedAt
+        )
+
+        XCTAssertTrue(result.didUpdate)
+        XCTAssertEqual(result.disposition, .updated)
+        XCTAssertEqual(result.metadata.title, "复刻 Codex 自动标题")
+        XCTAssertEqual(result.metadata.searchDescription, "为 MSP 提供可搜索的 Chat 标题摘要")
+        XCTAssertEqual(result.metadata.revision, "1")
+        XCTAssertEqual(result.metadata.record?.source, .model)
+        XCTAssertEqual(result.metadata.record?.updatedAt, updatedAt)
+        XCTAssertEqual(session.packageURL, pathBefore)
+        XCTAssertEqual(try Data(contentsOf: timelineURL(for: packageURL)), timelineBefore)
+
+        let manifest = try MSPChatCoreReader().readManifest(at: packageURL)
+        XCTAssertEqual(manifest.title, "复刻 Codex 自动标题")
+        XCTAssertEqual(manifest.searchDescription, "为 MSP 提供可搜索的 Chat 标题摘要")
+        XCTAssertEqual(manifest.titleRevision, 1)
+        XCTAssertEqual(manifest.titleSource, "model")
+        XCTAssertEqual(manifest.rawJSON["x-store-test"]?.objectValue?["preserved"], .bool(true))
+        XCTAssertEqual(
+            manifest.rawJSON["timeline"]?.objectValue?["x-timeline-metadata"],
+            .string("preserved")
+        )
+
+        let reopened = try store.openPackage(at: packageURL)
+        XCTAssertEqual(try reopened.titleMetadata(), result.metadata)
+        assertValidPackage(at: packageURL)
+    }
+
+    func testManualTitleWinsOverLateAutomaticWriteAndRevisionIsCompareAndSet() throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-manual-wins.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_manual_wins",
+            createdAt: "2026-07-11T10:01:00Z"
+        )
+        let modelDate = try XCTUnwrap(iso8601Date("2026-07-11T10:01:01Z"))
+        let manualDate = try XCTUnwrap(iso8601Date("2026-07-11T10:01:02Z"))
+
+        let generated = try session.setTitle(
+            "自动标题",
+            searchDescription: "自动摘要",
+            source: .model,
+            condition: .onlyIfUntitled,
+            updatedAt: modelDate
+        )
+        let generatedRevision = try XCTUnwrap(generated.metadata.revision)
+        let manual = try session.setTitle(
+            "开发者手动标题",
+            searchDescription: nil,
+            source: .manual,
+            condition: .always,
+            updatedAt: manualDate
+        )
+
+        let lateGenerated = try session.setTitle(
+            "迟到的自动标题",
+            searchDescription: "不应写入",
+            source: .model,
+            condition: .onlyIfUntitled,
+            updatedAt: manualDate.addingTimeInterval(1)
+        )
+        let staleRevisionWrite = try session.setTitle(
+            "使用旧 revision 的标题",
+            source: .fallback,
+            condition: .ifRevision(generatedRevision),
+            updatedAt: manualDate.addingTimeInterval(2)
+        )
+
+        XCTAssertTrue(generated.didUpdate)
+        XCTAssertTrue(manual.didUpdate)
+        XCTAssertEqual(manual.metadata.revision, "2")
+        XCTAssertFalse(lateGenerated.didUpdate)
+        XCTAssertFalse(staleRevisionWrite.didUpdate)
+        XCTAssertEqual(lateGenerated.metadata, manual.metadata)
+        XCTAssertEqual(staleRevisionWrite.metadata, manual.metadata)
+        XCTAssertEqual(try session.titleMetadata().title, "开发者手动标题")
+        XCTAssertNil(try session.titleMetadata().searchDescription)
+
+        let currentRevision = try XCTUnwrap(manual.metadata.revision)
+        let compareAndSet = try session.setTitle(
+            "条件更新后的标题",
+            searchDescription: "新的摘要",
+            source: .inherited,
+            condition: .ifRevision(currentRevision),
+            updatedAt: manualDate.addingTimeInterval(3)
+        )
+        XCTAssertTrue(compareAndSet.didUpdate)
+        XCTAssertEqual(compareAndSet.metadata.revision, "3")
+        XCTAssertEqual(compareAndSet.metadata.title, "条件更新后的标题")
+        XCTAssertEqual(compareAndSet.metadata.record?.source, .inherited)
+    }
+
+    func testConcurrentOnlyIfUntitledWritesCommitExactlyOneTitle() throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-concurrent.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_concurrent",
+            createdAt: "2026-07-11T10:02:00Z"
+        )
+        let timelineBefore = try Data(contentsOf: timelineURL(for: packageURL))
+        let resultLock = NSLock()
+        var results: [MSPChatTitleWriteResult] = []
+        var errors: [String] = []
+
+        DispatchQueue.concurrentPerform(iterations: 64) { index in
+            do {
+                let result = try session.setTitle(
+                    "自动标题 \(index)",
+                    searchDescription: "候选摘要 \(index)",
+                    source: .model,
+                    condition: .onlyIfUntitled,
+                    updatedAt: Date(timeIntervalSince1970: 1_783_765_400 + Double(index))
+                )
+                resultLock.lock()
+                results.append(result)
+                resultLock.unlock()
+            } catch {
+                resultLock.lock()
+                errors.append(String(describing: error))
+                resultLock.unlock()
+            }
+        }
+
+        XCTAssertTrue(errors.isEmpty, errors.joined(separator: "\n"))
+        XCTAssertEqual(results.count, 64)
+        XCTAssertEqual(results.filter(\.didUpdate).count, 1)
+        XCTAssertEqual(Set(results.compactMap(\.metadata.title)).count, 1)
+        XCTAssertEqual(try session.titleMetadata().revision, "1")
+        XCTAssertEqual(try Data(contentsOf: timelineURL(for: packageURL)), timelineBefore)
+        assertValidPackage(at: packageURL)
+    }
+
+    func testSessionImplementsAsyncTitlePersistenceContract() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-persistence-contract.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_protocol",
+            createdAt: "2026-07-11T10:03:00Z"
+        )
+        let persistence: any MSPChatTitlePersisting = session
+        let updatedAt = try XCTUnwrap(iso8601Date("2026-07-11T10:03:01Z"))
+        let write = try await persistence.writeTitle(
+            MSPChatTitleRecord(
+                chatID: "chatpkg_agent_store_title_protocol",
+                title: "异步持久化标题",
+                searchDescription: "协议接入测试",
+                source: .model,
+                updatedAt: updatedAt
+            ),
+            condition: .onlyIfUntitled
+        )
+        let loaded = try await persistence.titleMetadata(
+            for: "chatpkg_agent_store_title_protocol"
+        )
+
+        XCTAssertTrue(write.didUpdate)
+        XCTAssertEqual(loaded, write.metadata)
+    }
+
+    func testChatNamingIntegrationWiresGeneratorToPersistedSession() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-integration.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_integration",
+            createdAt: "2026-07-11T10:04:00Z"
+        )
+        let integration = try session.makeChatNamingIntegration(
+            titleGenerator: MSPAgentChatStoreTestTitleGenerator()
+        )
+
+        let outcome = try await integration.generateTitleIfNeeded(
+            input: MSPChatNamingInput(text: "给 MSP 增加自动标题 SDK"),
+            source: .initialUserInput
+        )
+
+        XCTAssertEqual(integration.chatID, "chatpkg_agent_store_title_integration")
+        XCTAssertEqual(outcome.metadata.title, "增加 ChatNaming SDK")
+        XCTAssertEqual(outcome.metadata.searchDescription, "MSP 自动标题开发者接入")
+        XCTAssertEqual(try session.titleMetadata(), outcome.metadata)
+    }
+
+    func testChatNamingIntegrationAutomaticallyBackfillsHistoricalUntitledChat() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-backfill.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_backfill",
+            createdAt: "2026-07-11T10:05:00Z",
+            initialModelVisibleHistory: [
+                messageItem(
+                    role: "user",
+                    text: "prefix\n## My request for Codex: 补全历史标题"
+                )
+            ]
+        )
+        let generator = MSPAgentChatStoreRecordingTitleGenerator(
+            suggestion: MSPChatTitleSuggestion(title: "补全历史标题")
+        )
+        let updated = expectation(description: "Historical title updated")
+
+        _ = try session.makeChatNamingIntegration(
+            titleGenerator: generator,
+            onEvent: { event in
+                if case .titleUpdated = event {
+                    updated.fulfill()
+                }
+            }
+        )
+        await fulfillment(of: [updated], timeout: 2)
+
+        let metadata = try session.titleMetadata()
+        let requests = await generator.snapshot()
+        XCTAssertEqual(metadata.title, "补全历史标题")
+        XCTAssertEqual(requests.map(\.prompt), ["补全历史标题"])
+        XCTAssertEqual(requests.map(\.source), [.historicalBackfill])
+    }
+
+    func testHistoricalBackfillUsesFirstCanonicalUserMessageAfterCompaction() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-backfill-compacted.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_backfill_compacted",
+            createdAt: "2026-07-11T10:05:30Z",
+            initialModelVisibleHistory: [
+                messageItem(
+                    role: "user",
+                    text: "## My request for Codex: 最初的持久化请求"
+                ),
+                messageItem(role: "assistant", text: "处理中")
+            ]
+        )
+        _ = try session.replaceModelVisibleHistory([
+            messageItem(role: "assistant", text: "压缩摘要"),
+            messageItem(role: "user", text: "压缩后的后续问题")
+        ])
+        let generator = MSPAgentChatStoreRecordingTitleGenerator(
+            suggestion: MSPChatTitleSuggestion(title: "最初请求标题")
+        )
+        let updated = expectation(description: "Compacted history title updated")
+
+        _ = try session.makeChatNamingIntegration(
+            titleGenerator: generator,
+            onEvent: { event in
+                if case .titleUpdated = event {
+                    updated.fulfill()
+                }
+            }
+        )
+        await fulfillment(of: [updated], timeout: 2)
+
+        let requests = await generator.snapshot()
+        XCTAssertEqual(requests.map(\.prompt), ["最初的持久化请求"])
+        XCTAssertEqual(try session.titleMetadata().title, "最初请求标题")
+    }
+
+    func testHistoricalBackfillUsesEarlierGoalWhenNoUserPreviewExistsYet() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-backfill-goal.chat")
+        let createdAt = "2026-07-11T10:05:35Z"
+        try MSPChatCoreWriter().createMinimalPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_backfill_goal",
+            createdAt: createdAt,
+            initialEvents: [
+                MSPChatTimelineEvent(
+                    id: "conversation-created",
+                    type: "conversation_lifecycle",
+                    seq: 1,
+                    createdAt: createdAt,
+                    payload: ["operation": .string("create")]
+                ),
+                MSPChatTimelineEvent(
+                    id: "goal-created",
+                    type: MSPGoalChatMapping.threadGoalUpdatedTimelineType,
+                    seq: 2,
+                    createdAt: createdAt,
+                    payload: ["objective": .string("先完成 ChatNaming SDK")]
+                ),
+                MSPChatTimelineEvent.message(
+                    id: "later-user-message",
+                    seq: 3,
+                    createdAt: createdAt,
+                    role: "user",
+                    content: "稍后的用户消息"
+                )
+            ],
+            profiles: ["core-timeline", "agent-timeline"],
+            capabilities: [
+                "read_core",
+                "write_core",
+                "preserve_unknown_events"
+            ]
+        )
+        let session = MSPAgentChatSession(packageURL: packageURL)
+        let generator = MSPAgentChatStoreRecordingTitleGenerator(
+            suggestion: MSPChatTitleSuggestion(title: "ChatNaming SDK")
+        )
+        let updated = expectation(description: "Goal preview title updated")
+
+        _ = try session.makeChatNamingIntegration(
+            titleGenerator: generator,
+            onEvent: { event in
+                if case .titleUpdated = event {
+                    updated.fulfill()
+                }
+            }
+        )
+        await fulfillment(of: [updated], timeout: 2)
+
+        let requests = await generator.snapshot()
+        XCTAssertEqual(requests.map(\.prompt), ["先完成 ChatNaming SDK"])
+        XCTAssertEqual(requests.map(\.source), [.historicalBackfill])
+    }
+
+    func testHistoricalBackfillOwnsInitialNamingWhenChatImmediatelySends() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-backfill-send-race.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_backfill_send_race",
+            createdAt: "2026-07-11T10:05:40Z",
+            initialModelVisibleHistory: [
+                messageItem(role: "user", text: "历史首条请求")
+            ]
+        )
+        let generator = MSPAgentChatStoreRecordingTitleGenerator(
+            suggestion: MSPChatTitleSuggestion(title: "历史标题")
+        )
+        let updated = expectation(description: "Historical race title updated")
+        let integration = try session.makeChatNamingIntegration(
+            titleGenerator: generator,
+            onEvent: { event in
+                if case .titleUpdated = event {
+                    updated.fulfill()
+                }
+            }
+        )
+        let runtime = MSPAgentRuntime(
+            modelClientFactory: { _ in MSPAgentChatStoreTestModelClient() },
+            execCommandBridge: MSPExecCommandBridge(runCommand: { _ in
+                .success(stdout: "")
+            })
+        )
+        let conversation = runtime.makeConversation(
+            configuration: MSPAgentConversationConfiguration(
+                model: "main-model",
+                compactionPolicy: .disabled
+            ),
+            chatNaming: integration
+        )
+
+        _ = try await conversation.send("刚发送的后续问题")
+        await fulfillment(of: [updated], timeout: 2)
+
+        let requests = await generator.snapshot()
+        XCTAssertEqual(requests.map(\.prompt), ["历史首条请求"])
+        XCTAssertEqual(requests.map(\.source), [.historicalBackfill])
+    }
+
+    func testBoundDescriptionRefreshUsesRecentPersistedUserContextFirst() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-current-context.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_current_context",
+            createdAt: "2026-07-11T10:05:50Z",
+            initialModelVisibleHistory: [
+                messageItem(role: "user", text: "旧目的 Alpha"),
+                messageItem(role: "assistant", text: "旧回复"),
+                messageItem(role: "user", text: "最新目的 Beta")
+            ]
+        )
+        _ = try session.setTitle("手动标题", source: .manual)
+        let generator = MSPAgentChatStoreRecordingCombinedGenerator()
+        let integration = try session.makeChatNamingIntegration(
+            titleGenerator: generator,
+            searchDescriptionGenerator: generator
+        )
+
+        let refreshed = try await integration.refreshSearchDescription()
+
+        XCTAssertEqual(refreshed.metadata.searchDescription, "最新目的 Beta Alpha")
+        let requests = await generator.descriptionSnapshot()
+        XCTAssertEqual(requests.count, 1)
+        XCTAssertEqual(requests[0].prompt, "最新目的 Beta\n\n旧目的 Alpha")
+        XCTAssertTrue(requests[0].instructions.contains("most recent active purpose"))
+    }
+
+    func testDerivedChatNamingIntegrationInheritsBeforeReturning() async throws {
+        let parentURL = try makeTemporaryPackageURL(named: "title-parent.chat")
+        let childURL = try makeTemporaryPackageURL(named: "title-child.chat")
+        let store = MSPAgentChatStore()
+        let parent = try store.createPackage(
+            at: parentURL,
+            packageID: "chatpkg_agent_store_title_parent",
+            createdAt: "2026-07-11T10:06:00Z"
+        )
+        _ = try parent.setTitle(
+            "父 Chat 标题",
+            searchDescription: "父 Chat 搜索摘要",
+            source: .manual
+        )
+        let child = try store.createPackage(
+            at: childURL,
+            packageID: "chatpkg_agent_store_title_child",
+            createdAt: "2026-07-11T10:06:01Z",
+            initialModelVisibleHistory: [messageItem(role: "user", text: "fork preview")]
+        )
+        let generator = MSPAgentChatStoreRecordingTitleGenerator(
+            suggestion: MSPChatTitleSuggestion(title: "Should not run")
+        )
+
+        let integration = try await child.makeDerivedChatNamingIntegration(
+            inheritingTitleFrom: parent,
+            titleGenerator: generator
+        )
+
+        let metadata = try child.titleMetadata()
+        let requests = await generator.snapshot()
+        XCTAssertEqual(integration.chatID, "chatpkg_agent_store_title_child")
+        XCTAssertEqual(metadata.title, "父 Chat 标题")
+        XCTAssertEqual(metadata.searchDescription, "父 Chat 搜索摘要")
+        XCTAssertEqual(metadata.record?.source, .inherited)
+        XCTAssertTrue(requests.isEmpty)
+    }
+
+    func testRuntimeAcceptsChatNamingIntegrationAsOneValue() throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-runtime.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_runtime",
+            createdAt: "2026-07-11T10:07:00Z"
+        )
+        let integration = try session.makeChatNamingIntegration(
+            titleGenerator: MSPAgentChatStoreTestTitleGenerator()
+        )
+        let runtime = MSPAgentRuntime(
+            modelClientFactory: { _ in MSPAgentChatStoreTestModelClient() },
+            execCommandBridge: MSPExecCommandBridge(runCommand: { _ in
+                .success(stdout: "")
+            })
+        )
+
+        let conversation = runtime.makeConversation(
+            configuration: MSPAgentConversationConfiguration(
+                model: "main-model",
+                compactionPolicy: .disabled
+            ),
+            chatNaming: integration
+        )
+
+        XCTAssertEqual(conversation.chatID, integration.chatID)
+    }
+
+    func testTitlePersistenceContractRejectsManifestWithoutPackageID() async throws {
+        let packageURL = try makeTemporaryPackageURL(named: "title-missing-package-id.chat")
+        let session = try MSPAgentChatStore().createPackage(
+            at: packageURL,
+            packageID: "chatpkg_agent_store_title_missing_package_id",
+            createdAt: "2026-07-11T10:04:00Z"
+        )
+        try removePackageIDFromManifest(at: packageURL)
+        let persistence: any MSPChatTitlePersisting = session
+
+        do {
+            _ = try await persistence.titleMetadata(
+                for: "chatpkg_agent_store_title_missing_package_id"
+            )
+            XCTFail("Expected title metadata read to reject a manifest without package_id.")
+        } catch {
+            XCTAssertEqual(error as? MSPAgentChatStoreError, .missingPackageID)
+        }
+
+        do {
+            _ = try await persistence.writeTitle(
+                MSPChatTitleRecord(
+                    chatID: "chatpkg_agent_store_title_missing_package_id",
+                    title: "不应写入",
+                    source: .model,
+                    updatedAt: Date()
+                ),
+                condition: .onlyIfUntitled
+            )
+            XCTFail("Expected title write to reject a manifest without package_id.")
+        } catch {
+            XCTAssertEqual(error as? MSPAgentChatStoreError, .missingPackageID)
+        }
+    }
+
     func testAsyncSessionWritesPreserveSubmissionOrder() async throws {
         let packageURL = try makeTemporaryPackageURL(named: "async-writes.chat")
         let store = MSPAgentChatStore()
@@ -588,6 +1092,39 @@ final class MSPAgentChatStoreTests: XCTestCase {
         return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
 
+    private func addManifestExtension(at packageURL: URL) throws {
+        let url = packageURL.appendingPathComponent("manifest.json")
+        let data = try Data(contentsOf: url)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["x-store-test"] = ["preserved": true]
+        var timeline = try XCTUnwrap(object["timeline"] as? [String: Any])
+        timeline["x-timeline-metadata"] = "preserved"
+        object["timeline"] = timeline
+        let updated = try JSONSerialization.data(
+            withJSONObject: object,
+            options: [.prettyPrinted, .sortedKeys]
+        )
+        try updated.write(to: url, options: .atomic)
+    }
+
+    private func removePackageIDFromManifest(at packageURL: URL) throws {
+        let url = packageURL.appendingPathComponent("manifest.json")
+        let data = try Data(contentsOf: url)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["package_id"] = nil
+        let updated = try JSONSerialization.data(
+            withJSONObject: object,
+            options: [.prettyPrinted, .sortedKeys]
+        )
+        try updated.write(to: url, options: .atomic)
+    }
+
+    private func iso8601Date(_ value: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: value)
+    }
+
     private func duplicateSecondTimelineEventID(at packageURL: URL) throws {
         let url = timelineURL(for: packageURL)
         let text = try String(contentsOf: url, encoding: .utf8)
@@ -634,5 +1171,75 @@ final class MSPAgentChatStoreTests: XCTestCase {
             try? FileManager.default.removeItem(at: root)
         }
         return root.appendingPathComponent(name, isDirectory: true)
+    }
+}
+
+private struct MSPAgentChatStoreTestTitleGenerator: MSPChatTitleGenerating {
+    func generateTitle(
+        request: MSPChatTitleGenerationRequest
+    ) async throws -> MSPChatTitleSuggestion {
+        MSPChatTitleSuggestion(
+            title: "增加 ChatNaming SDK",
+            searchDescription: "MSP 自动标题开发者接入"
+        )
+    }
+}
+
+private actor MSPAgentChatStoreRecordingTitleGenerator: MSPChatTitleGenerating {
+    private var requests: [MSPChatTitleGenerationRequest] = []
+    private let suggestion: MSPChatTitleSuggestion
+
+    init(suggestion: MSPChatTitleSuggestion) {
+        self.suggestion = suggestion
+    }
+
+    func generateTitle(
+        request: MSPChatTitleGenerationRequest
+    ) async throws -> MSPChatTitleSuggestion {
+        requests.append(request)
+        return suggestion
+    }
+
+    func snapshot() -> [MSPChatTitleGenerationRequest] {
+        requests
+    }
+}
+
+private actor MSPAgentChatStoreRecordingCombinedGenerator:
+    MSPChatTitleGenerating,
+    MSPChatSearchDescriptionGenerating
+{
+    private var descriptionRequests:
+        [MSPChatSearchDescriptionGenerationRequest] = []
+
+    func generateTitle(
+        request: MSPChatTitleGenerationRequest
+    ) async throws -> MSPChatTitleSuggestion {
+        MSPChatTitleSuggestion(
+            title: "Generated title",
+            searchDescription: "Generated description"
+        )
+    }
+
+    func generateSearchDescription(
+        request: MSPChatSearchDescriptionGenerationRequest
+    ) async throws -> String? {
+        descriptionRequests.append(request)
+        return "最新目的 Beta Alpha"
+    }
+
+    func descriptionSnapshot() -> [MSPChatSearchDescriptionGenerationRequest] {
+        descriptionRequests
+    }
+}
+
+private struct MSPAgentChatStoreTestModelClient: MSPAgentModelTurnClient {
+    func nextTurn(
+        request: MSPAgentRequestEnvelope,
+        onDelta: @escaping @Sendable (MSPAgentModelStreamDelta) async -> Void,
+        onAssistantMessage: @escaping @Sendable (String) async -> Void,
+        onToolCallPreparing: @escaping @Sendable (MSPAgentToolName) async -> Void
+    ) async throws -> MSPAgentModelTurnOutput {
+        MSPAgentModelTurnOutput(finalAnswer: "ok")
     }
 }

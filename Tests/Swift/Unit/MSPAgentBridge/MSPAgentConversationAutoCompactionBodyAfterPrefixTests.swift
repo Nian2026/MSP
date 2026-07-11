@@ -237,9 +237,9 @@ extension MSPAgentConversationAutoCompactionRequestTests {
                 id: "resp_full_window",
                 messageID: "msg_full_window",
                 text: "第二轮完成。",
-                inputTokens: 271_990,
+                inputTokens: 258_390,
                 outputTokens: 10,
-                totalTokens: 272_000
+                totalTokens: 258_400
             ),
             Self.compactSummaryStream(text: compactSummary),
             Self.thirdTurnFinalAnswerStream()
@@ -303,8 +303,8 @@ extension MSPAgentConversationAutoCompactionRequestTests {
                 messageID: "msg_server_prefill",
                 text: "压缩后第一轮完成。",
                 inputTokens: 100_000,
-                outputTokens: 160_000,
-                totalTokens: 260_000
+                outputTokens: 150_000,
+                totalTokens: 250_000
             ),
             Self.finalAnswerStreamWithUsage(
                 id: "resp_later_server_usage",

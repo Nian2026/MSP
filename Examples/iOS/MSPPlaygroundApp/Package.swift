@@ -64,7 +64,10 @@ let package = Package(
         ),
         .testTarget(
             name: "MSPPlaygroundAppTests",
-            dependencies: ["MSPPlaygroundApp"],
+            dependencies: [
+                "MSPPlaygroundApp",
+                .product(name: "MSPAgentBridge", package: "ModelShellProxy")
+            ],
             path: "Tests/MSPPlaygroundAppTests"
         )
     ],

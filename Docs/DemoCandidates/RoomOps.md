@@ -4,7 +4,7 @@ Status: Candidate Demo Concept
 
 ## 一句话
 
-RoomOps 是一个 iOS 空间工作台候选 demo：用户用 iPhone 捕获真实房间，Agent 通过 Model Shell Protocol 在一个受控 workspace 里读取空间数据、执行空间命令、生成布局方案和导出包。
+RoomOps 是一个 iOS 空间工作台候选 demo：用户用 iPhone 捕获真实房间，Agent 通过 Model Shell Proxy 在一个受控 workspace 里读取空间数据、执行空间命令、生成布局方案和导出包。
 
 它的目标不是再做一个文档整理产品，而是展示 MSP 如何把 App 专有设备能力暴露成 agent-safe commands。
 

@@ -21,6 +21,8 @@ struct ChatView: View {
     @State private var modelConfigurationDraft = MSPModelConfiguration.placeholder
     @State private var originalModelConfigurationAPIKey = ""
     @State private var clearsModelConfigurationAPIKey = false
+    @State private var modelCatalogSnapshots = MSPModelPickerCatalogSnapshots.bundled
+    @State private var apiModelCatalogCredentialIdentity: Int?
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -31,6 +33,9 @@ struct ChatView: View {
             }
             .onChange(of: colorScheme) { _, _ in
                 updateTranscriptRenderEnvironment()
+            }
+            .task(id: modelCatalogRefreshIdentity) {
+                await refreshModelCatalog()
             }
             .sheet(isPresented: modelConfigurationPresentationBinding) {
                 modelConfigurationSheet
@@ -134,6 +139,7 @@ struct ChatView: View {
         ModelConfigurationSheet(
             configuration: $modelConfigurationDraft,
             codexOAuthConfiguration: $viewModel.codexOAuthConfiguration,
+            modelCatalogSnapshots: modelCatalogSnapshots,
             codexOAuthQuota: viewModel.codexOAuthQuota,
             isStartingCodexOAuthLogin: viewModel.isStartingCodexOAuthLogin,
             isRefreshingCodexOAuthQuota: viewModel.isRefreshingCodexOAuthQuota,
@@ -173,14 +179,16 @@ struct ChatView: View {
     private var currentModelTitle: String {
         MSPModelPickerCatalog.currentSelectionTitle(
             configuration: viewModel.modelConfiguration,
-            codexOAuthConfiguration: viewModel.codexOAuthConfiguration
+            codexOAuthConfiguration: viewModel.codexOAuthConfiguration,
+            snapshots: modelCatalogSnapshots
         )
     }
 
     private var modelOptions: [MSPModelPickerOption] {
         MSPModelPickerCatalog.options(
             configuration: viewModel.modelConfiguration,
-            codexOAuthConfiguration: viewModel.codexOAuthConfiguration
+            codexOAuthConfiguration: viewModel.codexOAuthConfiguration,
+            snapshots: modelCatalogSnapshots
         )
     }
 
@@ -269,9 +277,110 @@ struct ChatView: View {
         }
         viewModel.modelConfiguration = MSPModelPickerCatalog.configuration(
             selecting: option,
-            from: viewModel.modelConfiguration
+            from: viewModel.modelConfiguration,
+            snapshots: modelCatalogSnapshots
         )
         _ = viewModel.saveModelConfiguration()
+    }
+
+    private var modelCatalogRefreshIdentity: ModelCatalogRefreshIdentity {
+        let configuration = viewModel.modelConfiguration.normalized()
+        let codexOAuth = viewModel.codexOAuthConfiguration.normalized()
+        return ModelCatalogRefreshIdentity(
+            providerName: configuration.providerName,
+            baseURL: configuration.resolvedBaseURL?.absoluteString ?? "",
+            credentialMode: configuration.credentialMode,
+            modelID: configuration.modelID,
+            apiKeyIdentity: configuration.apiKey.hashValue,
+            codexAccessTokenIdentity: codexOAuth.accessToken.hashValue,
+            codexAccountIdentity: codexOAuth.accountID.hashValue
+        )
+    }
+
+    private func refreshModelCatalog() async {
+        let configuration = viewModel.modelConfiguration.normalized()
+        let credentialMode = MSPModelCredentialMode(rawValue: configuration.credentialMode) ?? .apiKey
+        let apiCredentialIdentity = configuration.apiKey.hashValue
+        // OAuth selection rewrites the shared provider fields. Until the host
+        // persists separate provider configurations, only the active API source
+        // may replace the last API catalog snapshot.
+        let refreshesAPICatalog = credentialMode == .apiKey
+        let apiConfiguration = refreshesAPICatalog
+            ? catalogModelConfiguration(for: .apiKey)
+            : nil
+        let oauthConfiguration = catalogModelConfiguration(for: .codexOAuth)
+        async let apiSnapshot = Self.fetchModelCatalogSnapshot(configuration: apiConfiguration)
+        async let oauthSnapshot = Self.fetchModelCatalogSnapshot(configuration: oauthConfiguration)
+        let snapshots = await (apiSnapshot, oauthSnapshot)
+        guard !Task.isCancelled else {
+            return
+        }
+        var nextSnapshots = modelCatalogSnapshots.updating(
+            apiKey: snapshots.0,
+            codexOAuth: snapshots.1
+        )
+        if refreshesAPICatalog, snapshots.0 != nil {
+            apiModelCatalogCredentialIdentity = apiCredentialIdentity
+        } else if apiModelCatalogCredentialIdentity != nil,
+                  apiModelCatalogCredentialIdentity != apiCredentialIdentity {
+            nextSnapshots.apiKey = MSPModelCatalogManager.bundledSnapshot
+            apiModelCatalogCredentialIdentity = nil
+        }
+        modelCatalogSnapshots = nextSnapshots
+    }
+
+    private func catalogModelConfiguration(
+        for source: MSPModelPickerSource
+    ) -> MSPAgentModelConfiguration? {
+        var configuration = viewModel.modelConfiguration.normalized()
+        switch source {
+        case .apiKey:
+            guard !configuration.apiKey.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ).isEmpty else {
+                return nil
+            }
+            configuration.credentialMode = MSPModelCredentialMode.apiKey.rawValue
+            if configuration.providerName == MSPModelPickerSource.codexOAuth.title {
+                configuration.providerName = "OpenAI-compatible"
+            }
+        case .codexOAuth:
+            guard viewModel.codexOAuthConfiguration.normalized().hasStoredCredential else {
+                return nil
+            }
+            configuration.credentialMode = MSPModelCredentialMode.codexOAuth.rawValue
+            configuration.providerName = MSPModelPickerSource.codexOAuth.title
+            configuration.baseURL = MSPModelConfigurationResolver.officialOpenAIBaseURL
+        }
+
+        guard let resolved = MSPModelConfigurationResolver.resolve(
+            configuration: configuration,
+            codexOAuthConfiguration: viewModel.codexOAuthConfiguration
+        ) else {
+            return nil
+        }
+        let resolvedConfiguration = resolved.configuration.normalized()
+        guard let baseURL = resolvedConfiguration.resolvedBaseURL else {
+            return nil
+        }
+        return MSPAgentModelConfiguration(
+            baseURL: baseURL,
+            apiKey: resolvedConfiguration.apiKey,
+            model: resolvedConfiguration.modelID,
+            providerName: resolvedConfiguration.providerName,
+            additionalHTTPHeaders: resolved.additionalHTTPHeaders
+        )
+    }
+
+    private static func fetchModelCatalogSnapshot(
+        configuration: MSPAgentModelConfiguration?
+    ) async -> MSPModelCatalogSnapshot? {
+        guard let configuration else {
+            return nil
+        }
+        return await MSPModelCatalogManager
+            .responses(configuration: configuration)
+            .snapshot(refreshPolicy: .onlineIfUncached)
     }
 
     private func saveModelConfiguration() -> Bool {
@@ -316,6 +425,16 @@ struct ChatView: View {
             }
         )
     }
+}
+
+private struct ModelCatalogRefreshIdentity: Hashable {
+    var providerName: String
+    var baseURL: String
+    var credentialMode: String
+    var modelID: String
+    var apiKeyIdentity: Int
+    var codexAccessTokenIdentity: Int
+    var codexAccountIdentity: Int
 }
 
 private struct ExportedTranscriptDocument: Identifiable {
@@ -376,6 +495,7 @@ private final class TranscriptExportHostingViewController: NSViewController {
 private struct ModelConfigurationSheet: View {
     @Binding var configuration: MSPModelConfiguration
     @Binding var codexOAuthConfiguration: MSPCodexOAuthConfiguration
+    var modelCatalogSnapshots: MSPModelPickerCatalogSnapshots
     var codexOAuthQuota: MSPCodexOAuthQuotaResult?
     var isStartingCodexOAuthLogin: Bool
     var isRefreshingCodexOAuthQuota: Bool
@@ -426,10 +546,11 @@ private struct ModelConfigurationSheet: View {
                 }
 
                 Section {
-                    Picker("Reasoning", selection: $configuration.reasoningEffort) {
-                        Text("Low").tag("low")
-                        Text("Medium").tag("medium")
-                        Text("High").tag("high")
+                    Picker("Reasoning", selection: reasoningEffortBinding) {
+                        ForEach(reasoningEffortPresets, id: \.effort) { preset in
+                            Text(MSPModelPickerCatalog.reasoningEffortTitle(preset.effort))
+                                .tag(preset.effort.rawValue)
+                        }
                     }
                     Picker("Verbosity", selection: $configuration.verbosity) {
                         Text("Low").tag("low")
@@ -518,6 +639,25 @@ private struct ModelConfigurationSheet: View {
                 }
             }
         }
+    }
+
+    private var reasoningEffortPresets: [MSPReasoningEffortPreset] {
+        MSPModelPickerCatalog.reasoningEffortPresets(
+            configuration: configuration,
+            snapshots: modelCatalogSnapshots
+        )
+    }
+
+    private var reasoningEffortBinding: Binding<String> {
+        Binding(
+            get: {
+                MSPModelPickerCatalog.reasoningEffortSelection(
+                    configuration: configuration,
+                    snapshots: modelCatalogSnapshots
+                )
+            },
+            set: { configuration.reasoningEffort = $0 }
+        )
     }
 
     private var baseURLBinding: Binding<String> {

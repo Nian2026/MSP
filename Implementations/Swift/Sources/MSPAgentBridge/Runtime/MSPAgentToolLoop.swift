@@ -14,19 +14,22 @@ public struct MSPAgentToolLoop: Sendable {
     public var maximumTransientModelStreamRetries: Int
     public var modelID: String
     public var modelDisplayName: String
+    public var modelProfile: MSPResolvedModelProfile?
 
     public init(
         modelClient: any MSPAgentModelTurnClient,
         toolCallLimit: MSPAgentToolCallLimit = .unlimited,
         maximumTransientModelStreamRetries: Int = 1,
         modelID: String = "",
-        modelDisplayName: String = ""
+        modelDisplayName: String = "",
+        modelProfile: MSPResolvedModelProfile? = nil
     ) {
         self.modelClient = modelClient
         self.toolCallLimit = toolCallLimit
         self.maximumTransientModelStreamRetries = max(0, maximumTransientModelStreamRetries)
         self.modelID = modelID
         self.modelDisplayName = modelDisplayName
+        self.modelProfile = modelProfile
     }
 
     public init(
@@ -34,14 +37,16 @@ public struct MSPAgentToolLoop: Sendable {
         maximumToolCalls: Int,
         maximumTransientModelStreamRetries: Int = 1,
         modelID: String = "",
-        modelDisplayName: String = ""
+        modelDisplayName: String = "",
+        modelProfile: MSPResolvedModelProfile? = nil
     ) {
         self.init(
             modelClient: modelClient,
             toolCallLimit: .maximum(maximumToolCalls),
             maximumTransientModelStreamRetries: maximumTransientModelStreamRetries,
             modelID: modelID,
-            modelDisplayName: modelDisplayName
+            modelDisplayName: modelDisplayName,
+            modelProfile: modelProfile
         )
     }
 
@@ -77,6 +82,38 @@ public struct MSPAgentToolLoop: Sendable {
         var canDrainPendingInput = false
         let assistantProgressEmissionState = MSPAgentAssistantProgressEmissionState()
         let planModeStreamState = MSPAgentPlanModeStreamState()
+
+        func fullWindowUsageRecord() -> MSPAgentContextUsageRecord? {
+            if let modelProfile {
+                return MSPAgentContextUsageAdapter.fullWindowRecord(
+                    profile: modelProfile,
+                    modelID: modelID,
+                    modelDisplayName: modelDisplayName
+                )
+            }
+            return MSPAgentContextUsageAdapter.fullWindowRecord(
+                modelID: modelID,
+                modelDisplayName: modelDisplayName
+            )
+        }
+
+        func contextUsageRecord(
+            usage: MSPAgentTokenUsage?
+        ) -> MSPAgentContextUsageRecord? {
+            if let modelProfile {
+                return MSPAgentContextUsageAdapter.record(
+                    usage: usage,
+                    profile: modelProfile,
+                    modelID: modelID,
+                    modelDisplayName: modelDisplayName
+                )
+            }
+            return MSPAgentContextUsageAdapter.record(
+                usage: usage,
+                modelID: modelID,
+                modelDisplayName: modelDisplayName
+            )
+        }
 
         func finish(
             _ answer: String,
@@ -186,10 +223,7 @@ public struct MSPAgentToolLoop: Sendable {
         func runContextWindowExceededCompactionRetryIfNeeded() async throws -> Bool {
             guard contextWindowExceededCompactionRetryCount < 1,
                   midTurnCompaction != nil,
-                  let fullWindowUsage = MSPAgentContextUsageAdapter.fullWindowRecord(
-                    modelID: modelID,
-                    modelDisplayName: modelDisplayName
-                  )
+                  let fullWindowUsage = fullWindowUsageRecord()
             else {
                 return false
             }
@@ -441,10 +475,7 @@ public struct MSPAgentToolLoop: Sendable {
                         if contextWindowExceededProjectionRetryCount < 1 {
                             contextWindowExceededProjectionRetryCount += 1
                             promptToolOutputTokenLimit = MSPAgentPromptTranscriptNormalizer.strictMaxPromptToolOutputTokens
-                            if let fullWindowUsage = MSPAgentContextUsageAdapter.fullWindowRecord(
-                                modelID: modelID,
-                                modelDisplayName: modelDisplayName
-                            ) {
+                            if let fullWindowUsage = fullWindowUsageRecord() {
                                 latestContextUsage = fullWindowUsage
                                 await onEvent(.contextUsageUpdated(fullWindowUsage))
                             }
@@ -477,11 +508,7 @@ public struct MSPAgentToolLoop: Sendable {
                 latestResponseID: latestResponseID,
                 requestEvidence: completedModelRequestEvidence
             )))
-            if let contextUsage = MSPAgentContextUsageAdapter.record(
-                usage: modelOutput.tokenUsage,
-                modelID: modelID,
-                modelDisplayName: modelDisplayName
-            ) {
+            if let contextUsage = contextUsageRecord(usage: modelOutput.tokenUsage) {
                 latestContextUsage = contextUsage
                 await onEvent(.contextUsageUpdated(contextUsage))
             }

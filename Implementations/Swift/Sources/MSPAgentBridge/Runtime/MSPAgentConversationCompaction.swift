@@ -32,7 +32,10 @@ extension MSPAgentConversation {
 
         case .freshContextWindow:
             let body = requestBuilder.build(
-                context: configuration.requestContext(prompt: "")
+                context: configuration.requestContext(
+                    prompt: "",
+                    modelProfile: resolvedModelProfile
+                )
             )
             let envelope = try requestBuilder.envelope(from: body)
             let prefixItems = Array(envelope.input.prefix(max(0, envelope.input.count - 1)))
@@ -46,7 +49,10 @@ extension MSPAgentConversation {
 
         case .responsesCompact, .responsesCompactionV2:
             let body = requestBuilder.build(
-                context: configuration.requestContext(prompt: "")
+                context: configuration.requestContext(
+                    prompt: "",
+                    modelProfile: resolvedModelProfile
+                )
             )
             let envelope = try requestBuilder.envelope(from: body)
             let prefixItems = Array(envelope.input.prefix(max(0, envelope.input.count - 1)))
@@ -76,7 +82,8 @@ extension MSPAgentConversation {
             strategy: .memento
         )
         var requestContext = configuration.requestContext(
-            prompt: MSPCompactionRequestBuilder.summarizationPrompt
+            prompt: MSPCompactionRequestBuilder.summarizationPrompt,
+            modelProfile: resolvedModelProfile
         )
         requestContext.stream = true
         let body = requestBuilder.build(context: requestContext)
@@ -105,6 +112,7 @@ extension MSPAgentConversation {
         onEvent: @escaping EventHandler
     ) async throws -> PreTurnCompactionOutcome {
         guard !promptTranscriptItems.isEmpty || latestContextUsage != nil else {
+            acknowledgeResolvedModelProfileTransition()
             return .notRun
         }
         let tokenStatus = projectedPreTurnTokenStatus(
@@ -112,12 +120,41 @@ extension MSPAgentConversation {
             projectedInputTokenCount: projectedInputTokenCount
         )
         guard let tokenStatus else {
+            acknowledgeResolvedModelProfileTransition()
             return .notRun
         }
-        guard let decision = configuration.compactionPolicy.preTurnDecision(
-            tokenStatus: tokenStatus,
-            providerSupportsRemoteCompaction: providerSupportsRemoteCompaction
-        ) else {
+        let previousModelDecision: MSPPreviousModelCompactionDecision?
+        if let previousProfile = previousResolvedModelProfile,
+           let currentProfile = resolvedModelProfile,
+           previousProfile.modelID == currentProfile.modelID {
+            // A live catalog refresh can change comp_hash for the same model.
+            // Cross-model downshift compaction needs an explicit previous-model
+            // client handoff; do not silently run it through the new client.
+            previousModelDecision = configuration.compactionPolicy.previousModelPreTurnDecision(
+                previous: MSPCompactionModelSnapshot(
+                    model: previousProfile.modelID,
+                    compHash: previousProfile.compHash,
+                    contextWindowTokens: previousProfile.effectiveContextWindowTokens,
+                    autoCompactTokenLimit: previousProfile.autoCompactTokenLimit
+                ),
+                current: MSPCompactionModelSnapshot(
+                    model: currentProfile.modelID,
+                    compHash: currentProfile.compHash,
+                    contextWindowTokens: currentProfile.effectiveContextWindowTokens,
+                    autoCompactTokenLimit: currentProfile.autoCompactTokenLimit
+                ),
+                activeTokens: tokenStatus.activeTokens,
+                providerSupportsRemoteCompaction: providerSupportsRemoteCompaction
+            )
+        } else {
+            previousModelDecision = nil
+        }
+        guard let decision = previousModelDecision?.decision
+            ?? configuration.compactionPolicy.preTurnDecision(
+                tokenStatus: tokenStatus,
+                providerSupportsRemoteCompaction: providerSupportsRemoteCompaction
+            ) else {
+            acknowledgeResolvedModelProfileTransition()
             return .notRun
         }
         if decision.implementation == .freshContextWindow {
@@ -129,6 +166,7 @@ extension MSPAgentConversation {
                 onEvent: onEvent
             )
             self.latestContextUsage = result.contextUsage
+            acknowledgeResolvedModelProfileTransition()
             return result.wasCancelled ? .aborted(result) : .compacted
         }
         if decision.implementation == .responsesCompact
@@ -143,6 +181,7 @@ extension MSPAgentConversation {
                 onEvent: onEvent
             )
             self.latestContextUsage = result.contextUsage
+            acknowledgeResolvedModelProfileTransition()
             return result.wasCancelled ? .aborted(result) : .compacted
         }
 
@@ -162,6 +201,7 @@ extension MSPAgentConversation {
             onEvent: onEvent
         )
         self.latestContextUsage = result.contextUsage
+        acknowledgeResolvedModelProfileTransition()
         return result.wasCancelled ? .aborted(result) : .compacted
     }
 
@@ -177,7 +217,7 @@ extension MSPAgentConversation {
         }
         let tokenStatus = MSPCompactionTokenStatus(
             activeTokens: currentContextUsage.currentTokens,
-            contextWindowTokens: currentContextUsage.contextWindowTokens,
+            contextWindowTokens: currentContextUsage.effectiveContextWindowTokens,
             autoCompactTokenLimit: currentContextUsage.autoCompactTokenLimit,
             currentWindowPrefillTokens: currentWindowPrefillTokensForLimitEvaluation(
                 observing: currentContextUsage,
@@ -404,7 +444,10 @@ extension MSPAgentConversation {
             prefixItems: prefixItems,
             historyItems: promptTranscriptItems,
             suffixItems: compactPromptItems,
-            contextWindow: localCompactionRewriteContextWindow(),
+            contextWindow: Self.localCompactionRewriteContextWindow(
+                latestContextUsage: latestContextUsage,
+                resolvedModelProfile: resolvedModelProfile
+            ),
             estimatedTokenCount: { items in
                 Self.approximateTokenCount(in: items)
             }
@@ -442,9 +485,11 @@ extension MSPAgentConversation {
                     continue
                 }
                 if Self.isContextWindowExceededError(error),
+                   let modelProfile = resolvedModelProfile,
                    let contextUsage = MSPAgentContextUsageAdapter.fullWindowRecord(
+                    profile: modelProfile,
                     modelID: configuration.model,
-                    modelDisplayName: configuration.model
+                    modelDisplayName: modelProfile.displayName
                    ) {
                     await onEvent(.contextUsageUpdated(contextUsage))
                 }
@@ -601,7 +646,14 @@ extension MSPAgentConversation {
         MSPAgentModelClientError.isLikelyContextWindowExceeded(error)
     }
 
-    private func localCompactionRewriteContextWindow() -> Int? {
+    static func localCompactionRewriteContextWindow(
+        latestContextUsage: MSPAgentContextUsageRecord?,
+        resolvedModelProfile: MSPResolvedModelProfile?
+    ) -> Int? {
+        if let effectiveWindow = resolvedModelProfile?.effectiveContextWindowTokens,
+           effectiveWindow > 0 {
+            return effectiveWindow
+        }
         if let effectiveWindow = latestContextUsage?.effectiveContextWindowTokens,
            effectiveWindow > 0 {
             return effectiveWindow
@@ -610,7 +662,6 @@ extension MSPAgentConversation {
            contextWindow > 0 {
             return contextWindow
         }
-        return MSPAgentContextWindowProfile.profile(for: configuration.model)?
-            .effectiveContextWindowTokens
+        return nil
     }
 }

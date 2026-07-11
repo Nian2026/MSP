@@ -206,6 +206,9 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
     private var ocrCacheCoverage: PhotoSorterMediaOCRCacheCoverage?
     private var vlmCacheCoverage: PhotoSorterMediaVLMCacheCoverage?
     private var placeCacheCoverage: PhotoSorterMediaPlaceCacheCoverage?
+    private let visualCacheValidationLock = NSLock()
+    private var ocrAssetsUnderContentValidation: Set<String> = []
+    private var vlmAssetsUnderContentValidation: Set<String> = []
     private let presentationAssetCacheLock = NSLock()
     private var presentationAssetByVirtualPath: [String: MountedAsset] = [:]
     static let assetEnumerationPageSize = 128
@@ -4038,11 +4041,11 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
         guard mountedAsset.mediaType == .image else {
             throw PhotoSorterMediaOCRError.unsupported("OCR supports images only")
         }
+        let assetVersion = Self.ocrAssetVersion(for: mountedAsset)
         if let ocrRecognitionOverride {
             guard let text = try await ocrRecognitionOverride(mountedAsset, outputPath) else {
                 return nil
             }
-            let assetVersion = Self.ocrAssetVersion(for: mountedAsset)
             let storeResult = try ocrCache.store(
                 text: text,
                 localIdentifier: mountedAsset.localIdentifier,
@@ -4067,6 +4070,33 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
         }
 
         let (image, orientation) = try await localOCRImage(for: asset, mountedAsset: mountedAsset)
+        let contentFingerprint = PhotoSorterVisualContentFingerprint.make(
+            from: image,
+            orientation: orientation
+        )
+        if let candidate = ocrCache.lookup(
+            localIdentifier: mountedAsset.localIdentifier,
+            assetVersion: assetVersion
+        ), candidate.requiresContentValidation,
+           let contentFingerprint,
+           candidate.contentFingerprint == contentFingerprint {
+            let storeResult = try ocrCache.store(
+                text: candidate.text,
+                localIdentifier: mountedAsset.localIdentifier,
+                assetVersion: assetVersion,
+                contentFingerprint: contentFingerprint,
+                persistImmediately: persistImmediately
+            )
+            recordOCRCacheStore(
+                insertedValidEntry: storeResult.insertedValidEntry,
+                generation: storeResult.generation
+            )
+            return PhotoSorterMediaOCRResult(
+                path: outputPath,
+                text: candidate.text,
+                source: .cache
+            )
+        }
         let recognition = try await Self.recognizedOCRText(from: image, orientation: orientation)
         let text = recognition.text
         if recognition.tileCount > 1 {
@@ -4077,11 +4107,11 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
                 "ocr_tile_count": "\(recognition.tileCount)"
             ])
         }
-        let assetVersion = Self.ocrAssetVersion(for: mountedAsset)
         let storeResult = try ocrCache.store(
             text: text,
             localIdentifier: mountedAsset.localIdentifier,
             assetVersion: assetVersion,
+            contentFingerprint: contentFingerprint,
             persistImmediately: persistImmediately
         )
         recordOCRCacheStore(
@@ -4408,7 +4438,12 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
         pixelWidth: Int,
         pixelHeight: Int
     ) -> String {
-        let modified = modificationDate.map { String(format: "%.6f", $0.timeIntervalSinceReferenceDate) } ?? "unknown"
+        // The cache canonicalizes this value without modificationDate for stable
+        // lookup. The observed date remains available as a cheap signal that a
+        // visual fingerprint may need validation before reuse.
+        let modified = modificationDate.map {
+            String(format: "%.6f", $0.timeIntervalSinceReferenceDate)
+        } ?? "unknown"
         let longImageSuffix = ocrImagePlan(width: pixelWidth, height: pixelHeight).usesTiling
             ? "|long-ocr:tiles-v1"
             : ""
@@ -4464,8 +4499,152 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
         pixelWidth: Int,
         pixelHeight: Int
     ) -> String {
-        let modified = modificationDate.map { String(format: "%.6f", $0.timeIntervalSinceReferenceDate) } ?? "unknown"
+        let modified = modificationDate.map {
+            String(format: "%.6f", $0.timeIntervalSinceReferenceDate)
+        } ?? "unknown"
         return "modified:\(modified)|size:\(pixelWidth)x\(pixelHeight)|vlm-cache:\(PhotoSorterMediaVLMSummaryCache.configurationVersion)"
+    }
+
+    private func scheduleOCRContentValidation(
+        for mountedAsset: MountedAsset
+    ) {
+        let assetVersion = Self.ocrAssetVersion(for: mountedAsset)
+        guard let lookup = ocrCache.lookup(
+            localIdentifier: mountedAsset.localIdentifier,
+            assetVersion: assetVersion
+        ), lookup.requiresContentValidation,
+           beginVisualContentValidation(
+            localIdentifier: mountedAsset.localIdentifier,
+            kind: .ocr
+           ) else {
+            return
+        }
+
+        Task { [weak self] in
+            guard let self else { return }
+            defer {
+                self.endVisualContentValidation(
+                    localIdentifier: mountedAsset.localIdentifier,
+                    kind: .ocr
+                )
+            }
+            guard let asset = PHAsset.fetchAssets(
+                withLocalIdentifiers: [mountedAsset.localIdentifier],
+                options: nil
+            ).firstObject,
+                  let (image, orientation) = try? await self.localOCRImage(
+                    for: asset,
+                    mountedAsset: mountedAsset
+                  ),
+                  let fingerprint = PhotoSorterVisualContentFingerprint.make(
+                    from: image,
+                    orientation: orientation
+                  ) else {
+                return
+            }
+
+            if lookup.contentFingerprint == fingerprint {
+                _ = try? self.ocrCache.store(
+                    text: lookup.text,
+                    localIdentifier: mountedAsset.localIdentifier,
+                    assetVersion: assetVersion,
+                    contentFingerprint: fingerprint
+                )
+            } else {
+                _ = try? self.ocrCache.remove(
+                    localIdentifier: mountedAsset.localIdentifier,
+                    assetVersion: assetVersion,
+                    expectedContentFingerprint: lookup.contentFingerprint
+                )
+            }
+            self.invalidateVisualCacheCoverage(kind: .ocr)
+        }
+    }
+
+    private func scheduleVLMContentValidation(
+        for mountedAsset: MountedAsset,
+        cacheKey: PhotoSorterMediaVLMSummaryCacheKey
+    ) {
+        guard let lookup = vlmSummaryCache.lookup(for: cacheKey),
+              lookup.requiresContentValidation,
+              beginVisualContentValidation(
+                localIdentifier: mountedAsset.localIdentifier,
+                kind: .vlm
+              ) else {
+            return
+        }
+
+        Task { [weak self] in
+            guard let self else { return }
+            defer {
+                self.endVisualContentValidation(
+                    localIdentifier: mountedAsset.localIdentifier,
+                    kind: .vlm
+                )
+            }
+            guard let image = try? await self.vlmCIImage(for: mountedAsset),
+                  let fingerprint = PhotoSorterVisualContentFingerprint.make(from: image) else {
+                return
+            }
+
+            if lookup.contentFingerprint == fingerprint {
+                _ = try? self.vlmSummaryCache.store(
+                    summary: lookup.summary,
+                    for: cacheKey,
+                    contentFingerprint: fingerprint
+                )
+            } else {
+                _ = try? self.vlmSummaryCache.remove(
+                    for: cacheKey,
+                    expectedContentFingerprint: lookup.contentFingerprint
+                )
+            }
+            self.invalidateVisualCacheCoverage(kind: .vlm)
+        }
+    }
+
+    private enum VisualCacheValidationKind {
+        case ocr
+        case vlm
+    }
+
+    private func beginVisualContentValidation(
+        localIdentifier: String,
+        kind: VisualCacheValidationKind
+    ) -> Bool {
+        visualCacheValidationLock.lock()
+        defer { visualCacheValidationLock.unlock() }
+        switch kind {
+        case .ocr:
+            return ocrAssetsUnderContentValidation.insert(localIdentifier).inserted
+        case .vlm:
+            return vlmAssetsUnderContentValidation.insert(localIdentifier).inserted
+        }
+    }
+
+    private func endVisualContentValidation(
+        localIdentifier: String,
+        kind: VisualCacheValidationKind
+    ) {
+        visualCacheValidationLock.lock()
+        switch kind {
+        case .ocr:
+            ocrAssetsUnderContentValidation.remove(localIdentifier)
+        case .vlm:
+            vlmAssetsUnderContentValidation.remove(localIdentifier)
+        }
+        visualCacheValidationLock.unlock()
+    }
+
+    private func invalidateVisualCacheCoverage(kind: VisualCacheValidationKind) {
+        cacheCoverageLock.lock()
+        switch kind {
+        case .ocr:
+            ocrCacheCoverage = nil
+        case .vlm:
+            vlmCacheCoverage = nil
+        }
+        cacheCoverageLock.unlock()
     }
 
     private func summarizeVLM(
@@ -4479,10 +4658,33 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
             for: mountedAsset,
             processorConfigFingerprint: providerStatus.processorConfigFingerprint
         )
-        if let summary = vlmSummaryCache.summary(for: cacheKey) {
+        let cachedLookup = vlmSummaryCache.lookup(for: cacheKey)
+        if let cachedLookup, !cachedLookup.requiresContentValidation {
             return PhotoSorterMediaVLMSummaryResult(
                 path: outputPath,
-                summary: summary,
+                summary: cachedLookup.summary,
+                source: .cache
+            )
+        }
+        let image = try await vlmCIImage(for: mountedAsset)
+        let contentFingerprint = PhotoSorterVisualContentFingerprint.make(from: image)
+        if let cachedLookup,
+           cachedLookup.requiresContentValidation,
+           let contentFingerprint,
+           cachedLookup.contentFingerprint == contentFingerprint {
+            let storeResult = try vlmSummaryCache.store(
+                summary: cachedLookup.summary,
+                for: cacheKey,
+                contentFingerprint: contentFingerprint,
+                persistImmediately: persistImmediately
+            )
+            recordVLMSummaryCacheStore(
+                insertedValidEntry: storeResult.insertedValidEntry,
+                generation: storeResult.generation
+            )
+            return PhotoSorterMediaVLMSummaryResult(
+                path: outputPath,
+                summary: cachedLookup.summary,
                 source: .cache
             )
         }
@@ -4491,7 +4693,6 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
                 providerStatus.reason ?? "local FastVLM is unavailable"
             )
         }
-        let image = try await vlmCIImage(for: mountedAsset)
         let summary = try await vlmSummaryProvider.summarize(
             image: image,
             modelBundle: modelBundle
@@ -4499,6 +4700,7 @@ final class PhotoLibraryMount: NSObject, @unchecked Sendable {
         let storeResult = try vlmSummaryCache.store(
             summary: summary,
             for: cacheKey,
+            contentFingerprint: contentFingerprint,
             persistImmediately: persistImmediately
         )
         recordVLMSummaryCacheStore(
@@ -5258,15 +5460,18 @@ extension PhotoLibraryMount: PhotoSorterMediaOCRProviding {
             return .unavailable("OCR supports images only")
         }
         let assetVersion = Self.ocrAssetVersion(for: mountedAsset)
-        guard let text = ocrCache.text(
+        guard let lookup = ocrCache.lookup(
             localIdentifier: mountedAsset.localIdentifier,
             assetVersion: assetVersion
         ) else {
             return .miss
         }
+        if lookup.requiresContentValidation {
+            scheduleOCRContentValidation(for: mountedAsset)
+        }
         return .hit(PhotoSorterMediaOCRResult(
             path: normalized,
-            text: text,
+            text: lookup.text,
             source: .cache
         ))
     }
@@ -5355,12 +5560,16 @@ extension PhotoLibraryMount: PhotoSorterVLMProviding {
         guard mountedAsset.mediaType == .image else {
             return .unavailable("VLM supports images only")
         }
-        guard let summary = vlmSummaryCache.summary(for: vlmCacheKey(for: mountedAsset)) else {
+        let cacheKey = vlmCacheKey(for: mountedAsset)
+        guard let lookup = vlmSummaryCache.lookup(for: cacheKey) else {
             return .miss
+        }
+        if lookup.requiresContentValidation {
+            scheduleVLMContentValidation(for: mountedAsset, cacheKey: cacheKey)
         }
         return .hit(PhotoSorterMediaVLMSummaryResult(
             path: normalized,
-            summary: summary,
+            summary: lookup.summary,
             source: .cache
         ))
     }

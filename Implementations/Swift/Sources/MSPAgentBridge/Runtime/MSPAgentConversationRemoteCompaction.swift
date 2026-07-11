@@ -136,11 +136,29 @@ extension MSPAgentConversation {
         let fullInput = prefixItems + promptTranscriptItems
         let rewrite = compactionRequestBuilder.remoteCompactInputByRewritingOutputsToFitContextWindow(
             fullInput,
-            contextWindow: latestContextUsage?.contextWindowTokens
+            contextWindow: Self.remoteCompactFitContextWindow(
+                latestContextUsage: latestContextUsage,
+                resolvedModelProfile: resolvedModelProfile
+            )
         ) { items in
             Self.approximateTokenCount(in: items)
         }
         return rewrite.input
+    }
+
+    static func remoteCompactFitContextWindow(
+        latestContextUsage: MSPAgentContextUsageRecord?,
+        resolvedModelProfile: MSPResolvedModelProfile?
+    ) -> Int? {
+        if let effectiveWindow = resolvedModelProfile?.effectiveContextWindowTokens,
+           effectiveWindow > 0 {
+            return effectiveWindow
+        }
+        if let effectiveWindow = latestContextUsage?.effectiveContextWindowTokens,
+           effectiveWindow > 0 {
+            return effectiveWindow
+        }
+        return nil
     }
 
     private func runRemoteCompactV1(

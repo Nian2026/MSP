@@ -55,16 +55,10 @@ It combines the generic MSP shell model with a real iOS domain backend:
 - CPython packaging through the same optional MSP Python runtime path used by
   the other iOS example
 
-PhotoSorter could have been kept as a closed-source product. Photo library
-cleanup is a nearly universal problem: almost everyone with a phone eventually
-accumulates years of screenshots, duplicates, receipts, memes, documents, and
-half-forgotten moments that are too tedious to sort by hand. That makes
-PhotoSorter a genuinely commercial app idea.
-
-I am open-sourcing it anyway because the larger point is MSP: app capabilities
-should become composable command vocabulary inside product-shaped software,
-especially when the data is private, personal, and too valuable to hand to an
-uncontrolled tool.
+PhotoSorter could stand on its own as a closed-source product idea. This
+repository open-sources it as an example because the larger point is MSP: app
+capabilities should become composable command vocabulary inside product-shaped
+software.
 
 ## Photos Workspace
 
@@ -222,7 +216,7 @@ Create local signing settings once:
 ```bash
 ../../../Examples/iOS/Tools/bootstrap-ios-examples.sh \
   --team ABCDE12345 \
-  --bundle-prefix com.yourname.msp
+  --bundle-prefix com.yourname.modelshellproxy
 ```
 
 The public Xcode project does not contain a personal signing team. The bootstrap
@@ -239,7 +233,7 @@ Command-line device build:
 
 ```bash
 MSP_EXAMPLE_DEVELOPMENT_TEAM=ABCDE12345 \
-MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.msp \
+MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.modelshellproxy \
   xcodebuild -project Project/PhotoSorter.xcodeproj \
     -scheme PhotoSorter \
     -configuration Debug \

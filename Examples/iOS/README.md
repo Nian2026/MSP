@@ -1,6 +1,6 @@
 # iOS Examples
 
-This directory contains the two public iOS example apps for Model Shell Protocol.
+This directory contains the two public iOS example apps for Model Shell Proxy.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ From the repository root:
 ```sh
 Examples/iOS/Tools/bootstrap-ios-examples.sh \
   --team ABCDE12345 \
-  --bundle-prefix com.yourname.msp
+  --bundle-prefix com.yourname.modelshellproxy
 ```
 
 The script writes ignored local signing settings to

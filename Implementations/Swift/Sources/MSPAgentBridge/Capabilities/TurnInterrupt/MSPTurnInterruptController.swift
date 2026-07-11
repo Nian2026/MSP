@@ -61,7 +61,9 @@ final class MSPTurnInterruptController {
         guard let activeTurn else {
             return false
         }
-        return activeTurn.kind == .user && activeTurn.status == .running
+        return activeTurn.kind == .user
+            && activeTurn.status == .running
+            && activeTurn.task?.isCancelled != true
     }
 
     func installRecorder(

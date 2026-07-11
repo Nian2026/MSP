@@ -200,7 +200,7 @@ class MSPAgentConversationRequestTestCase: XCTestCase {
         XCTAssertTrue(text.contains("Linux workspace"), file: file, line: line)
         XCTAssertFalse(text.contains("Linux-like workspace"), file: file, line: line)
         XCTAssertTrue(text.contains("Workspace root visible to you: /"), file: file, line: line)
-        XCTAssertFalse(text.contains("Model Shell Protocol"), file: file, line: line)
+        XCTAssertFalse(text.contains("Model Shell Proxy"), file: file, line: line)
         XCTAssertFalse(text.contains("MSP"), file: file, line: line)
         XCTAssertFalse(text.contains("iOS app sandbox"), file: file, line: line)
     }

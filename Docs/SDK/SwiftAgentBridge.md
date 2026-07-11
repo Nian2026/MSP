@@ -1,7 +1,7 @@
 # Swift Agent Bridge
 
 `MSPAgentBridge` is the SDK layer that connects a model turn loop to a
-Model Shell Protocol command surface.
+Model Shell Proxy command surface.
 
 It has one job: keep the agent-facing interface simple while keeping the app
 runtime structured and auditable.

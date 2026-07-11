@@ -1,7 +1,26 @@
+import MSPAgentBridge
 import XCTest
 @testable import MSPPlaygroundApp
 
 final class MSPModelConfigurationStoreTests: XCTestCase {
+    func testLoadUsesModelDefaultReasoningAndVerbosityMedium() {
+        let suiteName = "MSPModelConfigurationStoreTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let secretStore = InMemoryModelSecretStore()
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+
+        let configuration = MSPModelConfigurationStore.load(
+            defaults: defaults,
+            environment: [:],
+            secretStore: secretStore
+        )
+
+        XCTAssertEqual(configuration.reasoningEffort, "model_default")
+        XCTAssertEqual(configuration.verbosity, "medium")
+    }
+
     func testSaveAndLoadPersistsModelConfiguration() throws {
         let suiteName = "MSPModelConfigurationStoreTests-\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
@@ -414,7 +433,10 @@ final class MSPModelConfigurationStoreTests: XCTestCase {
         XCTAssertEqual(resolved.configuration.providerName, "Codex OAuth")
         XCTAssertEqual(resolved.configuration.baseURL?.absoluteString, "https://chatgpt.com/backend-api/codex")
         XCTAssertEqual(resolved.configuration.apiKey, "oauth-token")
-        XCTAssertEqual(resolved.configuration.modelID, "gpt-5.5")
+        XCTAssertEqual(
+            resolved.configuration.modelID,
+            MSPModelConfigurationResolver.codexOAuthDefaultModelID
+        )
         XCTAssertEqual(resolved.additionalHTTPHeaders["Chatgpt-Account-Id"], "account-123")
         XCTAssertEqual(resolved.additionalHTTPHeaders["originator"], "codex_cli_rs")
         XCTAssertNotNil(resolved.additionalHTTPHeaders["User-Agent"])
@@ -479,14 +501,198 @@ final class MSPModelConfigurationStoreTests: XCTestCase {
             codexOAuthConfiguration: codexOAuthConfiguration(accessToken: "oauth-token")
         )
 
-        XCTAssertTrue(options.contains { $0.source == .apiKey && $0.modelID == "gpt-5" && $0.isEnabled })
+        XCTAssertTrue(options.contains { $0.source == .apiKey && $0.modelID == "gpt-5.6-sol" && $0.isEnabled })
         XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "gpt-5.4" && $0.isEnabled && $0.isSelected })
+        XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "gpt-5.6-sol" && $0.isEnabled })
         XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "gpt-5.5" && $0.isEnabled })
         XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "gpt-5.4-mini" && $0.isEnabled })
-        XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "gpt-5.3-codex" && $0.isEnabled })
-        XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "gpt-5.3-codex-spark" && $0.isEnabled })
         XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "gpt-5.2" && $0.isEnabled })
+        XCTAssertFalse(options.contains { $0.modelID == "gpt-5.3-codex" })
+        XCTAssertFalse(options.contains { $0.modelID == "gpt-5.3-codex-spark" })
+        XCTAssertFalse(options.contains { $0.modelID == "gpt-5" })
         XCTAssertFalse(options.contains { $0.source == .codexOAuth && $0.modelID == "codex-auto-review" })
+    }
+
+    func testModelPickerCatalogUsesCredentialSpecificSnapshots() throws {
+        let sharedAPIModel = MSPModelCapabilities(
+            slug: "shared-model",
+            displayName: "Shared API",
+            defaultReasoningEffort: .high,
+            supportedReasoningEfforts: [.low, .medium, .high].map {
+                MSPReasoningEffortPreset(effort: $0, description: $0.rawValue)
+            },
+            contextWindow: 200_000
+        )
+        let sharedOAuthModel = MSPModelCapabilities(
+            slug: "shared-model",
+            displayName: "Shared OAuth",
+            defaultReasoningEffort: .low,
+            supportedReasoningEfforts: [.low, .ultra].map {
+                MSPReasoningEffortPreset(effort: $0, description: $0.rawValue)
+            },
+            contextWindow: 400_000
+        )
+        let snapshots = MSPModelPickerCatalogSnapshots(
+            apiKey: MSPModelCatalogSnapshot(
+                models: [
+                    sharedAPIModel,
+                    MSPModelCapabilities(slug: "api-only", contextWindow: 200_000)
+                ],
+                metadataSource: .provided
+            ),
+            codexOAuth: MSPModelCatalogSnapshot(
+                models: [
+                    sharedOAuthModel,
+                    MSPModelCapabilities(slug: "oauth-only", contextWindow: 400_000)
+                ],
+                metadataSource: .provided
+            )
+        )
+        let configuration = MSPModelConfiguration(
+            providerName: "OpenAI-compatible",
+            baseURL: URL(string: "https://api.openai.com/v1"),
+            apiKey: "saved-api-key",
+            modelID: "shared-model",
+            credentialMode: MSPModelCredentialMode.apiKey.rawValue,
+            reasoningEffort: "high",
+            verbosity: "medium"
+        )
+
+        let options = MSPModelPickerCatalog.options(
+            configuration: configuration,
+            codexOAuthConfiguration: codexOAuthConfiguration(accessToken: "oauth-token"),
+            snapshots: snapshots
+        )
+
+        XCTAssertTrue(options.contains { $0.source == .apiKey && $0.modelID == "api-only" })
+        XCTAssertFalse(options.contains { $0.source == .apiKey && $0.modelID == "oauth-only" })
+        XCTAssertTrue(options.contains { $0.source == .codexOAuth && $0.modelID == "oauth-only" })
+        XCTAssertFalse(options.contains { $0.source == .codexOAuth && $0.modelID == "api-only" })
+
+        let oauthOption = try XCTUnwrap(options.first {
+            $0.source == .codexOAuth && $0.modelID == "shared-model"
+        })
+        let selected = MSPModelPickerCatalog.configuration(
+            selecting: oauthOption,
+            from: configuration,
+            snapshots: snapshots
+        )
+        XCTAssertEqual(selected.reasoningEffort, "low")
+
+        var oauthConfiguration = selected
+        oauthConfiguration.reasoningEffort = "high"
+        XCTAssertEqual(
+            MSPModelPickerCatalog.reasoningEffortSelection(
+                configuration: oauthConfiguration,
+                snapshots: snapshots
+            ),
+            "low"
+        )
+        XCTAssertEqual(
+            MSPModelPickerCatalog.reasoningEffortPresets(
+                configuration: oauthConfiguration,
+                snapshots: snapshots
+            ).map(\.effort),
+            [.modelDefault, .low, .ultra]
+        )
+    }
+
+    func testModelPickerCatalogSnapshotsPreserveInactiveAPISource() {
+        let apiSnapshot = MSPModelCatalogSnapshot(
+            models: [MSPModelCapabilities(slug: "custom-api", contextWindow: 200_000)],
+            metadataSource: .remote,
+            providerID: "custom-api"
+        )
+        let oauthSnapshot = MSPModelCatalogSnapshot(
+            models: [MSPModelCapabilities(slug: "oauth-new", contextWindow: 400_000)],
+            metadataSource: .remote,
+            providerID: "codex-oauth"
+        )
+
+        let updated = MSPModelPickerCatalogSnapshots(apiKey: apiSnapshot).updating(
+            apiKey: nil,
+            codexOAuth: oauthSnapshot
+        )
+
+        XCTAssertEqual(updated.apiKey, apiSnapshot)
+        XCTAssertEqual(updated.codexOAuth, oauthSnapshot)
+    }
+
+    func testModelPickerCatalogHidesUnknownBasicModelsButKeepsCurrentPrimary() {
+        let basicModel = MSPModelCapabilities(
+            slug: "text-embedding-test",
+            entryKind: .basic
+        )
+        let snapshot = MSPModelCatalogSnapshot(
+            models: [
+                MSPModelCapabilities(slug: "responses-model", contextWindow: 200_000),
+                basicModel
+            ],
+            metadataSource: .provided
+        )
+        let configuration = MSPModelConfiguration(
+            providerName: "OpenAI-compatible",
+            baseURL: URL(string: "https://api.openai.com/v1"),
+            apiKey: "saved-api-key",
+            modelID: "manually-entered-model",
+            credentialMode: MSPModelCredentialMode.apiKey.rawValue,
+            reasoningEffort: "model_default",
+            verbosity: "medium"
+        )
+
+        let options = MSPModelPickerCatalog.options(
+            configuration: configuration,
+            codexOAuthConfiguration: .empty,
+            snapshots: MSPModelPickerCatalogSnapshots(apiKey: snapshot)
+        )
+
+        XCTAssertTrue(snapshot.models.contains(basicModel))
+        XCTAssertTrue(options.contains { $0.modelID == "responses-model" })
+        XCTAssertTrue(options.contains {
+            $0.modelID == "manually-entered-model" && $0.isSelected
+        })
+        XCTAssertFalse(options.contains { $0.modelID == basicModel.slug })
+    }
+
+    func testModelPickerCatalogExposesDynamicGPT56ReasoningEfforts() {
+        let configuration = MSPModelConfiguration(
+            providerName: "OpenAI-compatible",
+            baseURL: URL(string: "https://api.openai.com/v1"),
+            apiKey: "saved-api-key",
+            modelID: "gpt-5.6-sol",
+            reasoningEffort: "model_default",
+            verbosity: "medium"
+        )
+
+        let efforts = MSPModelPickerCatalog
+            .reasoningEffortPresets(configuration: configuration)
+            .map(\.effort.rawValue)
+
+        XCTAssertEqual(efforts, [
+            "model_default", "low", "medium", "high", "xhigh", "max", "ultra"
+        ])
+    }
+
+    func testModelPickerCatalogReconcilesUnsupportedEffortWhenSwitchingModels() throws {
+        let configuration = MSPModelConfiguration(
+            providerName: "OpenAI-compatible",
+            baseURL: URL(string: "https://api.openai.com/v1"),
+            apiKey: "saved-api-key",
+            modelID: "gpt-5.6-sol",
+            reasoningEffort: "ultra",
+            verbosity: "medium"
+        )
+        let option = try XCTUnwrap(MSPModelPickerCatalog.options(
+            configuration: configuration,
+            codexOAuthConfiguration: .empty
+        ).first { $0.source == .apiKey && $0.modelID == "gpt-5.5" })
+
+        let selected = MSPModelPickerCatalog.configuration(
+            selecting: option,
+            from: configuration
+        )
+
+        XCTAssertEqual(selected.reasoningEffort, "medium")
     }
 
     func testModelPickerCatalogHidesAPIKeyOptionsWhenAPIKeyIsMissing() {
@@ -547,7 +753,10 @@ final class MSPModelConfigurationStoreTests: XCTestCase {
             codexOAuthConfiguration: codexOAuthConfiguration(accessToken: "oauth-token")
         )
 
-        XCTAssertEqual(title, "Codex OAuth · gpt-5.5")
+        XCTAssertEqual(
+            title,
+            "Codex OAuth · \(MSPModelConfigurationResolver.codexOAuthDefaultModelID)"
+        )
     }
 
     func testModelPickerTitleShowsMissingConfigurationWhenNoCredentialIsAvailable() {

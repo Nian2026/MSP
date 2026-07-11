@@ -14,7 +14,7 @@ struct PhotoSorterMediaVLMSummaryCacheKey: Codable, Hashable, Sendable, Equatabl
     var storageKey: String {
         [
             localIdentifier,
-            assetVersion,
+            Self.canonicalAssetVersion(assetVersion),
             providerKind,
             modelID,
             modelVersion,
@@ -27,10 +27,59 @@ struct PhotoSorterMediaVLMSummaryCacheKey: Codable, Hashable, Sendable, Equatabl
         .joined(separator: "|")
     }
 
+    static func canonicalAssetVersion(_ assetVersion: String) -> String {
+        guard assetVersion.hasPrefix("modified:"),
+              let stableSuffixRange = assetVersion.range(of: "|size:")
+        else {
+            return assetVersion
+        }
+        return String(assetVersion[stableSuffixRange.lowerBound...].dropFirst())
+    }
+
+    static func canonicalizedStorageKey(_ storageKey: String) -> String {
+        var components = storageKey.components(separatedBy: "|")
+        guard components.count == 9 else {
+            return storageKey
+        }
+        let decodedAssetVersion = unescapeStorageComponent(components[1])
+        components[1] = escapeStorageComponent(canonicalAssetVersion(decodedAssetVersion))
+        return components.joined(separator: "|")
+    }
+
+    static func assetVersion(in storageKey: String) -> String? {
+        let components = storageKey.components(separatedBy: "|")
+        guard components.count == 9 else {
+            return nil
+        }
+        return unescapeStorageComponent(components[1])
+    }
+
+    static func modificationDateRank(in storageKey: String) -> Double? {
+        guard let assetVersion = assetVersion(in: storageKey) else {
+            return nil
+        }
+        guard assetVersion.hasPrefix("modified:"),
+              let separatorRange = assetVersion.range(of: "|size:")
+        else {
+            return nil
+        }
+        let valueStart = assetVersion.index(
+            assetVersion.startIndex,
+            offsetBy: "modified:".count
+        )
+        return Double(assetVersion[valueStart..<separatorRange.lowerBound])
+    }
+
     private static func escapeStorageComponent(_ component: String) -> String {
         component
             .replacingOccurrences(of: "%", with: "%25")
             .replacingOccurrences(of: "|", with: "%7C")
+    }
+
+    private static func unescapeStorageComponent(_ component: String) -> String {
+        component
+            .replacingOccurrences(of: "%7C", with: "|")
+            .replacingOccurrences(of: "%25", with: "%")
     }
 }
 

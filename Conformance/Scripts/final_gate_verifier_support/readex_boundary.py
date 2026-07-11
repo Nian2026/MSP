@@ -25,7 +25,6 @@ FORBIDDEN_EXTERNAL_READEX_MARKERS = [
 ]
 
 DEFAULT_SCAN_EXCLUDED_FILENAMES = {
-    "check_open_source_example_boundary.py",
     "readex_boundary.py",
     "verify_readex_boundary.py",
 }

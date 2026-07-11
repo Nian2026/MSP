@@ -12,7 +12,7 @@ Usage:
   $0 --team TEAM_ID --bundle-prefix REVERSE_DNS_PREFIX [--skip-cpython]
 
 Example:
-  $0 --team ABCDE12345 --bundle-prefix com.yourname.msp
+  $0 --team ABCDE12345 --bundle-prefix com.yourname.modelshellproxy
 
 Writes the ignored local signing config used by the public iOS example projects
 and pre-populates the BeeWare CPython iOS cache used by direct Xcode builds.

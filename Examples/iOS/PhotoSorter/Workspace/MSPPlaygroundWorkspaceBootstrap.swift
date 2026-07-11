@@ -66,7 +66,7 @@ enum MSPPlaygroundWorkspaceBootstrap {
         )
         try removeIfContentsMatch(
             workspaceURL.appendingPathComponent("notes/first-run.txt"),
-            expected: "Commands run through Model Shell Protocol against this workspace.\n",
+            expected: "Commands run through Model Shell Proxy against this workspace.\n",
             fileManager: fileManager
         )
         try removeDirectoryIfEmpty(workspaceURL.appendingPathComponent("docs"), fileManager: fileManager)

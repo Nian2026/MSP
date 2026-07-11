@@ -1,9 +1,9 @@
-# Model Shell Protocol
+# Model Shell Proxy
 
 The final form of software engineering is an app-owned operating environment
 for models.
 
-Model Shell Protocol, or MSP, defines that environment.
+Model Shell Proxy, or MSP, defines that environment.
 
 MSP is the operating-system semantics layer inside an application: a runtime
 that turns app data, platform permissions, domain objects, user artifacts,
@@ -368,7 +368,7 @@ To prepare direct iOS device runs, create a local signing override once:
 ```sh
 Examples/iOS/Tools/bootstrap-ios-examples.sh \
   --team ABCDE12345 \
-  --bundle-prefix com.yourname.msp
+  --bundle-prefix com.yourname.modelshellproxy
 ```
 
 The script writes ignored local signing settings and populates the CPython iOS
@@ -409,7 +409,7 @@ xcodebuild \
   -sdk iphoneos \
   -destination 'generic/platform=iOS' \
   MSP_EXAMPLE_DEVELOPMENT_TEAM=ABCDE12345 \
-  MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.msp \
+  MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.modelshellproxy \
   build
 
 xcodebuild \
@@ -419,7 +419,7 @@ xcodebuild \
   -sdk iphoneos \
   -destination 'generic/platform=iOS' \
   MSP_EXAMPLE_DEVELOPMENT_TEAM=ABCDE12345 \
-  MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.msp \
+  MSP_EXAMPLE_BUNDLE_ID_PREFIX=com.yourname.modelshellproxy \
   build
 ```
 

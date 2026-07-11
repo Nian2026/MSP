@@ -129,6 +129,50 @@ final class MSPChatTests: XCTestCase {
         XCTAssertTrue(report.isValid, report.renderedText())
     }
 
+    func testManifestTitleMetadataRoundTripsWithoutDroppingUnknownFields() throws {
+        let raw: [String: MSPChatJSONValue] = [
+            "format": .string(MSPChat.formatIdentifier),
+            "version": .int(MSPChat.schemaVersion),
+            "package_id": .string("chatpkg_title_round_trip"),
+            "created_at": .string("2026-07-11T10:00:00Z"),
+            "updated_at": .string("2026-07-11T10:00:00Z"),
+            "profiles": .array([.string("core-timeline")]),
+            "capabilities": .array([.string("read_core"), .string("write_core")]),
+            "timeline": .object([
+                "path": .string(MSPChat.defaultTimelinePath),
+                "encoding": .string("utf-8"),
+                "record_format": .string("ndjson"),
+                "next_seq": .int(4),
+                "x-timeline-owner": .string("preserve-me")
+            ]),
+            "x-example": .object([
+                "enabled": .bool(true),
+                "nested": .array([.int(1), .string("two")])
+            ])
+        ]
+        let manifest = try MSPChatManifest(rawJSON: raw)
+
+        let titled = try MSPChatManifest(rawJSON: manifest.rawJSONWithTitle(
+            "复刻 Codex 自动标题",
+            searchDescription: "为 MSP 提供可接入的 ChatNaming SDK",
+            revision: 1,
+            titleUpdatedAt: "2026-07-11T10:00:01Z",
+            source: "model",
+            packageUpdatedAt: "2026-07-11T10:00:01Z"
+        ))
+
+        XCTAssertEqual(titled.title, "复刻 Codex 自动标题")
+        XCTAssertEqual(titled.searchDescription, "为 MSP 提供可接入的 ChatNaming SDK")
+        XCTAssertEqual(titled.titleRevision, 1)
+        XCTAssertEqual(titled.titleUpdatedAt, "2026-07-11T10:00:01Z")
+        XCTAssertEqual(titled.titleSource, "model")
+        XCTAssertEqual(titled.rawJSON["x-example"], raw["x-example"])
+        XCTAssertEqual(
+            titled.rawJSON["timeline"]?.objectValue?["x-timeline-owner"],
+            .string("preserve-me")
+        )
+    }
+
     func testCoreWriterAppendEventsAdvancesManifestNextSeqWithoutFullPackageRewrite() throws {
         let temporaryPackage = try makeTemporaryPackageURL(named: "append-state.chat")
         let writer = MSPChatCoreWriter()

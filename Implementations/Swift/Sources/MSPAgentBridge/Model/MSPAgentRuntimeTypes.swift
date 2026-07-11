@@ -262,25 +262,9 @@ public struct MSPAgentContextWindowProfile: Codable, Hashable, Sendable {
     }
 
     public static func profile(for modelID: String) -> MSPAgentContextWindowProfile? {
-        let normalizedModelID = modelID
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        let modelComponent = normalizedModelID
-            .replacingOccurrences(of: "｜", with: "|")
-            .components(separatedBy: CharacterSet(charactersIn: "/|:"))
-            .last?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            ?? normalizedModelID
-        guard modelComponent.hasPrefix("gpt-5") else { return nil }
-
-        let contextWindowTokens = 272_000
-        return MSPAgentContextWindowProfile(
-            modelID: modelID,
-            modelFamily: "gpt-5",
-            contextWindowTokens: contextWindowTokens,
-            effectiveContextWindowTokens: contextWindowTokens * 95 / 100,
-            autoCompactTokenLimit: contextWindowTokens * 9 / 10
-        )
+        MSPModelCatalogManager.bundledSnapshot
+            .resolvedProfile(for: modelID)
+            .contextWindowProfile
     }
 }
 
@@ -334,8 +318,8 @@ public struct MSPAgentContextUsageRecord: Codable, Hashable, Sendable {
     }
 
     public var currentWindowFraction: Double? {
-        guard contextWindowTokens > 0 else { return nil }
-        return Double(currentTokens) / Double(contextWindowTokens)
+        guard effectiveContextWindowTokens > 0 else { return nil }
+        return Double(currentTokens) / Double(effectiveContextWindowTokens)
     }
 
     public var currentUsageLevel: MSPAgentContextUsageLevel? {
@@ -344,8 +328,8 @@ public struct MSPAgentContextUsageRecord: Codable, Hashable, Sendable {
     }
 
     public var serverInputWindowFraction: Double? {
-        guard let serverInputTokens, contextWindowTokens > 0 else { return nil }
-        return Double(serverInputTokens) / Double(contextWindowTokens)
+        guard let serverInputTokens, effectiveContextWindowTokens > 0 else { return nil }
+        return Double(serverInputTokens) / Double(effectiveContextWindowTokens)
     }
 
     public var serverInputUsageLevel: MSPAgentContextUsageLevel? {
@@ -377,6 +361,43 @@ public enum MSPAgentContextUsageAdapter {
         guard let profile = MSPAgentContextWindowProfile.profile(for: modelID) else {
             return nil
         }
+        return fullWindowRecord(
+            modelID: modelID,
+            modelDisplayName: modelDisplayName,
+            contextWindowTokens: profile.contextWindowTokens,
+            effectiveContextWindowTokens: profile.effectiveContextWindowTokens,
+            autoCompactTokenLimit: profile.autoCompactTokenLimit,
+            measuredAt: measuredAt
+        )
+    }
+
+    public static func fullWindowRecord(
+        profile: MSPResolvedModelProfile,
+        modelID: String? = nil,
+        modelDisplayName: String? = nil,
+        measuredAt: Date = Date()
+    ) -> MSPAgentContextUsageRecord? {
+        guard let contextProfile = profile.contextWindowProfile else {
+            return nil
+        }
+        return fullWindowRecord(
+            modelID: modelID ?? profile.modelID,
+            modelDisplayName: modelDisplayName,
+            contextWindowTokens: contextProfile.contextWindowTokens,
+            effectiveContextWindowTokens: contextProfile.effectiveContextWindowTokens,
+            autoCompactTokenLimit: contextProfile.autoCompactTokenLimit,
+            measuredAt: measuredAt
+        )
+    }
+
+    private static func fullWindowRecord(
+        modelID: String,
+        modelDisplayName: String?,
+        contextWindowTokens: Int,
+        effectiveContextWindowTokens: Int,
+        autoCompactTokenLimit: Int,
+        measuredAt: Date
+    ) -> MSPAgentContextUsageRecord {
         let displayName = modelDisplayName?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedDisplayName: String
@@ -389,11 +410,11 @@ public enum MSPAgentContextUsageAdapter {
         return MSPAgentContextUsageRecord(
             modelID: modelID,
             modelDisplayName: resolvedDisplayName,
-            contextWindowTokens: profile.contextWindowTokens,
-            effectiveContextWindowTokens: profile.effectiveContextWindowTokens,
-            autoCompactTokenLimit: profile.autoCompactTokenLimit,
-            estimatedInputTokens: profile.contextWindowTokens,
-            currentTokens: profile.contextWindowTokens,
+            contextWindowTokens: contextWindowTokens,
+            effectiveContextWindowTokens: effectiveContextWindowTokens,
+            autoCompactTokenLimit: autoCompactTokenLimit,
+            estimatedInputTokens: effectiveContextWindowTokens,
+            currentTokens: effectiveContextWindowTokens,
             serverInputTokens: nil,
             serverOutputTokens: nil,
             serverTotalTokens: nil,
@@ -411,6 +432,50 @@ public enum MSPAgentContextUsageAdapter {
               let profile = MSPAgentContextWindowProfile.profile(for: modelID) else {
             return nil
         }
+        return record(
+            usage: usage,
+            modelID: modelID,
+            modelDisplayName: modelDisplayName,
+            contextWindowTokens: profile.contextWindowTokens,
+            effectiveContextWindowTokens: profile.effectiveContextWindowTokens,
+            autoCompactTokenLimit: profile.autoCompactTokenLimit,
+            measuredAt: measuredAt
+        )
+    }
+
+    public static func record(
+        usage: MSPAgentTokenUsage?,
+        profile: MSPResolvedModelProfile,
+        modelID: String? = nil,
+        modelDisplayName: String? = nil,
+        measuredAt: Date = Date()
+    ) -> MSPAgentContextUsageRecord? {
+        guard let usage else {
+            return nil
+        }
+        guard let contextProfile = profile.contextWindowProfile else {
+            return nil
+        }
+        return record(
+            usage: usage,
+            modelID: modelID ?? profile.modelID,
+            modelDisplayName: modelDisplayName,
+            contextWindowTokens: contextProfile.contextWindowTokens,
+            effectiveContextWindowTokens: contextProfile.effectiveContextWindowTokens,
+            autoCompactTokenLimit: contextProfile.autoCompactTokenLimit,
+            measuredAt: measuredAt
+        )
+    }
+
+    private static func record(
+        usage: MSPAgentTokenUsage,
+        modelID: String,
+        modelDisplayName: String?,
+        contextWindowTokens: Int,
+        effectiveContextWindowTokens: Int,
+        autoCompactTokenLimit: Int,
+        measuredAt: Date
+    ) -> MSPAgentContextUsageRecord {
 
         let inputTokens = usage.inputTokens.map { max(0, $0) }
         let cachedInputTokens = usage.cachedInputTokens.map { max(0, $0) }
@@ -432,9 +497,9 @@ public enum MSPAgentContextUsageAdapter {
         return MSPAgentContextUsageRecord(
             modelID: modelID,
             modelDisplayName: resolvedDisplayName,
-            contextWindowTokens: profile.contextWindowTokens,
-            effectiveContextWindowTokens: profile.effectiveContextWindowTokens,
-            autoCompactTokenLimit: profile.autoCompactTokenLimit,
+            contextWindowTokens: contextWindowTokens,
+            effectiveContextWindowTokens: effectiveContextWindowTokens,
+            autoCompactTokenLimit: autoCompactTokenLimit,
             estimatedInputTokens: 0,
             currentTokens: max(0, currentTokens),
             serverInputTokens: inputTokens,

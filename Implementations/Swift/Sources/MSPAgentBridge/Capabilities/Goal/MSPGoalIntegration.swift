@@ -66,7 +66,6 @@ extension MSPAgentConversation: MSPGoalProtocol {
         }
 
         let turnID = UUID()
-        var emptyCurrentUserItems: [MSPAgentJSONValue] = []
         await startTrackedTurn(
             id: turnID,
             kind: .user,
@@ -84,7 +83,6 @@ extension MSPAgentConversation: MSPGoalProtocol {
                 additionalEnvironmentNotes: [],
                 onRequestBuilt: onRequestBuilt,
                 onEvent: onEvent,
-                currentUserItemsForCancellation: &emptyCurrentUserItems,
                 currentUserItemsOverride: [],
                 goalInitialItemsOverride: continuationItems
             )

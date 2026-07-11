@@ -1,6 +1,6 @@
 # WorkspaceFS Profile
 
-WorkspaceFS is the Model Shell Protocol filesystem boundary for app sandboxes.
+WorkspaceFS is the Model Shell Proxy filesystem boundary for app sandboxes.
 It is not a staging VFS. Commands run against the developer-provided workspace
 directory directly, while every path first passes through MSP path resolution
 and policy checks.

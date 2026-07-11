@@ -24,7 +24,7 @@ public struct MSPAgentRequestBuildContext: Hashable, Sendable {
         environmentNotes: [String] = MSPAgentInstructions.defaultEnvironmentNotes(),
         tools: [MSPAgentModelToolDefinition] = MSPAgentRequestBuilder.defaultToolDefinitions,
         toolChoice: String = "auto",
-        reasoningEffort: String = "medium",
+        reasoningEffort: String = MSPReasoningEffort.modelDefaultValue,
         textVerbosity: String = "medium",
         store: Bool = false,
         stream: Bool = true,
@@ -56,7 +56,7 @@ public struct MSPAgentRequestBody: Codable, Hashable, Sendable {
     public var tools: [MSPAgentModelToolDefinition]
     public var toolChoice: String
     public var parallelToolCalls: Bool
-    public var reasoning: MSPAgentReasoningOptions
+    public var reasoning: MSPAgentReasoningOptions?
     public var store: Bool
     public var stream: Bool
     public var include: [String]
@@ -213,6 +213,12 @@ public struct MSPAgentRequestBuilder: Sendable {
     public init() {}
 
     public func build(context: MSPAgentRequestBuildContext) -> MSPAgentRequestBody {
+        let reasoningEffort = context.reasoningEffort
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let reasoning = reasoningEffort.isEmpty
+            || reasoningEffort == MSPReasoningEffort.modelDefaultValue
+            ? nil
+            : MSPAgentReasoningOptions(effort: reasoningEffort)
         return MSPAgentRequestBody(
             model: context.model,
             instructions: context.instructions,
@@ -223,7 +229,7 @@ public struct MSPAgentRequestBuilder: Sendable {
             tools: context.tools,
             toolChoice: context.toolChoice,
             parallelToolCalls: context.parallelToolCalls,
-            reasoning: MSPAgentReasoningOptions(effort: context.reasoningEffort),
+            reasoning: reasoning,
             store: context.store,
             stream: context.stream,
             include: context.include,

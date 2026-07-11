@@ -44,6 +44,17 @@ source provenance, and the Cargo license inventory with any release that
 contains that artifact. Source-only downstreams may rebuild or replace the
 bridge from the recorded provenance instead of consuming the checked-in binary.
 
+## Codex Model Catalog Semantics
+
+The dynamic model-catalog implementation under
+`Implementations/Swift/Sources/MSPAgentBridge/Model/Catalog` is a native Swift
+adaptation of model metadata, reasoning-effort, cache, and resolution semantics
+from the Apache-2.0 OpenAI Codex project. The implementation is modified for
+MSP provider scoping and OpenAI-compatible endpoint fallback; it is not a
+verbatim vendored copy. Upstream notice: OpenAI Codex, Copyright 2025 OpenAI.
+Keep this notice and the repository Apache-2.0 license with distributions that
+include that implementation.
+
 ## ExampleChatTranscriptRenderer Runtime Assets
 
 The example iOS apps bundle shared ExampleChatTranscriptRenderer runtime assets

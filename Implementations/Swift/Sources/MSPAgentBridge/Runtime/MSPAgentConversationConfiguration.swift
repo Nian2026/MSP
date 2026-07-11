@@ -28,14 +28,14 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
         environmentNotes: [String] = MSPAgentInstructions.defaultEnvironmentNotes(),
         tools: [MSPAgentModelToolDefinition] = MSPAgentRequestBuilder.defaultToolDefinitions,
         toolChoice: String = "auto",
-        reasoningEffort: String = "medium",
+        reasoningEffort: String = MSPReasoningEffort.modelDefaultValue,
         textVerbosity: String = "medium",
         store: Bool = false,
         stream: Bool = true,
         parallelToolCalls: Bool = false,
         include: [String] = [],
         promptCacheKey: String? = nil,
-        compactionPolicy: MSPCompactionPolicy = .disabled,
+        compactionPolicy: MSPCompactionPolicy = .automatic,
         goalCapability: MSPGoalCapability = .disabled,
         planProgressCapability: MSPPlanProgressCapability = .disabled,
         planModeCapability: MSPPlanModeCapability = .disabled
@@ -68,7 +68,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
         environmentNotes: [String] = MSPAgentInstructions.defaultEnvironmentNotes(),
         tools: [MSPAgentModelToolDefinition] = MSPAgentRequestBuilder.defaultToolDefinitions,
         toolChoice: String = "auto",
-        reasoningEffort: String = "medium",
+        reasoningEffort: String = MSPReasoningEffort.modelDefaultValue,
         textVerbosity: String = "medium",
         store: Bool = false,
         stream: Bool = true,
@@ -112,7 +112,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
         environmentNotes: [String] = MSPAgentInstructions.defaultEnvironmentNotes(),
         tools: [MSPAgentModelToolDefinition] = MSPAgentRequestBuilder.defaultToolDefinitions,
         toolChoice: String = "auto",
-        reasoningEffort: String = "medium",
+        reasoningEffort: String = MSPReasoningEffort.modelDefaultValue,
         textVerbosity: String = "medium",
         store: Bool = false,
         stream: Bool = true,
@@ -134,7 +134,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
             parallelToolCalls: parallelToolCalls,
             include: include,
             promptCacheKey: promptCacheKey,
-            compactionPolicy: .disabled
+            compactionPolicy: .automatic
         )
     }
 
@@ -145,7 +145,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
         environmentNotes: [String] = MSPAgentInstructions.defaultEnvironmentNotes(),
         tools: [MSPAgentModelToolDefinition] = MSPAgentRequestBuilder.defaultToolDefinitions,
         toolChoice: String = "auto",
-        reasoningEffort: String = "medium",
+        reasoningEffort: String = MSPReasoningEffort.modelDefaultValue,
         textVerbosity: String = "medium",
         store: Bool = false,
         stream: Bool = true,
@@ -172,7 +172,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
             parallelToolCalls: parallelToolCalls,
             include: include,
             promptCacheKey: promptCacheKey,
-            compactionPolicy: .disabled,
+            compactionPolicy: .automatic,
             turnInterruptCapability: turnInterruptCapability,
             turnSteerCapability: turnSteerCapability,
             goalCapability: goalCapability,
@@ -188,7 +188,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
         environmentNotes: [String] = MSPAgentInstructions.defaultEnvironmentNotes(),
         tools: [MSPAgentModelToolDefinition] = MSPAgentRequestBuilder.defaultToolDefinitions,
         toolChoice: String = "auto",
-        reasoningEffort: String = "medium",
+        reasoningEffort: String = MSPReasoningEffort.modelDefaultValue,
         textVerbosity: String = "medium",
         store: Bool = false,
         stream: Bool = true,
@@ -214,7 +214,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
             parallelToolCalls: parallelToolCalls,
             include: include,
             promptCacheKey: promptCacheKey,
-            compactionPolicy: .disabled
+            compactionPolicy: .automatic
         )
         self.turnSteerCapability = turnSteerCapability
         self.goalCapability = goalCapability
@@ -224,12 +224,17 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
 
     func requestContext(
         prompt: String,
+        modelProfile: MSPResolvedModelProfile? = nil,
         planProgressToolsVisible: Bool = true
     ) -> MSPAgentRequestBuildContext {
         let baseTools = goalCapability.augmentTools(tools)
         let requestTools = planProgressToolsVisible
             ? planProgressCapability.augmentTools(baseTools)
             : MSPPlanProgressCapability.disabled.augmentTools(baseTools)
+        let resolvedReasoningEffort = modelProfile?
+            .effectiveReasoningEffort(for: reasoningEffort)?
+            .rawValue
+            ?? reasoningEffort
         return MSPAgentRequestBuildContext(
             model: model,
             prompt: prompt,
@@ -238,7 +243,7 @@ public struct MSPAgentConversationConfiguration: Hashable, Sendable {
             environmentNotes: environmentNotes,
             tools: requestTools,
             toolChoice: toolChoice,
-            reasoningEffort: reasoningEffort,
+            reasoningEffort: resolvedReasoningEffort,
             textVerbosity: textVerbosity,
             store: store,
             stream: stream,

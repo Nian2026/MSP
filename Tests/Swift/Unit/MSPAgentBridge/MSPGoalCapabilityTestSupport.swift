@@ -52,7 +52,7 @@ extension MSPGoalCapabilityTests {
             execCommandBridge: MSPExecCommandBridge(runCommand: commandRunner),
             requestBuilder: MSPAgentRequestBuilder(),
             toolCallLimit: .unlimited,
-            threadID: threadID
+            chatID: threadID
         )
     }
 

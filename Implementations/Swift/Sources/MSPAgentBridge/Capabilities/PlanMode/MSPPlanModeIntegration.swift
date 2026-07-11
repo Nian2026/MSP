@@ -29,7 +29,7 @@ extension MSPAgentConversation: MSPPlanModeProtocol {
         try Task.checkCancellation()
 
         let turnID = UUID()
-        var currentUserItemsForCancellation = try currentUserTranscriptItems(
+        let currentUserItemsForCancellation = try currentUserTranscriptItems(
             userMessage: request.prompt
         )
         let earlyRecorder = MSPAgentTurnTranscriptRecorder(
@@ -65,7 +65,7 @@ extension MSPAgentConversation: MSPPlanModeProtocol {
                 additionalEnvironmentNotes: [],
                 onRequestBuilt: onRequestBuilt,
                 onEvent: onEvent,
-                currentUserItemsForCancellation: &currentUserItemsForCancellation,
+                currentUserItemsOverride: currentUserItemsForCancellation,
                 goalInitialItemsOverride: [],
                 planModeRuntime: planRuntime
             )

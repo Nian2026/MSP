@@ -4,6 +4,11 @@ public struct MSPChatManifest: Equatable, Sendable {
     public var packageID: String?
     public var createdAt: String?
     public var updatedAt: String?
+    public var title: String?
+    public var searchDescription: String?
+    public var titleRevision: Int?
+    public var titleUpdatedAt: String?
+    public var titleSource: String?
     public var profiles: [String]
     public var capabilities: [String]
     public var timelinePath: String
@@ -33,6 +38,11 @@ public struct MSPChatManifest: Equatable, Sendable {
         self.packageID = rawJSON["package_id"]?.stringValue
         self.createdAt = rawJSON["created_at"]?.stringValue
         self.updatedAt = rawJSON["updated_at"]?.stringValue
+        self.title = rawJSON["title"]?.stringValue
+        self.searchDescription = rawJSON["search_description"]?.stringValue
+        self.titleRevision = rawJSON["title_revision"]?.intValue
+        self.titleUpdatedAt = rawJSON["title_updated_at"]?.stringValue
+        self.titleSource = rawJSON["title_source"]?.stringValue
         self.profiles = profiles
         self.capabilities = rawJSON["capabilities"]?.stringArrayValue ?? []
         self.timelinePath = timelinePath
@@ -44,13 +54,18 @@ public struct MSPChatManifest: Equatable, Sendable {
         packageID: String,
         createdAt: String,
         updatedAt: String? = nil,
+        title: String? = nil,
+        searchDescription: String? = nil,
+        titleRevision: Int? = nil,
+        titleUpdatedAt: String? = nil,
+        titleSource: String? = nil,
         profiles: [String] = ["core-timeline"],
         capabilities: [String] = ["read_core", "write_core"],
         timelinePath: String = MSPChat.defaultTimelinePath,
         timelineNextSeq: Int = 1
     ) throws {
         try MSPChatManifest.validateTimelinePath(timelinePath)
-        let raw: [String: MSPChatJSONValue] = [
+        var raw: [String: MSPChatJSONValue] = [
             "format": .string(MSPChat.formatIdentifier),
             "version": .int(MSPChat.schemaVersion),
             "package_id": .string(packageID),
@@ -65,6 +80,11 @@ public struct MSPChatManifest: Equatable, Sendable {
                 "next_seq": .int(timelineNextSeq)
             ])
         ]
+        raw["title"] = title.map(MSPChatJSONValue.string)
+        raw["search_description"] = searchDescription.map(MSPChatJSONValue.string)
+        raw["title_revision"] = titleRevision.map(MSPChatJSONValue.int)
+        raw["title_updated_at"] = titleUpdatedAt.map(MSPChatJSONValue.string)
+        raw["title_source"] = titleSource.map(MSPChatJSONValue.string)
         try self.init(rawJSON: raw)
     }
 
@@ -76,6 +96,24 @@ public struct MSPChatManifest: Equatable, Sendable {
             timelineObject["next_seq"] = .int(timelineNextSeq)
             raw["timeline"] = .object(timelineObject)
         }
+        return raw
+    }
+
+    public func rawJSONWithTitle(
+        _ title: String,
+        searchDescription: String?,
+        revision: Int,
+        titleUpdatedAt: String,
+        source: String,
+        packageUpdatedAt: String
+    ) -> [String: MSPChatJSONValue] {
+        var raw = rawJSON
+        raw["title"] = .string(title)
+        raw["search_description"] = searchDescription.map(MSPChatJSONValue.string)
+        raw["title_revision"] = .int(revision)
+        raw["title_updated_at"] = .string(titleUpdatedAt)
+        raw["title_source"] = .string(source)
+        raw["updated_at"] = .string(packageUpdatedAt)
         return raw
     }
 

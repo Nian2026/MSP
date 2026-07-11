@@ -5,7 +5,10 @@ extension MSPAgentConversation {
         userMessage: String
     ) throws -> [MSPAgentJSONValue] {
         let body = requestBuilder.build(
-            context: configuration.requestContext(prompt: userMessage)
+            context: configuration.requestContext(
+                prompt: userMessage,
+                modelProfile: resolvedModelProfile
+            )
         )
         let envelope = try requestBuilder.envelope(from: body)
         let prefixCount = max(0, envelope.input.count - 1)
@@ -21,14 +24,54 @@ extension MSPAgentConversation {
         onRequestBuilt: RequestBuiltHandler?,
         onTranscriptSnapshotUpdated: (@Sendable ([MSPAgentJSONValue]) async -> Void)? = nil,
         onEvent: @escaping EventHandler,
-        currentUserItemsForCancellation: inout [MSPAgentJSONValue],
         currentUserItemsOverride: [MSPAgentJSONValue]? = nil,
         goalInitialItemsOverride: [MSPAgentJSONValue]? = nil,
         planModeRuntime: MSPPlanModeRuntimeSession? = nil
     ) async throws -> MSPAgentRunResult {
+        let task = Task {
+            try await self.runActiveTurnBody(
+                id: turnID,
+                userMessage: userMessage,
+                additionalDeveloperContextBlocks: additionalDeveloperContextBlocks,
+                dynamicDeveloperContextBlocks: dynamicDeveloperContextBlocks,
+                additionalEnvironmentNotes: additionalEnvironmentNotes,
+                onRequestBuilt: onRequestBuilt,
+                onTranscriptSnapshotUpdated: onTranscriptSnapshotUpdated,
+                onEvent: onEvent,
+                currentUserItemsOverride: currentUserItemsOverride,
+                goalInitialItemsOverride: goalInitialItemsOverride,
+                planModeRuntime: planModeRuntime
+            )
+        }
+        if installActiveTurnTask(task, id: turnID) {
+            task.cancel()
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    private func runActiveTurnBody(
+        id turnID: UUID,
+        userMessage: String,
+        additionalDeveloperContextBlocks: [String],
+        dynamicDeveloperContextBlocks: [MSPAgentDynamicDeveloperContextBlock],
+        additionalEnvironmentNotes: [String],
+        onRequestBuilt: RequestBuiltHandler?,
+        onTranscriptSnapshotUpdated: (@Sendable ([MSPAgentJSONValue]) async -> Void)?,
+        onEvent: @escaping EventHandler,
+        currentUserItemsOverride: [MSPAgentJSONValue]?,
+        goalInitialItemsOverride: [MSPAgentJSONValue]?,
+        planModeRuntime: MSPPlanModeRuntimeSession?
+    ) async throws -> MSPAgentRunResult {
+        try Task.checkCancellation()
         await onEvent(.modelRequestPreparing(statusText: "preparing_request"))
+        let modelProfile = try await resolveModelProfileForCurrentTurn()
         var requestContext = configuration.requestContext(
             prompt: userMessage,
+            modelProfile: modelProfile,
             planProgressToolsVisible: planModeRuntime == nil
         )
         requestContext.developerContextBlocks.append(contentsOf: additionalDeveloperContextBlocks)
@@ -36,17 +79,18 @@ extension MSPAgentConversation {
         let dynamicDeveloperContextTexts = await MSPAgentDynamicDeveloperContextBlock.resolveAll(
             dynamicDeveloperContextBlocks
         )
+        try Task.checkCancellation()
         requestContext.developerContextBlocks.append(contentsOf: dynamicDeveloperContextTexts)
         requestContext.environmentNotes.append(contentsOf: additionalEnvironmentNotes)
         let body = requestBuilder.build(context: requestContext)
         await onRequestBuilt?(body)
+        try Task.checkCancellation()
         let envelope = try requestBuilder.envelope(from: body)
         let prefixItems = Array(envelope.input.prefix(max(0, envelope.input.count - 1)))
         let builtCurrentUserItems = currentUserItemsOverride == nil
             ? Array(envelope.input.dropFirst(prefixItems.count))
             : []
         let currentUserItems = currentUserItemsOverride ?? builtCurrentUserItems
-        currentUserItemsForCancellation = currentUserItems
         var promptProjection = promptTranscriptProjection()
         var promptTranscriptItems = promptProjection.items
         let goalInitialItems = goalInitialItemsOverride ?? activeGoalInitialInput(id: turnID)
@@ -71,6 +115,7 @@ extension MSPAgentConversation {
         case .aborted(let result):
             return result
         }
+        try Task.checkCancellation()
         let recorder = MSPAgentTurnTranscriptRecorder(
             initialItems: currentUserItems,
             onSnapshotUpdated: onTranscriptSnapshotUpdated
@@ -86,7 +131,8 @@ extension MSPAgentConversation {
             modelClient: modelClient,
             toolCallLimit: toolCallLimit,
             modelID: configuration.model,
-            modelDisplayName: configuration.model
+            modelDisplayName: modelProfile.displayName,
+            modelProfile: modelProfile
         )
         let scopedOnEvent: EventHandler = { event in
             guard await self.shouldEmitActiveTurnRuntimeEvent(id: turnID) else {
@@ -208,7 +254,9 @@ extension MSPAgentConversation {
                 }
             )
         }
-        if shouldCancelBeforeStart || installActiveTurnTask(task, id: turnID) {
+        if shouldCancelBeforeStart
+            || Task.isCancelled
+            || installActiveTurnTask(task, id: turnID) {
             task.cancel()
         }
         return try await withTaskCancellationHandler {

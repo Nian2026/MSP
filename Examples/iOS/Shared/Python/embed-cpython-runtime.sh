@@ -122,7 +122,7 @@ if [[ -z "${ARCHS:-}" && -n "$executable_name" && -f "$CODESIGNING_FOLDER_PATH/$
 fi
 
 export PLATFORM_FAMILY_NAME="${PLATFORM_FAMILY_NAME:-iOS}"
-export PRODUCT_BUNDLE_IDENTIFIER="${PRODUCT_BUNDLE_IDENTIFIER:-com.modelshellprotocol.example}"
+export PRODUCT_BUNDLE_IDENTIFIER="${PRODUCT_BUNDLE_IDENTIFIER:-com.modelshellproxy.example}"
 
 # BeeWare's Python Apple support installs the stdlib into $CODESIGNING_FOLDER_PATH/python.
 # shellcheck disable=SC1090

@@ -130,6 +130,7 @@ public struct MSPCompactionPolicy: Codable, Hashable, Sendable {
     }
 
     public static let disabled = MSPCompactionPolicy()
+    public static let automatic = MSPCompactionPolicy(enabled: true)
 
     func implementation(providerSupportsRemoteCompaction: Bool) -> MSPCompactionImplementation {
         if tokenBudgetFeatureEnabled {

@@ -1,4 +1,5 @@
 import Foundation
+import MSPAgentBridge
 
 struct MSPModelConfiguration: Hashable, Sendable {
     var providerName: String
@@ -48,7 +49,7 @@ struct MSPModelConfiguration: Hashable, Sendable {
         apiStyle: MSPModelConfiguration.defaultAPIStyle,
         endpointType: MSPModelConfiguration.defaultEndpointType,
         endpointPathOverride: "",
-        reasoningEffort: "medium",
+        reasoningEffort: MSPReasoningEffort.modelDefaultValue,
         verbosity: "low"
     )
 
@@ -81,7 +82,7 @@ struct MSPModelConfiguration: Hashable, Sendable {
                 : endpointType.trimmingCharacters(in: .whitespacesAndNewlines),
             endpointPathOverride: endpointPathOverride.trimmingCharacters(in: .whitespacesAndNewlines),
             reasoningEffort: reasoningEffort.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ? "medium"
+                ? MSPReasoningEffort.modelDefaultValue
                 : reasoningEffort.trimmingCharacters(in: .whitespacesAndNewlines),
             verbosity: verbosity.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? "low"
@@ -316,7 +317,7 @@ struct MSPResolvedModelConfiguration: Equatable {
 
 enum MSPModelConfigurationResolver {
     static let codexOAuthBaseURL = URL(string: "https://chatgpt.com/backend-api/codex")!
-    static let codexOAuthDefaultModelID = "gpt-5.5"
+    static let codexOAuthDefaultModelID = MSPModelCatalogManager.bundledSnapshot.defaultModelID ?? "gpt-5"
     static let officialOpenAIBaseURL = URL(string: "https://api.openai.com/v1")!
     private static let codexOAuthUserAgent = "codex_cli_rs/0.76.0 (Debian 13.0.0; x86_64) WindowsTerminal"
 
@@ -460,40 +461,69 @@ struct MSPModelPickerOption: Identifiable, Hashable, Sendable {
     var isSelected: Bool
 }
 
-enum MSPModelPickerCatalog {
-    private static let apiKeyModels = [
-        "gpt-5.5",
-        "gpt-5.4",
-        "gpt-5.4-mini",
-        "gpt-5.3-codex",
-        "gpt-5.2",
-        "gpt-5"
-    ]
-    private static let codexOAuthModels = [
-        "gpt-5.5",
-        "gpt-5.4",
-        "gpt-5.4-mini",
-        "gpt-5.3-codex",
-        "gpt-5.3-codex-spark",
-        "gpt-5.2"
-    ]
+struct MSPModelPickerCatalogSnapshots: Hashable, Sendable {
+    var apiKey: MSPModelCatalogSnapshot
+    var codexOAuth: MSPModelCatalogSnapshot
 
+    init(
+        apiKey: MSPModelCatalogSnapshot = MSPModelCatalogManager.bundledSnapshot,
+        codexOAuth: MSPModelCatalogSnapshot = MSPModelCatalogManager.bundledSnapshot
+    ) {
+        self.apiKey = apiKey
+        self.codexOAuth = codexOAuth
+    }
+
+    static let bundled = MSPModelPickerCatalogSnapshots()
+
+    func snapshot(for source: MSPModelPickerSource) -> MSPModelCatalogSnapshot {
+        switch source {
+        case .apiKey:
+            return apiKey
+        case .codexOAuth:
+            return codexOAuth
+        }
+    }
+
+    func snapshot(for credentialMode: MSPModelCredentialMode) -> MSPModelCatalogSnapshot {
+        switch credentialMode {
+        case .apiKey:
+            return apiKey
+        case .codexOAuth:
+            return codexOAuth
+        }
+    }
+
+    func updating(
+        apiKey: MSPModelCatalogSnapshot?,
+        codexOAuth: MSPModelCatalogSnapshot?
+    ) -> MSPModelPickerCatalogSnapshots {
+        MSPModelPickerCatalogSnapshots(
+            apiKey: apiKey ?? self.apiKey,
+            codexOAuth: codexOAuth ?? self.codexOAuth
+        )
+    }
+}
+
+enum MSPModelPickerCatalog {
     static func options(
         configuration: MSPModelConfiguration,
-        codexOAuthConfiguration: MSPCodexOAuthConfiguration
+        codexOAuthConfiguration: MSPCodexOAuthConfiguration,
+        snapshots: MSPModelPickerCatalogSnapshots = .bundled
     ) -> [MSPModelPickerOption] {
         let normalized = configuration.normalized()
         let credentialMode = MSPModelCredentialMode(rawValue: normalized.credentialMode) ?? .apiKey
         let hasAPIKey = !normalized.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let hasCodexOAuth = codexOAuthConfiguration.normalized().hasStoredCredential
+        let apiVisibleModels = snapshots.apiKey.visibleModels
+        let oauthVisibleModels = snapshots.codexOAuth.visibleModels
 
         let apiModels = mergedModelIDs(
             primary: credentialMode == .apiKey ? normalized.modelID : nil,
-            defaults: apiKeyModels
+            defaults: apiVisibleModels.filter(\.supportedInAPI).map(\.slug)
         )
         let oauthModels = mergedModelIDs(
             primary: credentialMode == .codexOAuth ? normalized.modelID : nil,
-            defaults: codexOAuthModels
+            defaults: oauthVisibleModels.map(\.slug)
         )
 
         let apiOptions = hasAPIKey
@@ -501,6 +531,7 @@ enum MSPModelPickerCatalog {
                 option(
                     source: .apiKey,
                     modelID: modelID,
+                    snapshot: snapshots.apiKey,
                     isSelected: credentialMode == .apiKey && normalized.modelID == modelID
                 )
             }
@@ -510,6 +541,7 @@ enum MSPModelPickerCatalog {
                 option(
                     source: .codexOAuth,
                     modelID: modelID,
+                    snapshot: snapshots.codexOAuth,
                     isSelected: credentialMode == .codexOAuth && normalized.modelID == modelID
                 )
             }
@@ -520,9 +552,11 @@ enum MSPModelPickerCatalog {
 
     static func configuration(
         selecting option: MSPModelPickerOption,
-        from configuration: MSPModelConfiguration
+        from configuration: MSPModelConfiguration,
+        snapshots: MSPModelPickerCatalogSnapshots = .bundled
     ) -> MSPModelConfiguration {
         var next = configuration.normalized()
+        let requestedReasoningEffort = next.reasoningEffort
         next.credentialMode = option.source.credentialMode.rawValue
         next.modelID = option.modelID
         switch option.source {
@@ -538,16 +572,23 @@ enum MSPModelPickerCatalog {
             next.providerName = MSPModelPickerSource.codexOAuth.title
             next.baseURL = MSPModelConfigurationResolver.officialOpenAIBaseURL
         }
+        let profile = snapshots.snapshot(for: option.source).resolvedProfile(for: option.modelID)
+        if !profile.usedFallbackMetadata,
+           let reconciled = profile.reconciledReasoningEffort(requestedReasoningEffort) {
+            next.reasoningEffort = reconciled.rawValue
+        }
         return next.normalized()
     }
 
     static func currentSelectionTitle(
         configuration: MSPModelConfiguration,
-        codexOAuthConfiguration: MSPCodexOAuthConfiguration
+        codexOAuthConfiguration: MSPCodexOAuthConfiguration,
+        snapshots: MSPModelPickerCatalogSnapshots = .bundled
     ) -> String {
         let availableOptions = options(
             configuration: configuration,
-            codexOAuthConfiguration: codexOAuthConfiguration
+            codexOAuthConfiguration: codexOAuthConfiguration,
+            snapshots: snapshots
         )
         let selectedOption = availableOptions.first(where: \.isSelected)
             ?? availableOptions.first
@@ -557,15 +598,86 @@ enum MSPModelPickerCatalog {
         return "\(selectedOption.source.title) · \(selectedOption.modelID)"
     }
 
+    static func reasoningEffortPresets(
+        configuration: MSPModelConfiguration,
+        snapshots: MSPModelPickerCatalogSnapshots = .bundled
+    ) -> [MSPReasoningEffortPreset] {
+        let normalized = configuration.normalized()
+        let credentialMode = MSPModelCredentialMode(rawValue: normalized.credentialMode) ?? .apiKey
+        let snapshot = snapshots.snapshot(for: credentialMode)
+        let profile = snapshot.resolvedProfile(for: normalized.modelID)
+        if !profile.usedFallbackMetadata, !profile.supportedReasoningEfforts.isEmpty {
+            var presets = profile.supportedReasoningEfforts
+            if !presets.contains(where: { $0.effort == .modelDefault }) {
+                presets.insert(
+                    MSPReasoningEffortPreset(
+                        effort: .modelDefault,
+                        description: "Use model default"
+                    ),
+                    at: 0
+                )
+            }
+            return presets
+        }
+
+        var efforts: [MSPReasoningEffort] = []
+        func append(_ rawValue: String) {
+            guard let effort = MSPReasoningEffort(rawValue: rawValue),
+                  !efforts.contains(effort) else {
+                return
+            }
+            efforts.append(effort)
+        }
+        append(normalized.reasoningEffort)
+        [MSPReasoningEffort.low, .medium, .high].forEach { append($0.rawValue) }
+        return efforts.map {
+            MSPReasoningEffortPreset(effort: $0, description: $0.rawValue)
+        }
+    }
+
+    static func reasoningEffortSelection(
+        configuration: MSPModelConfiguration,
+        snapshots: MSPModelPickerCatalogSnapshots = .bundled
+    ) -> String {
+        let normalized = configuration.normalized()
+        let credentialMode = MSPModelCredentialMode(rawValue: normalized.credentialMode) ?? .apiKey
+        let snapshot = snapshots.snapshot(for: credentialMode)
+        let profile = snapshot.resolvedProfile(for: normalized.modelID)
+        guard !profile.usedFallbackMetadata,
+              !profile.supportedReasoningEfforts.isEmpty else {
+            return normalized.reasoningEffort
+        }
+        return profile.reconciledReasoningEffort(normalized.reasoningEffort)?.rawValue
+            ?? normalized.reasoningEffort
+    }
+
+    static func reasoningEffortTitle(_ effort: MSPReasoningEffort) -> String {
+        switch effort {
+        case .none: return "None"
+        case .minimal: return "Minimal"
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        case .xhigh: return "XHigh"
+        case .max: return "Max"
+        case .ultra: return "Ultra"
+        case .modelDefault: return "Model default"
+        default: return effort.rawValue
+        }
+    }
+
     private static func option(
         source: MSPModelPickerSource,
         modelID: String,
+        snapshot: MSPModelCatalogSnapshot,
         isSelected: Bool
     ) -> MSPModelPickerOption {
-        MSPModelPickerOption(
+        let profile = snapshot.resolvedProfile(for: modelID)
+        let title = profile.usedFallbackMetadata ? modelID : profile.displayName
+        return MSPModelPickerOption(
             source: source,
             modelID: modelID,
-            title: modelID,
+            title: title,
             subtitle: source.title,
             isEnabled: true,
             isSelected: isSelected

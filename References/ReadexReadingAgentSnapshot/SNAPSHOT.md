@@ -5,7 +5,7 @@ reading-mode behavior reference.
 
 The extracted source subtree in this directory is intentionally ignored by Git
 and is not part of the publishable repository surface. It is also not part of
-the Model Shell Protocol Swift package targets.
+the Model Shell Proxy Swift package targets.
 
 ## Purpose
 

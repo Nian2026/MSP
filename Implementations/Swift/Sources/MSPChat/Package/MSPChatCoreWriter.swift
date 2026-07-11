@@ -94,6 +94,34 @@ public struct MSPChatCoreWriter {
         }
     }
 
+    /// Reads and conditionally replaces `manifest.json` while holding the
+    /// process-local package write lock. Returning `nil` leaves the manifest
+    /// untouched. A host that has multiple writer processes must provide an
+    /// outer cross-process lock.
+    @discardableResult
+    public func updateManifest(
+        at packageURL: URL,
+        _ update: (MSPChatManifest) throws -> MSPChatManifest?
+    ) throws -> MSPChatManifest {
+        let packageURL = packageURL.standardizedFileURL
+        return try Self.withPackageWriteLock(at: packageURL) {
+            let currentManifest = try MSPChatCoreReader().readManifest(at: packageURL)
+            guard let updatedManifest = try update(currentManifest) else {
+                return currentManifest
+            }
+
+            let timelineURL = packageURL.appendingPathComponent(updatedManifest.timelinePath)
+            guard FileManager.default.fileExists(atPath: timelineURL.path) else {
+                throw MSPChatError.missingTimeline(timelineURL.path)
+            }
+            try MSPChatJSON.writeObject(
+                updatedManifest.rawJSON,
+                to: packageURL.appendingPathComponent("manifest.json")
+            )
+            return updatedManifest
+        }
+    }
+
     public func appendMessage(
         to packageURL: URL,
         id: String,

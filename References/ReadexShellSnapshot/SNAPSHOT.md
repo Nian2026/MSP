@@ -9,7 +9,7 @@ Purpose:
 
 - Keep the mature Readex shell implementation available for MSP extraction.
 - Preserve original project-relative paths for easier comparison.
-- Avoid modifying the original Readex project while designing Model Shell Protocol.
+- Avoid modifying the original Readex project while designing Model Shell Proxy.
 - Keep the extracted source subtree ignored by Git and out of the publishable
   repository surface.
 

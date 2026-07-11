@@ -37,6 +37,7 @@ REQUIRED_RULE_IDS = [
     "codex-validation-phase-results-public-surface",
     "codex-apply-patch-vendor-hygiene",
     "markstream-public-surface",
+    "msp-chat-ui-markstream-vendor-hygiene",
     "local-internal-spec-reference-paths",
 ]
 
@@ -224,6 +225,36 @@ MARKSTREAM_PUBLIC_SURFACE_EXCLUDED_PATHS = {
     "Tests/Swift/Integration/ModelShellProxy/StandardFixtures/ModelShellProxyOpenSourceHygieneConformanceTests.swift",
 }
 MARKSTREAM_PUBLIC_SURFACE_MARKER = "markstream"
+MSP_CHAT_UI_ROOT = "Implementations/UI/MSPChatUI"
+MSP_CHAT_UI_MARKSTREAM_VENDOR_RULE_ID = "msp-chat-ui-markstream-vendor-hygiene"
+MSP_CHAT_UI_MARKSTREAM_BUNDLE = (
+    f"{MSP_CHAT_UI_ROOT}/Renderers/Default/runtime/assets/Math/readex-markstream-sdk.js"
+)
+MSP_CHAT_UI_MARKSTREAM_AUDIT = (
+    f"{MSP_CHAT_UI_ROOT}/Conformance/fixtures/markstream-bundle-license-audit.json"
+)
+MSP_CHAT_UI_MARKSTREAM_RUNTIME_README = (
+    f"{MSP_CHAT_UI_ROOT}/Renderers/Default/runtime/markstream/README.md"
+)
+MSP_CHAT_UI_MARKSTREAM_RUNTIME_ROOT = (
+    f"{MSP_CHAT_UI_ROOT}/Renderers/Default/runtime/markstream"
+)
+MSP_CHAT_UI_VENDOR_MANIFEST = f"{MSP_CHAT_UI_ROOT}/Renderers/Default/VENDOR_MANIFEST.md"
+MSP_CHAT_UI_THIRD_PARTY_NOTICES = f"{MSP_CHAT_UI_ROOT}/THIRD_PARTY_NOTICES.md"
+MSP_CHAT_UI_PACKAGE_MANIFEST = f"{MSP_CHAT_UI_ROOT}/package.json"
+MSP_CHAT_UI_MARKSTREAM_ALLOWED_PATHS = {
+    MSP_CHAT_UI_MARKSTREAM_AUDIT,
+    MSP_CHAT_UI_MARKSTREAM_BUNDLE,
+    MSP_CHAT_UI_MARKSTREAM_RUNTIME_ROOT,
+    MSP_CHAT_UI_MARKSTREAM_RUNTIME_README,
+}
+MSP_CHAT_UI_MARKSTREAM_APPROVED_LICENSES = {
+    "MIT",
+    "ISC",
+    "(MPL-2.0 OR Apache-2.0)",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+}
 LOCAL_INTERNAL_SPEC_REFERENCE_RULE_ID = "local-internal-spec-reference-paths"
 LOCAL_INTERNAL_SPEC_REFERENCE_MARKERS = (
     LOCAL_CHAT_INTERNAL_SPEC_ROOT,
@@ -324,6 +355,8 @@ def is_markstream_public_surface_excluded(path: str) -> bool:
     normalized = path.rstrip("/")
     return (
         normalized in MARKSTREAM_PUBLIC_SURFACE_EXCLUDED_PATHS
+        or normalized == MSP_CHAT_UI_ROOT
+        or normalized.startswith(f"{MSP_CHAT_UI_ROOT}/")
         or is_local_readex_reference_snapshot(normalized)
     )
 
@@ -1276,6 +1309,167 @@ def markstream_public_surface_scan(
     return blocked, len(candidate_paths)
 
 
+def msp_chat_ui_markstream_vendor_hygiene_scan(
+    root: Path,
+    git_paths: list[str],
+) -> tuple[list[BlockedPath], int]:
+    if (root / ".git").exists():
+        candidate_paths = sorted({
+            path.rstrip("/")
+            for path in git_paths
+            if (
+                path.rstrip("/") == MSP_CHAT_UI_ROOT
+                or path.rstrip("/").startswith(f"{MSP_CHAT_UI_ROOT}/")
+            )
+        })
+    else:
+        ui_root = root / MSP_CHAT_UI_ROOT
+        candidate_paths = []
+        if ui_root.exists():
+            for current_root, dirs, files in os.walk(ui_root):
+                current = Path(current_root)
+                rel_current = current.relative_to(root).as_posix()
+                dirs[:] = [name for name in dirs if name not in PRUNE_DIR_NAMES]
+                candidate_paths.extend(f"{rel_current}/{name}" for name in dirs)
+                candidate_paths.extend(f"{rel_current}/{name}" for name in files)
+            candidate_paths.sort()
+    if not candidate_paths:
+        return [], 0
+
+    git_publishable = set(git_paths)
+    blocked: list[BlockedPath] = []
+    seen: set[str] = set()
+
+    def block(path: str, reason: str) -> None:
+        if path in seen:
+            return
+        seen.add(path)
+        blocked.append(BlockedPath(
+            path=path,
+            reason=reason,
+            rule_id=MSP_CHAT_UI_MARKSTREAM_VENDOR_RULE_ID,
+            source="git-publishable" if path in git_publishable else "filesystem",
+        ))
+
+    markstream_named_paths = {
+        path
+        for path in candidate_paths
+        if MARKSTREAM_PUBLIC_SURFACE_MARKER in path.lower()
+    }
+    for path in sorted(markstream_named_paths - MSP_CHAT_UI_MARKSTREAM_ALLOWED_PATHS):
+        block(
+            path,
+            "MSPChatUI must not add undeclared Markstream files outside the audited vendor surface",
+        )
+
+    required_paths = [
+        MSP_CHAT_UI_MARKSTREAM_BUNDLE,
+        MSP_CHAT_UI_MARKSTREAM_AUDIT,
+        MSP_CHAT_UI_MARKSTREAM_RUNTIME_README,
+        MSP_CHAT_UI_VENDOR_MANIFEST,
+        MSP_CHAT_UI_THIRD_PARTY_NOTICES,
+        MSP_CHAT_UI_PACKAGE_MANIFEST,
+    ]
+    for path in required_paths:
+        if not (root / path).is_file():
+            block(path, "MSPChatUI Markstream vendor surface is missing required audit evidence")
+
+    bundle = read_bytes_if_available(root / MSP_CHAT_UI_MARKSTREAM_BUNDLE)
+    audit_text = read_text_if_available(root / MSP_CHAT_UI_MARKSTREAM_AUDIT)
+    audit: dict[str, object] | None = None
+    if audit_text is not None:
+        try:
+            decoded = json.loads(audit_text)
+            if isinstance(decoded, dict):
+                audit = decoded
+        except json.JSONDecodeError:
+            pass
+    if audit is None:
+        block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit fixture must be valid JSON")
+    else:
+        bundle_record = audit.get("bundle")
+        if not isinstance(bundle_record, dict):
+            block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit must declare the bundled asset")
+        else:
+            expected_relative_bundle = MSP_CHAT_UI_MARKSTREAM_BUNDLE[len(f"{MSP_CHAT_UI_ROOT}/"):]
+            if bundle_record.get("path") != expected_relative_bundle:
+                block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit bundle path is not canonical")
+            if bundle is not None:
+                if bundle_record.get("bytes") != len(bundle):
+                    block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit byte count does not match the bundle")
+                if bundle_record.get("sha256") != hashlib.sha256(bundle).hexdigest():
+                    block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit checksum does not match the bundle")
+
+        allowed_licenses = audit.get("allowedLicenses")
+        if (
+            not isinstance(allowed_licenses, list)
+            or not all(isinstance(item, str) for item in allowed_licenses)
+            or set(allowed_licenses) != MSP_CHAT_UI_MARKSTREAM_APPROVED_LICENSES
+        ):
+            block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit license allowlist is incomplete or unexpected")
+
+        packages = audit.get("packages")
+        calculated_counts: dict[str, int] = {}
+        if not isinstance(packages, list) or not packages:
+            block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit must enumerate bundled packages")
+        else:
+            for package in packages:
+                if not isinstance(package, dict):
+                    block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit package records must be objects")
+                    continue
+                package_path = package.get("path")
+                version = package.get("version")
+                license_name = package.get("license")
+                if not isinstance(package_path, str) or not package_path.startswith("node_modules/"):
+                    block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit package paths must be node_modules-relative")
+                if not isinstance(version, str) or not version:
+                    block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit packages must declare versions")
+                if license_name not in MSP_CHAT_UI_MARKSTREAM_APPROVED_LICENSES:
+                    block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit contains an unapproved package license")
+                if isinstance(license_name, str):
+                    calculated_counts[license_name] = calculated_counts.get(license_name, 0) + 1
+        if audit.get("licenseCounts") != calculated_counts:
+            block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit license counts do not match package records")
+
+        source_record = audit.get("source")
+        package_lock = source_record.get("packageLock") if isinstance(source_record, dict) else None
+        if (
+            not isinstance(package_lock, str)
+            or not package_lock
+            or package_lock.startswith(("/", "~"))
+            or ".." in Path(package_lock).parts
+            or "/Users/" in package_lock
+            or "/Volumes/" in package_lock
+        ):
+            block(MSP_CHAT_UI_MARKSTREAM_AUDIT, "MSPChatUI Markstream audit source path must be portable and relative")
+
+    for evidence_path in [MSP_CHAT_UI_VENDOR_MANIFEST, MSP_CHAT_UI_THIRD_PARTY_NOTICES]:
+        evidence = read_text_if_available(root / evidence_path)
+        if evidence is None:
+            continue
+        if (
+            "markstream-bundle-license-audit.json" not in evidence
+            or "readex-markstream-sdk.js" not in evidence
+        ):
+            block(evidence_path, "MSPChatUI vendor evidence must name the audited Markstream bundle and fixture")
+
+    package_text = read_text_if_available(root / MSP_CHAT_UI_PACKAGE_MANIFEST)
+    if package_text is not None:
+        try:
+            package_manifest = json.loads(package_text)
+        except json.JSONDecodeError:
+            package_manifest = None
+        scripts = package_manifest.get("scripts") if isinstance(package_manifest, dict) else None
+        if (
+            not isinstance(scripts, dict)
+            or scripts.get("check:licenses") != "node Conformance/scripts/license-audit.cjs"
+            or "check:licenses" not in str(scripts.get("check", ""))
+        ):
+            block(MSP_CHAT_UI_PACKAGE_MANIFEST, "MSPChatUI release checks must execute the Markstream license audit")
+
+    return sorted(blocked, key=lambda item: item.path), len(candidate_paths)
+
+
 def local_internal_spec_reference_scan(
     root: Path,
     git_paths: list[str],
@@ -1375,6 +1569,9 @@ def blocked_paths(root: Path) -> tuple[list[BlockedPath], int, list[str]]:
         root,
         git_paths,
     )
+    msp_chat_ui_markstream_blocked, msp_chat_ui_markstream_scanned_count = (
+        msp_chat_ui_markstream_vendor_hygiene_scan(root, git_paths)
+    )
     local_internal_reference_blocked, local_internal_reference_scanned_count = (
         local_internal_spec_reference_scan(root, git_paths)
     )
@@ -1385,6 +1582,7 @@ def blocked_paths(root: Path) -> tuple[list[BlockedPath], int, list[str]]:
     blocked.extend(first_party_blocked)
     blocked.extend(apply_patch_blocked)
     blocked.extend(markstream_blocked)
+    blocked.extend(msp_chat_ui_markstream_blocked)
     blocked.extend(local_internal_reference_blocked)
     blocked.sort(key=lambda item: (item.path, item.rule_id, item.reason))
     return (
@@ -1399,6 +1597,7 @@ def blocked_paths(root: Path) -> tuple[list[BlockedPath], int, list[str]]:
             + first_party_scanned_count
             + apply_patch_scanned_count
             + markstream_scanned_count
+            + msp_chat_ui_markstream_scanned_count
             + local_internal_reference_scanned_count
         ),
         git_paths,
@@ -1425,6 +1624,7 @@ def build_report(root: Path) -> dict[str, object]:
             "Codex CLI validation phase-results public surface scan",
             "Codex apply_patch vendor provenance and artifacts",
             "Markstream public surface scan",
+            "MSPChatUI Markstream vendor audit",
             "local internal spec reference scan",
         ],
         "required_rule_ids": REQUIRED_RULE_IDS,

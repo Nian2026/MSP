@@ -69,7 +69,7 @@ enum MSPPlaygroundWorkspaceBootstrap {
             to: docsURL.appendingPathComponent("welcome.txt")
         )
         try write(
-            "Commands run through Model Shell Protocol against this workspace.\n",
+            "Commands run through Model Shell Proxy against this workspace.\n",
             to: notesURL.appendingPathComponent("first-run.txt")
         )
         try Data().write(to: markerURL)

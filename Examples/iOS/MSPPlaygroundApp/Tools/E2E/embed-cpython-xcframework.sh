@@ -24,7 +24,7 @@ fi
 APP_BUNDLE="$1"
 PYTHON_XCFRAMEWORK_PATH="$2"
 OUT_DIR="$3"
-BUNDLE_ID="${MSP_PLAYGROUND_E2E_BUNDLE_ID:-${MSP_EXAMPLE_BUNDLE_ID_PREFIX:-com.modelshellprotocol.examples}.playground}"
+BUNDLE_ID="${MSP_PLAYGROUND_E2E_BUNDLE_ID:-${MSP_EXAMPLE_BUNDLE_ID_PREFIX:-com.modelshellproxy.examples}.playground}"
 EXECUTABLE_NAME="${MSP_PLAYGROUND_E2E_EXECUTABLE_NAME:-MSPPlaygroundApp}"
 
 if [[ ! -d "$APP_BUNDLE" ]]; then

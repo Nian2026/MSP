@@ -79,12 +79,13 @@ extension MSPAgentConversation {
     func estimatedContextUsageRecord(
         estimatedTokens: Int
     ) -> MSPAgentContextUsageRecord? {
-        guard let profile = MSPAgentContextWindowProfile.profile(for: configuration.model) else {
+        guard let modelProfile = resolvedModelProfile,
+              let profile = modelProfile.contextWindowProfile else {
             return nil
         }
         return MSPAgentContextUsageRecord(
-            modelID: configuration.model,
-            modelDisplayName: configuration.model,
+            modelID: modelProfile.modelID,
+            modelDisplayName: modelProfile.displayName,
             contextWindowTokens: profile.contextWindowTokens,
             effectiveContextWindowTokens: profile.effectiveContextWindowTokens,
             autoCompactTokenLimit: profile.autoCompactTokenLimit,
@@ -119,7 +120,7 @@ extension MSPAgentConversation {
         let activeTokens = max(currentUsage?.currentTokens ?? 0, projectedTokens)
         return MSPCompactionTokenStatus(
             activeTokens: activeTokens,
-            contextWindowTokens: usageForLimits.contextWindowTokens,
+            contextWindowTokens: usageForLimits.effectiveContextWindowTokens,
             autoCompactTokenLimit: usageForLimits.autoCompactTokenLimit,
             currentWindowPrefillTokens: currentWindowPrefillTokensForLimitEvaluation(
                 observing: currentUsage
@@ -131,12 +132,12 @@ extension MSPAgentConversation {
         _ modelVisibleItems: [MSPAgentJSONValue]
     ) throws {
         guard let usage = estimatedContextUsageRecord(for: modelVisibleItems),
-              usage.contextWindowTokens > 0,
-              usage.currentTokens >= usage.contextWindowTokens else {
+              usage.effectiveContextWindowTokens > 0,
+              usage.currentTokens >= usage.effectiveContextWindowTokens else {
             return
         }
         throw MSPAgentModelClientError.contextWindowExceeded(
-            "The next request is estimated at \(usage.currentTokens) tokens, over the \(usage.contextWindowTokens)-token context window, even after compacting previous context. Shorten the current message or start a new thread."
+            "The next request is estimated at \(usage.currentTokens) tokens, over the \(usage.effectiveContextWindowTokens)-token effective context window, even after compacting previous context. Shorten the current message or start a new thread."
         )
     }
 

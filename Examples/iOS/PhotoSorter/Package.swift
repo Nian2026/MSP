@@ -119,7 +119,8 @@ let package = Package(
             dependencies: [
                 "PhotoSorter",
                 .product(name: "ModelShellProxy", package: "ModelShellProxy"),
-                .product(name: "MSPCore", package: "ModelShellProxy")
+                .product(name: "MSPCore", package: "ModelShellProxy"),
+                .product(name: "MSPAgentBridge", package: "ModelShellProxy")
             ],
             path: "Tests/PhotoSorterTests"
         )
