@@ -1,9 +1,9 @@
-# Model Shell Proxy
+# Model Shell Protocol
 
 The final form of software engineering is an app-owned operating environment
 for models.
 
-Model Shell Proxy, or MSP, defines that environment.
+Model Shell Protocol, or MSP, defines that environment.
 
 MSP is the operating-system semantics layer inside an application: a runtime
 that turns app data, platform permissions, domain objects, user artifacts,
