@@ -195,10 +195,9 @@ They belong in app-defined command packs or examples.
 
 ## Current Verification Checkpoint
 
-As of the current MSP v1 command-layer checkpoint, the required command fixture
-contains 68 commands, the direct parity fixture contains one direct case for each
-of those 68 commands, and the POSIX core command pack registers the same 68
-commands without app-specific or external-binary commands.
+As of the current MSP v1 Core100 checkpoint, the tracked Core100 command fixture
+covers all 100 required command buckets. App-specific and external-binary
+commands remain outside this POSIX-focused scope.
 
 A six-family VPS oracle audit has expanded local coverage across the command
 surface:

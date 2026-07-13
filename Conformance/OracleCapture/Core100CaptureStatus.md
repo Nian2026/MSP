@@ -1,6 +1,6 @@
 # Core100 Oracle Capture Status
 
-Last updated: 2026-06-29 02:39 Asia/Shanghai.
+Last updated: 2026-07-14 Asia/Shanghai.
 
 ## Current Accepted Capture
 
@@ -12,8 +12,8 @@ Last updated: 2026-06-29 02:39 Asia/Shanghai.
 Current public fixture summary:
 
 ```text
-case_count: 808
-linux_capture_only_count: 808
+case_count: 905
+linux_capture_only_count: 905
 core100_command_count: 100
 covered_core100_command_count: 100
 missing_core100_commands: []
@@ -35,7 +35,7 @@ Conformance/ReferenceOutputs/MSPV1Core100Debian12Oracle/noninteractive-cases.jso
 
 ## Latest Local Gates
 
-These gates passed for the 808-case fixture:
+These gates passed for the 905-case fixture:
 
 ```sh
 python3 -m py_compile Conformance/Scripts/core100_oracle_capture.py
@@ -55,7 +55,7 @@ status: passed
 Safety audit result:
 
 ```text
-accepted_case_count: 808
+accepted_case_count: 905
 finding_count: 0
 ```
 
@@ -97,8 +97,8 @@ python3 Conformance/Scripts/core100_oracle_capture.py run-vps \
 Result:
 
 ```text
-case_count: 808
-linux_capture_only_count: 808
+case_count: 905
+linux_capture_only_count: 905
 core100_command_count: 100
 covered_core100_command_count: 100
 missing_core100_commands: []
@@ -107,7 +107,7 @@ timeout_count: 0
 limit_exceeded_count: 0
 ```
 
-The current 808-case fixture was regenerated from
+The current 905-case fixture was regenerated from
 `Conformance/OracleCapture/Core100CaptureCases.generated.json`, passed the
 Core100 safety audit with `finding_count: 0`, and was captured on the Debian
 reference VPS through `core100_oracle_capture.py run-vps`.
@@ -123,18 +123,17 @@ Post-capture checks passed:
 
 ## Current MSP Implementation Baseline
 
-After the 808-case VPS recapture, the implementation-level Core100 oracle
-runner reports:
+The final-gate contract for the implementation-level Core100 oracle report is:
 
 ```text
-selected_case_count: 808
-passed_case_count: 808
+selected_case_count: 905
+passed_case_count: 905
 failed_case_count: 0
 ```
 
-Command implementation work is still active, and this capture update is not a
-completion claim because the Core100 closure gate still reports open Batch 03
-compatibility matrix gaps.
+This document records the accepted Core100 fixture baseline. Full release
+closure is determined separately by `check_core100_closure.py` and the final
+gate verifier.
 
 ## Host Key And SSH Notes
 

@@ -1,7 +1,7 @@
 # MSP Oracle Capture
 
-This directory contains the oracle-first planning surface for expanding the MSP
-Linux command layer from 68 commands to Core100.
+This directory contains the oracle-first capture and validation surface for the
+MSP Core100 Linux command layer, covering 100 commands.
 
 Read in this order:
 

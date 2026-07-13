@@ -1,7 +1,7 @@
 # Core100 Debian Oracle Capture Plan
 
-This plan describes the capture work required before expanding the MSP Linux
-command layer from 68 to 100 commands. It is intentionally oracle-first: do not
+This plan describes the Debian oracle capture work for the MSP Core100 Linux
+command layer, covering 100 commands. It is intentionally oracle-first: do not
 implement a command or parameter by guessing. Capture Debian 12 behavior first,
 then implement against normalized byte-level fixtures.
 
