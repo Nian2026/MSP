@@ -220,12 +220,15 @@ enum ExampleChatTranscriptPayloadFactory {
             "chatMarkdownRendererProfile": NSNull(),
             "style": style(fontScale: fontScale, interfaceTheme: interfaceTheme),
             "displayWindow": NSNull(),
-            "expandedExampleChatProcessingBlockIDs": expansionState.expandedExampleChatProcessingBlockIDs,
-            "collapsedExampleChatProcessingBlockIDs": expansionState.collapsedExampleChatProcessingBlockIDs,
-            "expandedExampleChatToolActivityBlockIDs": expandedToolActivityBlockIDs,
-            "collapsedExampleChatToolActivityBlockIDs": expansionState.collapsedExampleChatToolActivityBlockIDs,
-            "expandedExampleChatNestedDisclosureKeysBySourceBlockID": expandedNestedDisclosureKeysBySourceBlockID,
-            "collapsedExampleChatNestedDisclosureKeysBySourceBlockID": expansionState.collapsedExampleChatNestedDisclosureKeysBySourceBlockID,
+            // These names are the stable Swift/JavaScript wire contract used by
+            // the shared transcript renderer. Internal Swift types may use the
+            // ExampleChat name without renaming serialized payload fields.
+            "expandedReadexProcessingBlockIDs": expansionState.expandedExampleChatProcessingBlockIDs,
+            "collapsedReadexProcessingBlockIDs": expansionState.collapsedExampleChatProcessingBlockIDs,
+            "expandedReadexToolActivityBlockIDs": expandedToolActivityBlockIDs,
+            "collapsedReadexToolActivityBlockIDs": expansionState.collapsedExampleChatToolActivityBlockIDs,
+            "expandedReadexNestedDisclosureKeysBySourceBlockID": expandedNestedDisclosureKeysBySourceBlockID,
+            "collapsedReadexNestedDisclosureKeysBySourceBlockID": expansionState.collapsedExampleChatNestedDisclosureKeysBySourceBlockID,
             "messages": messages,
             "blockCatalog": [],
             "messageGroups": messageGroups

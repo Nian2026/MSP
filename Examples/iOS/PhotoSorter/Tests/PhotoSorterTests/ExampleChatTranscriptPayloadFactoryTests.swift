@@ -1587,7 +1587,7 @@ final class ExampleChatTranscriptPayloadFactoryTests: XCTestCase {
             from: items,
             isGenerating: false
         )
-        let expandedIDs = try XCTUnwrap(payload["expandedExampleChatToolActivityBlockIDs"] as? [String])
+        let expandedIDs = try XCTUnwrap(payload["expandedReadexToolActivityBlockIDs"] as? [String])
         XCTAssertTrue(expandedIDs.contains(toolItem.id.uuidString))
         XCTAssertTrue(expandedIDs.contains("chat_tool_call:0"))
         XCTAssertTrue(expandedIDs.contains("chat_tool_activity:0"))
@@ -1596,7 +1596,7 @@ final class ExampleChatTranscriptPayloadFactoryTests: XCTestCase {
         XCTAssertTrue(expandedIDs.contains("call_ls"))
 
         let nestedKeys = try XCTUnwrap(
-            payload["expandedExampleChatNestedDisclosureKeysBySourceBlockID"] as? [String: [String]]
+            payload["expandedReadexNestedDisclosureKeysBySourceBlockID"] as? [String: [String]]
         )
         XCTAssertTrue(nestedKeys[toolItem.id.uuidString]?.contains("activity\u{1f}activity-\(toolItem.id.uuidString)") == true)
         XCTAssertTrue(nestedKeys[toolItem.id.uuidString]?.contains("processing\u{1f}activity-\(toolItem.id.uuidString)") == true)
@@ -1608,7 +1608,7 @@ final class ExampleChatTranscriptPayloadFactoryTests: XCTestCase {
             isGenerating: false,
             expandToolActivityBlocks: true
         )
-        let explicitlyExpandedIDs = try XCTUnwrap(expandedPayload["expandedExampleChatToolActivityBlockIDs"] as? [String])
+        let explicitlyExpandedIDs = try XCTUnwrap(expandedPayload["expandedReadexToolActivityBlockIDs"] as? [String])
         XCTAssertTrue(explicitlyExpandedIDs.contains(toolItem.id.uuidString))
     }
 
@@ -1702,17 +1702,81 @@ final class ExampleChatTranscriptPayloadFactoryTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            try XCTUnwrap(payload["collapsedExampleChatToolActivityBlockIDs"] as? [String]),
+            try XCTUnwrap(payload["collapsedReadexToolActivityBlockIDs"] as? [String]),
             [toolItem.id.uuidString]
         )
         XCTAssertEqual(
-            try XCTUnwrap(payload["collapsedExampleChatProcessingBlockIDs"] as? [String]),
+            try XCTUnwrap(payload["collapsedReadexProcessingBlockIDs"] as? [String]),
             ["turn-\(toolItem.turnStartedAtMilliseconds ?? 0)"]
         )
         let collapsedNestedKeys = try XCTUnwrap(
-            payload["collapsedExampleChatNestedDisclosureKeysBySourceBlockID"] as? [String: [String]]
+            payload["collapsedReadexNestedDisclosureKeysBySourceBlockID"] as? [String: [String]]
         )
         XCTAssertEqual(collapsedNestedKeys[toolItem.id.uuidString], [nestedKey])
+    }
+
+    func testUserExpandedShellRemainsExpandedAfterNextAssistantMessageRebuild() throws {
+        let toolItem = MSPAgentTimelineItem(
+            kind: .toolCall,
+            title: "工作区命令",
+            body: "已执行工作区命令",
+            callID: "call_pwd",
+            command: "pwd",
+            cwd: "/",
+            status: "completed",
+            startedAtMilliseconds: 1_772_000_030_000,
+            completedAtMilliseconds: 1_772_000_030_500,
+            durationMilliseconds: 500,
+            turnStartedAtMilliseconds: 1_772_000_029_000,
+            turnDurationMilliseconds: 1_200
+        )
+        var expansionState = ExampleChatTranscriptExpansionState.empty
+        expansionState.apply(ExampleChatTranscriptExpansionStateChange(
+            kind: .toolActivity,
+            sourceBlockID: toolItem.id.uuidString,
+            key: nil,
+            expanded: true
+        ))
+
+        let rebuiltPayload = ExampleChatTranscriptPayloadFactory.payload(
+            from: [
+                MSPAgentTimelineItem(kind: .user, title: "", body: "查看路径"),
+                toolItem,
+                MSPAgentTimelineItem(
+                    kind: .assistantFinal,
+                    title: "",
+                    body: "路径已经确认。",
+                    turnStartedAtMilliseconds: 1_772_000_031_000
+                )
+            ],
+            isGenerating: false,
+            expansionState: expansionState
+        )
+
+        let expandedIDs = try XCTUnwrap(
+            rebuiltPayload["expandedReadexToolActivityBlockIDs"] as? [String]
+        )
+        XCTAssertTrue(expandedIDs.contains(toolItem.id.uuidString))
+        XCTAssertFalse(
+            (rebuiltPayload["collapsedReadexToolActivityBlockIDs"] as? [String] ?? [])
+                .contains(toolItem.id.uuidString)
+        )
+
+        let rendererSource = try String(
+            contentsOf: Self.photoSorterRootURL()
+                .appendingPathComponent("Vendor")
+                .appendingPathComponent("ExampleChatTranscriptRenderer")
+                .appendingPathComponent("RuntimeResources")
+                .appendingPathComponent("Math")
+                .appendingPathComponent("chat-transcript-message-block-support-renderer.js"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(rendererSource.contains(
+            #"readexToolActivityBlockIDSet("expandedReadexToolActivityBlockIDs")"#
+        ))
+        XCTAssertTrue(rendererSource.contains(
+            #"readexToolActivityBlockIDSet("collapsedReadexToolActivityBlockIDs")"#
+        ))
     }
 
     func testWorkspaceCommandActionsUseExampleChatShellDisplayClassification() {

@@ -55,6 +55,7 @@
 		A00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift */; };
 		A00000000000000000000035 /* PhotoLibraryMount.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000035 /* PhotoLibraryMount.swift */; };
 		A00000000000000000000053 /* PhotoSorterMediaCacheTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000052 /* PhotoSorterMediaCacheTypes.swift */; };
+		A20000000000000000000001 /* PhotoSorterVisualContentFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* PhotoSorterVisualContentFingerprint.swift */; };
 		A00000000000000000000054 /* PhotoSorterMediaOCRCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000053 /* PhotoSorterMediaOCRCache.swift */; };
 		A00000000000000000000055 /* PhotoSorterMediaVLMSummaryCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000054 /* PhotoSorterMediaVLMSummaryCache.swift */; };
 		A00000000000000000000056 /* PhotoSorterMediaAskExclusionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000055 /* PhotoSorterMediaAskExclusionCache.swift */; };
@@ -168,6 +169,7 @@
 		B00000000000000000000034 /* ExampleChatStreamingToolPresentationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleChatStreamingToolPresentationHelper.swift; sourceTree = "<group>"; };
 		B00000000000000000000035 /* PhotoLibraryMount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryMount.swift; sourceTree = "<group>"; };
 		B00000000000000000000052 /* PhotoSorterMediaCacheTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaCacheTypes.swift; sourceTree = "<group>"; };
+		B20000000000000000000001 /* PhotoSorterVisualContentFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterVisualContentFingerprint.swift; sourceTree = "<group>"; };
 		B00000000000000000000053 /* PhotoSorterMediaOCRCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaOCRCache.swift; sourceTree = "<group>"; };
 		B00000000000000000000054 /* PhotoSorterMediaVLMSummaryCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaVLMSummaryCache.swift; sourceTree = "<group>"; };
 		B00000000000000000000055 /* PhotoSorterMediaAskExclusionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSorterMediaAskExclusionCache.swift; sourceTree = "<group>"; };
@@ -358,6 +360,7 @@
 				B00000000000000000000040 /* PhotoLibraryIndex.swift */,
 				B00000000000000000000035 /* PhotoLibraryMount.swift */,
 				B00000000000000000000052 /* PhotoSorterMediaCacheTypes.swift */,
+				B20000000000000000000001 /* PhotoSorterVisualContentFingerprint.swift */,
 				B00000000000000000000053 /* PhotoSorterMediaOCRCache.swift */,
 				B00000000000000000000054 /* PhotoSorterMediaVLMSummaryCache.swift */,
 				B00000000000000000000055 /* PhotoSorterMediaAskExclusionCache.swift */,
@@ -821,6 +824,7 @@
 				A00000000000000000000040 /* PhotoLibraryIndex.swift in Sources */,
 				A00000000000000000000035 /* PhotoLibraryMount.swift in Sources */,
 				A00000000000000000000053 /* PhotoSorterMediaCacheTypes.swift in Sources */,
+				A20000000000000000000001 /* PhotoSorterVisualContentFingerprint.swift in Sources */,
 				A00000000000000000000054 /* PhotoSorterMediaOCRCache.swift in Sources */,
 				A00000000000000000000055 /* PhotoSorterMediaVLMSummaryCache.swift in Sources */,
 				A00000000000000000000056 /* PhotoSorterMediaAskExclusionCache.swift in Sources */,
