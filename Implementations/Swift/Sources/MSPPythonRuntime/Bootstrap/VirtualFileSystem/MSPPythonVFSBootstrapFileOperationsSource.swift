@@ -182,8 +182,8 @@ def _msp_vfs_access(path, mode, *args, **kwargs):
         command_access = _msp_vfs_virtual_command_access(virtual_path, mode)
         if command_access is not None:
             return command_access
-        _msp_vfs_request("access", path=virtual_path, mode=int(mode))
-        return True
+        response = _msp_vfs_request("access", path=virtual_path, mode=int(mode))
+        return bool(response.get("bool_value", False))
     except (TypeError, ValueError):
         raise
     except Exception:
