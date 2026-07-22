@@ -61,13 +61,17 @@ public struct MSPInProcessExternalCommandRunner: MSPExternalCommandRunner {
             executableURL: executableURL,
             runtimePathMappings: runtimePathMappings
         )
-        let outputSanitizer = try pathMapper.outputSanitizer(context: context)
         if let versionOutput,
            request.arguments.count == 1,
            (request.arguments[0] == "--version" || request.arguments[0] == "-v") {
-            return outputSanitizer.sanitize(.success(stdout: versionOutput))
+            guard context.workspace != nil else {
+                return .success(stdout: versionOutput)
+            }
+            return try pathMapper.outputSanitizer(context: context)
+                .sanitize(.success(stdout: versionOutput))
         }
 
+        let outputSanitizer = try pathMapper.outputSanitizer(context: context)
         var environment = try pathMapper.environment(
             request: request,
             extraEnvironment: extraEnvironment,
