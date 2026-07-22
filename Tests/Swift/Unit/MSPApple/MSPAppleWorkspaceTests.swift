@@ -521,6 +521,101 @@ final class MSPAppleWorkspaceTests: XCTestCase {
         XCTAssertEqual(try workspace.fileSystem.readTextFile("/docs/a.txt"), "alpha\n")
     }
 
+    func testFlatDisplayedTrashShowsNestedFileAtTrashRootAndRestoresIt() throws {
+        let rootURL = makeTemporaryURL()
+        defer { removeTemporaryURL(rootURL) }
+        let policy = MSPWorkspaceFileSystemPolicy(
+            trashConfiguration: .displayedTrash(
+                displayRootPath: "/废纸篓",
+                displayStyle: .flat
+            )
+        )
+        let workspace = try MSPAppleWorkspace(rootURL: rootURL, policy: policy)
+        let trash = try XCTUnwrap(workspace.fileSystem as? any MSPWorkspaceTrashCapable)
+
+        try workspace.fileSystem.writeTextFile(
+            "/视频/a.mp4",
+            contents: "video\n",
+            options: [.overwriteExisting, .createParentDirectories]
+        )
+        try workspace.fileSystem.remove("/视频/a.mp4")
+
+        XCTAssertEqual(try workspace.fileSystem.listDirectory("/废纸篓").map(\.name), ["a.mp4"])
+        XCTAssertEqual(try workspace.fileSystem.readTextFile("/废纸篓/a.mp4"), "video\n")
+        XCTAssertThrowsError(try workspace.fileSystem.stat("/废纸篓/视频"))
+
+        let restored = try trash.restoreTrash(["/废纸篓/a.mp4"])
+        XCTAssertEqual(restored.first?.restoredPath, "/视频/a.mp4")
+        XCTAssertEqual(try workspace.fileSystem.readTextFile("/视频/a.mp4"), "video\n")
+    }
+
+    func testFlatDisplayedTrashKeepsTrashedDirectoryContentsUnderTopLevelFolder() throws {
+        let rootURL = makeTemporaryURL()
+        defer { removeTemporaryURL(rootURL) }
+        let policy = MSPWorkspaceFileSystemPolicy(
+            trashConfiguration: .displayedTrash(
+                displayRootPath: "/废纸篓",
+                displayStyle: .flat
+            )
+        )
+        let workspace = try MSPAppleWorkspace(rootURL: rootURL, policy: policy)
+
+        try workspace.fileSystem.writeTextFile(
+            "/资料/视频/a.mp4",
+            contents: "video\n",
+            options: [.overwriteExisting, .createParentDirectories]
+        )
+        try workspace.fileSystem.remove("/资料/视频", recursive: true)
+
+        XCTAssertEqual(try workspace.fileSystem.listDirectory("/废纸篓").map(\.name), ["视频"])
+        XCTAssertEqual(try workspace.fileSystem.listDirectory("/废纸篓/视频").map(\.name), ["a.mp4"])
+        XCTAssertEqual(try workspace.fileSystem.readTextFile("/废纸篓/视频/a.mp4"), "video\n")
+        XCTAssertThrowsError(try workspace.fileSystem.stat("/废纸篓/资料"))
+    }
+
+    func testFlatDisplayedTrashUniquifiesDuplicateNamesWithoutLosingRestorePaths() throws {
+        let rootURL = makeTemporaryURL()
+        defer { removeTemporaryURL(rootURL) }
+        let policy = MSPWorkspaceFileSystemPolicy(
+            trashConfiguration: .displayedTrash(
+                displayRootPath: "/废纸篓",
+                displayStyle: .flat
+            )
+        )
+        let workspace = try MSPAppleWorkspace(rootURL: rootURL, policy: policy)
+        let trash = try XCTUnwrap(workspace.fileSystem as? any MSPWorkspaceTrashCapable)
+
+        try workspace.fileSystem.writeTextFile(
+            "/第一组/a.txt",
+            contents: "alpha\n",
+            options: [.overwriteExisting, .createParentDirectories]
+        )
+        try workspace.fileSystem.writeTextFile(
+            "/第二组/a.txt",
+            contents: "beta\n",
+            options: [.overwriteExisting, .createParentDirectories]
+        )
+        try workspace.fileSystem.remove("/第一组/a.txt")
+        try workspace.fileSystem.remove("/第二组/a.txt")
+
+        XCTAssertEqual(
+            try workspace.fileSystem.listDirectory("/废纸篓").map(\.name),
+            ["a 2.txt", "a.txt"]
+        )
+        XCTAssertEqual(
+            Set([
+                try workspace.fileSystem.readTextFile("/废纸篓/a.txt"),
+                try workspace.fileSystem.readTextFile("/废纸篓/a 2.txt")
+            ]),
+            Set(["alpha\n", "beta\n"])
+        )
+
+        let restored = try trash.restoreTrash(["/废纸篓/a.txt", "/废纸篓/a 2.txt"])
+        XCTAssertEqual(Set(restored.map(\.restoredPath)), Set(["/第一组/a.txt", "/第二组/a.txt"]))
+        XCTAssertEqual(try workspace.fileSystem.readTextFile("/第一组/a.txt"), "alpha\n")
+        XCTAssertEqual(try workspace.fileSystem.readTextFile("/第二组/a.txt"), "beta\n")
+    }
+
     func testEmptyTrashRequiresUserConfirmedAuthorization() throws {
         let rootURL = makeTemporaryURL()
         defer { removeTemporaryURL(rootURL) }

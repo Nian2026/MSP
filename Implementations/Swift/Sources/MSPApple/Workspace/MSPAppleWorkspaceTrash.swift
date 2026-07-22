@@ -35,19 +35,31 @@ extension MSPFileManagerWorkspaceFileSystem {
         guard isTrashDisplayPath(normalizedPath) else {
             throw MSPWorkspaceFileSystemError.notFound(normalizedPath)
         }
-        let info = try trashFileInfo(atDisplayPath: normalizedPath)
-        guard info.type == .directory else {
-            throw MSPWorkspaceFileSystemError.notDirectory(normalizedPath)
-        }
         guard let trashConfiguration,
               let displayRootPath = trashConfiguration.displayRootPath else {
             throw MSPWorkspaceFileSystemError.notFound(normalizedPath)
         }
 
         let records = try trashRecords()
-        if let record = trashRecord(containingDisplayPath: normalizedPath, records: records),
+        let displayIndex = MSPAppleWorkspaceTrashDisplayIndex(
+            records: records,
+            configuration: trashConfiguration
+        )
+        let info = try trashFileInfo(
+            atDisplayPath: normalizedPath,
+            records: records,
+            displayIndex: displayIndex
+        )
+        guard info.type == .directory else {
+            throw MSPWorkspaceFileSystemError.notDirectory(normalizedPath)
+        }
+        if let record = trashRecord(
+            containingDisplayPath: normalizedPath,
+            records: records,
+            displayIndex: displayIndex
+        ),
            record.isDirectory {
-            let recordDisplayPath = trashDisplayPath(for: record, configuration: trashConfiguration)
+            let recordDisplayPath = displayIndex.displayPath(for: record)
             let suffix = normalizedPath == recordDisplayPath
                 ? ""
                 : String(normalizedPath.dropFirst(recordDisplayPath.count))
@@ -72,7 +84,8 @@ extension MSPFileManagerWorkspaceFileSystem {
         return try trashVirtualChildren(
             of: normalizedPath,
             displayRootPath: displayRootPath,
-            records: records
+            records: records,
+            displayIndex: displayIndex
         )
     }
 
@@ -81,17 +94,21 @@ extension MSPFileManagerWorkspaceFileSystem {
         from currentDirectory: String = "/",
         collisionPolicy: MSPWorkspaceTrashRestoreCollisionPolicy = .unique
     ) throws -> [MSPWorkspaceTrashRestoreSummary] {
-        guard trashConfiguration != nil else {
+        guard let trashConfiguration else {
             throw MSPWorkspaceFileSystemError.notFound("/")
         }
         let records = try trashRecords()
+        let displayIndex = MSPAppleWorkspaceTrashDisplayIndex(
+            records: records,
+            configuration: trashConfiguration
+        )
         var matched: [MSPWorkspaceTrashRecord] = []
         for rawPath in paths {
             let path = MSPWorkspacePathResolver.normalize(rawPath, from: currentDirectory)
             let matches = records.filter { record in
                 record.originalPath == path
                     || record.trashPath == path
-                    || trashConfiguration.map({ trashDisplayPath(for: record, configuration: $0) }) == path
+                    || displayIndex.displayPath(for: record) == path
             }
             guard !matches.isEmpty else {
                 throw MSPWorkspaceFileSystemError.notFound(path)
@@ -245,19 +262,6 @@ extension MSPFileManagerWorkspaceFileSystem {
         return normalizedPath == displayRootPath || normalizedPath.hasPrefix(displayRootPath + "/")
     }
 
-    func trashDisplayPath(
-        for record: MSPWorkspaceTrashRecord,
-        configuration: MSPWorkspaceTrashConfiguration
-    ) -> String {
-        guard let displayRootPath = configuration.displayRootPath else {
-            return record.originalPath
-        }
-        guard record.originalPath != "/" else {
-            return displayRootPath
-        }
-        return displayRootPath + record.originalPath
-    }
-
     func trashDisplayEntries(in parentVirtualPath: String) throws -> [MSPDirectoryEntry] {
         guard let trashConfiguration,
               let displayRootPath = trashConfiguration.displayRootPath,
@@ -280,7 +284,27 @@ extension MSPFileManagerWorkspaceFileSystem {
 
     func trashFileInfo(atDisplayPath path: String) throws -> MSPFileInfo {
         guard let trashConfiguration,
-              let displayRootPath = trashConfiguration.displayRootPath else {
+              trashConfiguration.displayRootPath != nil else {
+            throw MSPWorkspaceFileSystemError.notFound(path)
+        }
+        let records = try trashRecords()
+        let displayIndex = MSPAppleWorkspaceTrashDisplayIndex(
+            records: records,
+            configuration: trashConfiguration
+        )
+        return try trashFileInfo(
+            atDisplayPath: path,
+            records: records,
+            displayIndex: displayIndex
+        )
+    }
+
+    private func trashFileInfo(
+        atDisplayPath path: String,
+        records: [MSPWorkspaceTrashRecord],
+        displayIndex: MSPAppleWorkspaceTrashDisplayIndex
+    ) throws -> MSPFileInfo {
+        guard let displayRootPath = trashConfiguration?.displayRootPath else {
             throw MSPWorkspaceFileSystemError.notFound(path)
         }
         let normalizedPath = MSPWorkspacePathResolver.normalize(path)
@@ -289,13 +313,16 @@ extension MSPFileManagerWorkspaceFileSystem {
                 virtualPath: displayRootPath,
                 type: .directory,
                 size: 0,
-                modificationDate: try trashRecords().map(\.trashedAt).max()
+                modificationDate: records.map(\.trashedAt).max()
             )
         }
 
-        let records = try trashRecords()
-        if let record = trashRecord(containingDisplayPath: normalizedPath, records: records) {
-            let recordDisplayPath = trashDisplayPath(for: record, configuration: trashConfiguration)
+        if let record = trashRecord(
+            containingDisplayPath: normalizedPath,
+            records: records,
+            displayIndex: displayIndex
+        ) {
+            let recordDisplayPath = displayIndex.displayPath(for: record)
             let backingPath: String
             if normalizedPath == recordDisplayPath {
                 backingPath = record.trashPath
@@ -316,7 +343,8 @@ extension MSPFileManagerWorkspaceFileSystem {
         let children = try trashVirtualChildren(
             of: normalizedPath,
             displayRootPath: displayRootPath,
-            records: records
+            records: records,
+            displayIndex: displayIndex
         )
         guard !children.isEmpty else {
             throw MSPWorkspaceFileSystemError.notFound(normalizedPath)
@@ -335,13 +363,18 @@ extension MSPFileManagerWorkspaceFileSystem {
         }
         let normalizedPath = MSPWorkspacePathResolver.normalize(path)
         let records = try trashRecords()
+        let displayIndex = MSPAppleWorkspaceTrashDisplayIndex(
+            records: records,
+            configuration: trashConfiguration
+        )
         guard let record = trashRecord(
             containingDisplayPath: normalizedPath,
-            records: records
+            records: records,
+            displayIndex: displayIndex
         ) else {
             throw MSPWorkspaceFileSystemError.notFound(normalizedPath)
         }
-        let recordDisplayPath = trashDisplayPath(for: record, configuration: trashConfiguration)
+        let recordDisplayPath = displayIndex.displayPath(for: record)
         let backingPath: String
         if normalizedPath == recordDisplayPath {
             guard !record.isDirectory else {
@@ -369,19 +402,17 @@ extension MSPFileManagerWorkspaceFileSystem {
 
     func trashRecord(
         containingDisplayPath path: String,
-        records: [MSPWorkspaceTrashRecord]
+        records: [MSPWorkspaceTrashRecord],
+        displayIndex: MSPAppleWorkspaceTrashDisplayIndex
     ) -> MSPWorkspaceTrashRecord? {
-        guard let trashConfiguration else {
-            return nil
-        }
         return records
             .filter { record in
-                let displayPath = trashDisplayPath(for: record, configuration: trashConfiguration)
+                let displayPath = displayIndex.displayPath(for: record)
                 return path == displayPath || (record.isDirectory && path.hasPrefix(displayPath + "/"))
             }
             .sorted {
-                trashDisplayPath(for: $0, configuration: trashConfiguration).count
-                    > trashDisplayPath(for: $1, configuration: trashConfiguration).count
+                displayIndex.displayPath(for: $0).count
+                    > displayIndex.displayPath(for: $1).count
             }
             .first
     }
@@ -389,14 +420,12 @@ extension MSPFileManagerWorkspaceFileSystem {
     func trashVirtualChildren(
         of path: String,
         displayRootPath: String,
-        records: [MSPWorkspaceTrashRecord]
+        records: [MSPWorkspaceTrashRecord],
+        displayIndex: MSPAppleWorkspaceTrashDisplayIndex
     ) throws -> [MSPDirectoryEntry] {
-        guard let trashConfiguration else {
-            return []
-        }
         var entriesByName: [String: MSPDirectoryEntry] = [:]
         for record in records {
-            let displayPath = trashDisplayPath(for: record, configuration: trashConfiguration)
+            let displayPath = displayIndex.displayPath(for: record)
             guard displayPath.hasPrefix(path + "/") else {
                 continue
             }
@@ -408,7 +437,11 @@ extension MSPFileManagerWorkspaceFileSystem {
             if suffix == childName {
                 entriesByName[childName] = MSPDirectoryEntry(
                     name: childName,
-                    info: try trashFileInfo(atDisplayPath: childPath)
+                    info: try trashFileInfo(
+                        atDisplayPath: childPath,
+                        records: records,
+                        displayIndex: displayIndex
+                    )
                 )
             } else {
                 let existingDate = entriesByName[childName]?.info.modificationDate

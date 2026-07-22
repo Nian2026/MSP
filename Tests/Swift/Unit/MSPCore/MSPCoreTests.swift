@@ -44,6 +44,29 @@ final class MSPCoreTests: XCTestCase {
         XCTAssertFalse(policy.isHidden("/废纸篓/docs/a.txt"))
     }
 
+    func testTrashConfigurationDecodesLegacyPayloadWithOriginalHierarchyStyle() throws {
+        let data = Data(
+            #"{"storageRootPath":"/.msp/trash","displayRootPath":"/废纸篓","restoreCollisionPolicy":"unique"}"#.utf8
+        )
+
+        let configuration = try JSONDecoder().decode(
+            MSPWorkspaceTrashConfiguration.self,
+            from: data
+        )
+
+        XCTAssertEqual(configuration.displayStyle, .originalHierarchy)
+        XCTAssertEqual(configuration.displayRootPath, "/废纸篓")
+    }
+
+    func testDisplayedTrashConfigurationSupportsFlatPresentation() {
+        let configuration = MSPWorkspaceTrashConfiguration.displayedTrash(
+            displayRootPath: "/废纸篓",
+            displayStyle: .flat
+        )
+
+        XCTAssertEqual(configuration.displayStyle, .flat)
+    }
+
     func testCompositeWorkspaceSynthesizesNestedMountParents() throws {
         let base = MSPCoreMemoryFileSystem()
         let mounted = MSPCoreMemoryFileSystem(files: [

@@ -48,6 +48,10 @@ commands and app-specific commands:
   instead of physically deleting it.
 - Hidden trash storage must remain an implementation detail unless the host app
   explicitly configures a virtual display root.
+- A displayed trash root may preserve original parent hierarchy or flatten each
+  removed item into a top-level entry. In flat mode, removed directories keep
+  their own descendants, name collisions must receive deterministic unique
+  display names, and the original path remains the restore destination source.
 - Implementations must not expose hard-delete behavior through normal shell
   commands or ordinary WorkspaceFS remove configuration.
 - Physical trash emptying must require host-app authorization that represents a
