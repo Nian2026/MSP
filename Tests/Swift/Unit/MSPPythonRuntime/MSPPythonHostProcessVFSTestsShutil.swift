@@ -42,6 +42,7 @@ final class MSPPythonHostProcessVFSTestsShutil: MSPPythonRuntimeTestCase {
         print('find-isfile=' + str(os.path.isfile('/usr/bin/find')))
         print('find-access=' + repr((os.access('/usr/bin/find', os.F_OK), os.access('/usr/bin/find', os.X_OK), os.access('/usr/bin/find', os.W_OK))))
         print('bin-find-access=' + repr((os.access('/bin/find', os.F_OK), os.access('/bin/find', os.X_OK), os.access('/bin/find', os.W_OK))))
+        print('wrong-find-access=' + str(os.access('/usr/local/bin/find', os.F_OK | os.X_OK)))
         print('find-stat=' + str(stat.S_ISREG(find_stat.st_mode)) + ':' + '%03o' % stat.S_IMODE(find_stat.st_mode))
         print('bin-find-stat=' + str(stat.S_ISREG(bin_find_stat.st_mode)) + ':' + '%03o' % stat.S_IMODE(bin_find_stat.st_mode))
         print('root-has-bin=' + str('bin' in os.listdir('/')))
@@ -66,6 +67,7 @@ final class MSPPythonHostProcessVFSTestsShutil: MSPPythonRuntimeTestCase {
         find-isfile=True
         find-access=(True, True, False)
         bin-find-access=(True, True, False)
+        wrong-find-access=False
         find-stat=True:755
         bin-find-stat=True:755
         root-has-bin=True

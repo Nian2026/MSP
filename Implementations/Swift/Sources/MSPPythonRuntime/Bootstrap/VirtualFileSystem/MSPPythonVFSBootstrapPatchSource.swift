@@ -252,9 +252,21 @@ def _msp_install_python_vfs():
     _msp_vfs_traceback.format_list = _msp_vfs_traceback_format_list
     _msp_vfs_traceback.format_stack = _msp_vfs_traceback_format_stack
     _msp_vfs_traceback.format_tb = _msp_vfs_traceback_format_tb
-    _msp_vfs_os.environ["HOME"] = _msp_vfs_os.environ.get("MSP_PYTHON_VIRTUAL_HOME", "/") or "/"
-    _msp_vfs_os.environ["TMPDIR"] = _msp_vfs_os.environ.get("MSP_PYTHON_VIRTUAL_TMPDIR", "/tmp") or "/tmp"
-    _msp_vfs_os.environ["PATH"] = _msp_vfs_os.environ.get("MSP_PYTHON_VIRTUAL_PATH", "/usr/bin:/bin") or "/usr/bin:/bin"
+    _msp_vfs_os.environ["HOME"] = (
+        _msp_vfs_os.environ.get("MSP_PYTHON_VIRTUAL_HOME")
+        or _msp_vfs_os.environ.get("HOME")
+        or "/"
+    )
+    _msp_vfs_os.environ["TMPDIR"] = (
+        _msp_vfs_os.environ.get("MSP_PYTHON_VIRTUAL_TMPDIR")
+        or _msp_vfs_os.environ.get("TMPDIR")
+        or "/tmp"
+    )
+    _msp_vfs_os.environ["PATH"] = (
+        _msp_vfs_os.environ.get("MSP_PYTHON_VIRTUAL_PATH")
+        or _msp_vfs_os.environ.get("PATH")
+        or "/usr/bin:/bin"
+    )
     _msp_vfs_os.environ["PWD"] = _MSP_VFS_VIRTUAL_CWD
     for _msp_vfs_internal_env_name in (
         "MSP_PYTHON_WORKSPACE_ROOT",
