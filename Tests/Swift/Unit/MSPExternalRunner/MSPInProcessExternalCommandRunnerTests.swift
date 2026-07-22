@@ -24,6 +24,27 @@ private actor RecordingInProcessExecutor: MSPInProcessExternalCommandExecutor {
 }
 
 final class MSPInProcessExternalCommandRunnerTests: XCTestCase {
+    func testVersionOutputDoesNotRequireWorkspaceOrInvokeExecutor() async throws {
+        let executor = RecordingInProcessExecutor()
+        let runner = MSPInProcessExternalCommandRunner(
+            executableURL: URL(fileURLWithPath: "/runtime/bin/qpdf"),
+            versionOutput: "qpdf 12.0\n",
+            executor: executor
+        )
+
+        let result = try await runner.run(
+            MSPExternalCommandRequest(
+                executableName: "qpdf",
+                arguments: ["--version"]
+            ),
+            context: MSPCommandContext()
+        )
+
+        XCTAssertEqual(result, .success(stdout: "qpdf 12.0\n"))
+        let invocation = await executor.invocation
+        XCTAssertNil(invocation)
+    }
+
     func testMapsInvocationAndSanitizesRawCommandResult() async throws {
         let rootURL = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: rootURL) }
