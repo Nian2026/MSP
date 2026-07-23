@@ -95,6 +95,7 @@ public struct MSPRgCommand: MSPStreamingCommand {
                         output: output,
                         state: state
                     ) { candidate in
+                        state.anyMatched = true
                         try await output.appendStdoutLine(candidate.displayPath)
                         return true
                     }
@@ -102,7 +103,7 @@ public struct MSPRgCommand: MSPStreamingCommand {
                 return MSPCommandResult(
                     stdoutData: await output.stdoutData,
                     stderr: await output.stderr,
-                    exitCode: state.hadDiagnostics ? 2 : 0
+                    exitCode: state.hadDiagnostics ? 2 : (state.anyMatched ? 0 : 1)
                 )
             }
 

@@ -6992,14 +6992,60 @@
       ],
       "standard_input_b64": "",
       "title": "Binary stdout and stderr preserve NUL bytes and file side effects"
+    },
+    {
+      "case_type": "noninteractive",
+      "category": "rg-glob-parity",
+      "command_line": "printf 'pdf-class\\n'; rg --files docs -g '*.[pP][dD][fF]' | sort; printf 'numeric-range\\n'; rg --files docs -g 'a[0-9].txt' | sort; printf 'negated-range\\n'; rg --files docs -g 'a[!0-9].txt' | sort; printf 'exclude-class\\n'; rg --files docs -g '*.txt' -g '!a[0-9].txt' | sort; printf 'no-match\\n'; rg --files docs -g '*.zzz'; printf 'status:%s\\n' \"$?\"; printf 'malformed\\n'; rg --files docs -g '*.[pP'; printf 'status:%s\\n' \"$?\"",
+      "commands": ["printf", "rg", "sort"],
+      "compare_fields": ["stdout", "stderr", "exit_code", "file_tree"],
+      "evidence_level": "linux_and_candidate_parity_pass",
+      "expected": {
+        "exit_code": 0,
+        "stderr_b64": "ZXJyb3IgcGFyc2luZyBnbG9iICcqLltwUCc6IHVuY2xvc2VkIGNoYXJhY3RlciBjbGFzczsgbWlzc2luZyAnXScK",
+        "stdout_b64": "cGRmLWNsYXNzCmRvY3MvbG93ZXIucGRmCmRvY3MvbWl4ZWQucERmCmRvY3Mvc3ViL2NoYXB0ZXIucGRmCmRvY3MvdGl0bGUuUGRmCmRvY3MvdXBwZXIuUERGCm51bWVyaWMtcmFuZ2UKZG9jcy9hMS50eHQKbmVnYXRlZC1yYW5nZQpkb2NzL2FBLnR4dApkb2NzL2F4LnR4dApleGNsdWRlLWNsYXNzCmRvY3MvYUEudHh0CmRvY3MvYXgudHh0CmRvY3Mvc3ViL2NoYXB0ZXIudHh0Cm5vLW1hdGNoCnN0YXR1czoxCm1hbGZvcm1lZApzdGF0dXM6Mgo="
+      },
+      "file_tree": [
+        {"kind": "directory", "mode": "755", "path": ".", "size": null},
+        {"kind": "directory", "mode": "755", "path": "./docs", "size": null},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/a1.txt", "size": 0},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/aA.txt", "size": 0},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/ax.txt", "size": 0},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/lower.pdf", "size": 0},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/mixed.pDf", "size": 0},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/title.Pdf", "size": 0},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/upper.PDF", "size": 0},
+        {"kind": "directory", "mode": "755", "path": "./docs/sub", "size": null},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/sub/chapter.pdf", "size": 0},
+        {"content_b64": "", "kind": "file", "mode": "644", "path": "./docs/sub/chapter.txt", "size": 0}
+      ],
+      "fixture": {
+        "directories": ["docs/sub"],
+        "files": [
+          {"content": "", "mode": "0644", "path": "docs/lower.pdf"},
+          {"content": "", "mode": "0644", "path": "docs/upper.PDF"},
+          {"content": "", "mode": "0644", "path": "docs/title.Pdf"},
+          {"content": "", "mode": "0644", "path": "docs/mixed.pDf"},
+          {"content": "", "mode": "0644", "path": "docs/sub/chapter.pdf"},
+          {"content": "", "mode": "0644", "path": "docs/sub/chapter.txt"},
+          {"content": "", "mode": "0644", "path": "docs/a1.txt"},
+          {"content": "", "mode": "0644", "path": "docs/aA.txt"},
+          {"content": "", "mode": "0644", "path": "docs/ax.txt"}
+        ],
+        "kind": "isolated-temp-tree"
+      },
+      "id": "rg-files-glob-character-classes",
+      "shell": {"argv": ["/bin/bash", "--noprofile", "--norc"], "dialect": "bash", "path": "/bin/bash"},
+      "standard_input_b64": "",
+      "title": "rg --files glob character classes, exclusions, diagnostics, and no-match status"
     }
   ],
   "evidence_summary": {
-    "case_count": 50,
-    "linux_and_candidate_parity_pass_count": 41,
+    "case_count": 51,
+    "linux_and_candidate_parity_pass_count": 42,
     "linux_capture_only_count": 9,
     "mismatch_count_for_parity_pass_subset": 0,
-    "target_case_count": 50
+    "target_case_count": 51
   },
   "normalization": {
     "case_command": "<CASE_COMMAND>",

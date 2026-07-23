@@ -71,11 +71,13 @@ struct RgQuery {
                 guard index < arguments.count else {
                     throw MSPCommandFailure.usage("rg: missing value for --glob\n")
                 }
-                globRules.append(RgGlobRule(rawPattern: arguments[index]))
+                globRules.append(try Self.globRule(rawPattern: arguments[index]))
             case _ where argument.hasPrefix("--glob="):
-                globRules.append(RgGlobRule(rawPattern: String(argument.dropFirst("--glob=".count))))
+                globRules.append(try Self.globRule(
+                    rawPattern: String(argument.dropFirst("--glob=".count))
+                ))
             case _ where argument.hasPrefix("-g") && argument.count > 2:
-                globRules.append(RgGlobRule(rawPattern: String(argument.dropFirst(2))))
+                globRules.append(try Self.globRule(rawPattern: String(argument.dropFirst(2))))
             case "--":
                 index += 1
                 if !filesOnly, patterns.isEmpty, index < arguments.count {
@@ -104,5 +106,15 @@ struct RgQuery {
             return false
         }
         return !globRules.contains { $0.isExclusion && $0.matches(displayPath) }
+    }
+
+    private static func globRule(rawPattern: String) throws -> RgGlobRule {
+        do {
+            return try RgGlobRule(rawPattern: rawPattern)
+        } catch let error as RgGlobParseError {
+            throw MSPCommandFailure.usage(
+                "error parsing glob '\(rawPattern)': \(error.message)\n"
+            )
+        }
     }
 }

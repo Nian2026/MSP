@@ -388,6 +388,44 @@
       "exit_code": 0
     },
     {
+      "id": "rg-glob-character-classes",
+      "covered_commands": ["rg"],
+      "setup_files": [
+        { "path": "lower.pdf", "content": "" },
+        { "path": "upper.PDF", "content": "" },
+        { "path": "title.Pdf", "content": "" },
+        { "path": "mixed.pDf", "content": "" },
+        { "path": "sub/chapter.pdf", "content": "" },
+        { "path": "note.txt", "content": "" }
+      ],
+      "command_line": "rg --files -g '*.[pP][dD][fF]' | sort",
+      "stdout": "lower.pdf\nmixed.pDf\nsub/chapter.pdf\ntitle.Pdf\nupper.PDF\n",
+      "stderr": "",
+      "exit_code": 0
+    },
+    {
+      "id": "rg-files-glob-no-match",
+      "covered_commands": ["rg"],
+      "setup_files": [
+        { "path": "note.txt", "content": "" }
+      ],
+      "command_line": "rg --files -g '*.zzz'",
+      "stdout": "",
+      "stderr": "",
+      "exit_code": 1
+    },
+    {
+      "id": "rg-glob-unclosed-character-class",
+      "covered_commands": ["rg"],
+      "setup_files": [
+        { "path": "note.txt", "content": "" }
+      ],
+      "command_line": "rg --files -g '*.[pP'",
+      "stdout": "",
+      "stderr": "error parsing glob '*.[pP': unclosed character class; missing ']'\n",
+      "exit_code": 2
+    },
+    {
       "id": "cksum-modern-digest-frontend-options",
       "covered_commands": ["cksum"],
       "setup_files": [
