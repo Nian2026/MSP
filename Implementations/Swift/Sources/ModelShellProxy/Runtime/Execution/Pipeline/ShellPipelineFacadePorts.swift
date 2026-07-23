@@ -61,6 +61,8 @@ extension ModelShellProxy {
                 return commandContextSeed.makeCommandContext(
                     standardInput: stage.routing.standardInput,
                     standardInputClosed: stage.routing.standardInputClosed,
+                    standardInputOverridesFileDescriptor: stage.usesPipeInput
+                        || IORuntimeState.redirectionsScopeStandardInput(stage.parsed.redirections),
                     standardInputStream: standardInputStream,
                     standardOutputStream: stdoutStream,
                     standardErrorStream: stderrStream,

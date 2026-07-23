@@ -2,6 +2,7 @@ import Foundation
 import XCTest
 import MSPAgentBridge
 import MSPApple
+import MSPExternalRunner
 import ModelShellProxy
 
 final class ModelShellProxyExecCommandPipelineTests: ModelShellProxyIntegrationTestCase {
@@ -130,6 +131,77 @@ final class ModelShellProxyExecCommandPipelineTests: ModelShellProxyIntegrationT
             read.result.stdout,
             "/tmp/pressure-check/a.txt\n/tmp/pressure-check/b.txt\n"
         )
+        XCTAssertEqual(read.result.stderr, "")
+    }
+
+    func testExecCommandBridgeRgSearchesPipelineInputInsteadOfWorkspace() async throws {
+        let rootURL = makeTemporaryURL()
+        defer { removeTemporaryURL(rootURL) }
+        try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
+        try Data("git status --short --branch\n".utf8).write(
+            to: rootURL.appendingPathComponent("commands.txt")
+        )
+        try Data([0x25, 0x50, 0x44, 0x46, 0x2d, 0x00, 0x50, 0x49, 0x44]).write(
+            to: rootURL.appendingPathComponent("lecture.pdf")
+        )
+        let shell = try ModelShellProxy.iOS(workspaceURL: rootURL)
+            .enable(.posixCore)
+        let bridge = shell.execCommandBridge()
+
+        let read = await bridge.runSession(MSPExecCommandCall(
+            cmd: "printf 'PID PPID STAT COMMAND ARGS\\n123 0 S bash bash\\n' | rg 'git status --short --branch|PID'",
+            yieldTimeMilliseconds: 1_000
+        ))
+
+        XCTAssertNil(read.runningSessionID)
+        XCTAssertEqual(read.exitCode, 0)
+        XCTAssertEqual(read.result.stdout, "PID PPID STAT COMMAND ARGS\n")
+        XCTAssertEqual(read.result.stderr, "")
+
+        let emptyRead = await bridge.runSession(MSPExecCommandCall(
+            cmd: "printf '' | rg PID",
+            yieldTimeMilliseconds: 1_000
+        ))
+
+        XCTAssertNil(emptyRead.runningSessionID)
+        XCTAssertEqual(emptyRead.exitCode, 1)
+        XCTAssertEqual(emptyRead.result.stdout, "")
+        XCTAssertEqual(emptyRead.result.stderr, "")
+
+        let explicitFileRead = await bridge.runSession(MSPExecCommandCall(
+            cmd: "printf 'PIPE PID\\n' | rg 'git status' commands.txt",
+            yieldTimeMilliseconds: 1_000
+        ))
+
+        XCTAssertNil(explicitFileRead.runningSessionID)
+        XCTAssertEqual(explicitFileRead.exitCode, 0)
+        XCTAssertEqual(explicitFileRead.result.stdout, "git status --short --branch\n")
+        XCTAssertEqual(explicitFileRead.result.stderr, "")
+    }
+
+    func testExecCommandBridgeStartsInProcessExternalCommandWithoutWaitingForSessionEOF() async throws {
+        let rootURL = makeTemporaryURL()
+        defer { removeTemporaryURL(rootURL) }
+        try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
+        let shell = try ModelShellProxy.iOS(workspaceURL: rootURL)
+            .enable(.posixCore)
+        try shell.registerExternalCommand(
+            "inprocess-probe",
+            runner: MSPInProcessExternalCommandRunner(
+                executableURL: URL(fileURLWithPath: "/runtime/bin/inprocess-probe"),
+                executor: ImmediateInProcessExternalExecutor()
+            )
+        )
+        let bridge = shell.execCommandBridge()
+
+        let read = await bridge.runSession(MSPExecCommandCall(
+            cmd: "inprocess-probe",
+            yieldTimeMilliseconds: 1_000
+        ))
+
+        XCTAssertNil(read.runningSessionID)
+        XCTAssertEqual(read.exitCode, 0)
+        XCTAssertEqual(read.result.stdout, "started with 0 stdin bytes\n")
         XCTAssertEqual(read.result.stderr, "")
     }
 
@@ -287,4 +359,12 @@ final class ModelShellProxyExecCommandPipelineTests: ModelShellProxyIntegrationT
     }
     #endif
 
+}
+
+private struct ImmediateInProcessExternalExecutor: MSPInProcessExternalCommandExecutor {
+    func execute(
+        _ invocation: MSPInProcessExternalCommandInvocation
+    ) async throws -> MSPCommandResult {
+        .success(stdout: "started with \(invocation.standardInput.count) stdin bytes\n")
+    }
 }

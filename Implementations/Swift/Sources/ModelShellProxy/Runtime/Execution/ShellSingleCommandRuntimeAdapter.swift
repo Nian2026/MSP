@@ -401,6 +401,9 @@ extension ShellRuntime {
                 let context = commandConfiguration.makeCommandContext(
                     standardInput: routing.standardInput,
                     standardInputClosed: routing.standardInputClosed,
+                    standardInputOverridesFileDescriptor: frame.standardInputOverridesFileDescriptor
+                        || routing.standardInputDescriptor != nil
+                        || IORuntimeState.redirectionsScopeStandardInput(parsed.redirections),
                     standardInputStream: inheritsStandardInputStream
                         ? commandConfiguration.standardInputStream
                         : nil,

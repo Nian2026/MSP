@@ -20,10 +20,57 @@ func searchRgFile(
         }
         return
     }
+    try await searchRgData(
+        data,
+        displayPath: candidate.displayPath,
+        query: query,
+        matcher: matcher,
+        prefixPath: prefixPath,
+        reportBinaryMatches: candidate.reportBinaryMatches,
+        output: output,
+        state: state
+    )
+}
+
+func searchRgStandardInput(
+    _ data: Data,
+    query: RgQuery,
+    matcher: RgMatcher,
+    output: any RgOutputWriter,
+    state: RgRunState
+) async throws {
+    try await searchRgData(
+        data,
+        displayPath: "<stdin>",
+        query: query,
+        matcher: matcher,
+        prefixPath: query.forceWithFilename,
+        reportBinaryMatches: true,
+        output: output,
+        state: state
+    )
+}
+
+private func searchRgData(
+    _ data: Data,
+    displayPath: String,
+    query: RgQuery,
+    matcher: RgMatcher,
+    prefixPath: Bool,
+    reportBinaryMatches: Bool,
+    output: any RgOutputWriter,
+    state: RgRunState
+) async throws {
+    state.currentFileMatchCount = 0
+    let binaryOffset = data.firstIndex(of: 0).map {
+        data.distance(from: data.startIndex, to: $0)
+    }
+    if binaryOffset != nil, !reportBinaryMatches {
+        return
+    }
     let text = String(decoding: data, as: UTF8.self)
     let lines = mspPOSIXRgLines(text)
     var fileMatched = false
-    state.currentFileMatchCount = 0
     for (index, line) in lines.enumerated() {
         guard matcher.matches(line) else {
             if !query.invertMatch {
@@ -32,9 +79,10 @@ func searchRgFile(
             try await recordRgMatch(
                 line: line,
                 lineIndex: index,
-                candidate: candidate,
+                displayPath: displayPath,
                 query: query,
                 prefixPath: prefixPath,
+                suppressLineOutput: binaryOffset != nil,
                 output: output,
                 state: state,
                 fileMatched: &fileMatched
@@ -47,35 +95,51 @@ func searchRgFile(
         try await recordRgMatch(
             line: line,
             lineIndex: index,
-            candidate: candidate,
+            displayPath: displayPath,
             query: query,
             prefixPath: prefixPath,
+            suppressLineOutput: binaryOffset != nil,
             output: output,
             state: state,
             fileMatched: &fileMatched
         )
     }
     if query.count {
-        let countLine = rgCountLine(
-            count: state.currentFileMatchCount,
-            candidate: candidate,
-            prefixPath: prefixPath,
-            query: query
-        )
-        try await output.appendStdoutLine(countLine)
+        if state.currentFileMatchCount > 0 {
+            let countLine = rgCountLine(
+                count: state.currentFileMatchCount,
+                displayPath: displayPath,
+                prefixPath: prefixPath,
+                query: query
+            )
+            try await output.appendStdoutLine(countLine)
+        }
         state.currentFileMatchCount = 0
     }
     if query.filesWithMatches, fileMatched {
-        try await output.appendStdoutLine(candidate.displayPath)
+        try await output.appendStdoutLine(displayPath)
+    }
+    if let binaryOffset,
+       fileMatched,
+       !query.quiet,
+       !query.count,
+       !query.filesWithMatches {
+        let pathPrefix = prefixPath && !query.forceWithoutFilename
+            ? displayPath + ": "
+            : ""
+        try await output.appendStdoutLine(
+            "\(pathPrefix)binary file matches (found \"\\0\" byte around offset \(binaryOffset))"
+        )
     }
 }
 
 private func recordRgMatch(
     line: String,
     lineIndex: Int,
-    candidate: RgFileCandidate,
+    displayPath: String,
     query: RgQuery,
     prefixPath: Bool,
+    suppressLineOutput: Bool,
     output: any RgOutputWriter,
     state: RgRunState,
     fileMatched: inout Bool
@@ -83,7 +147,7 @@ private func recordRgMatch(
     state.anyMatched = true
     fileMatched = true
     state.currentFileMatchCount += 1
-    guard !query.quiet, !query.count else {
+    guard !query.quiet, !query.count, !suppressLineOutput else {
         return
     }
     if query.filesWithMatches {
@@ -91,7 +155,7 @@ private func recordRgMatch(
     }
     var row = ""
     if prefixPath && !query.forceWithoutFilename {
-        row += candidate.displayPath + ":"
+        row += displayPath + ":"
     }
     if query.lineNumber {
         row += "\(lineIndex + 1):"
@@ -100,9 +164,9 @@ private func recordRgMatch(
     try await output.appendStdoutLine(row)
 }
 
-private func rgCountLine(count: Int, candidate: RgFileCandidate, prefixPath: Bool, query: RgQuery) -> String {
+private func rgCountLine(count: Int, displayPath: String, prefixPath: Bool, query: RgQuery) -> String {
     if prefixPath && !query.forceWithoutFilename {
-        return "\(candidate.displayPath):\(count)"
+        return "\(displayPath):\(count)"
     }
     return "\(count)"
 }

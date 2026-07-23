@@ -432,6 +432,75 @@ final class MSPWorkerFMiscProcessNumericSearchTests: XCTestCase {
         XCTAssertEqual(result.exitCode, 0)
     }
 
+    func testRgSkipsBinaryWorkspaceFilesWithoutRenderingReplacementText() async throws {
+        let workspace = WorkerFWorkspace(files: [
+            "/document.pdf": Data([0x25, 0x50, 0x44, 0x46, 0x2d, 0x00, 0x50, 0x49, 0x44]),
+            "/notes.txt": Data("PID\n".utf8)
+        ])
+
+        let result = await runCommand("rg", ["PID"], workspace: workspace)
+
+        XCTAssertEqual(result.stdout, "notes.txt:PID\n")
+        XCTAssertEqual(result.stderr, "")
+        XCTAssertEqual(result.exitCode, 0)
+    }
+
+    func testRgBinaryAndZeroCountBehaviorMatchesDebian12RipgrepOracle() async throws {
+        let binaryData = Data([0x25, 0x50, 0x44, 0x46, 0x2d, 0x00, 0x50, 0x49, 0x44])
+        let workspace = WorkerFWorkspace(files: [
+            "/document.pdf": binaryData,
+            "/notes.txt": Data("alpha\n".utf8)
+        ])
+
+        let explicitBinary = await runCommand("rg", ["PID", "document.pdf"], workspace: workspace)
+        let namedBinary = await runCommand("rg", ["-H", "PID", "document.pdf"], workspace: workspace)
+        let countedBinary = await runCommand("rg", ["-c", "PID", "document.pdf"], workspace: workspace)
+        let listedBinary = await runCommand("rg", ["-l", "PID", "document.pdf"], workspace: workspace)
+        let quietBinary = await runCommand("rg", ["-q", "PID", "document.pdf"], workspace: workspace)
+        let stdinBinary = await runCommand("rg", ["PID"], standardInput: binaryData)
+        let namedStdinBinary = await runCommand("rg", ["-H", "PID"], standardInput: binaryData)
+        let zeroCount = await runCommand("rg", ["-c", "zeta"], standardInput: Data("alpha\n".utf8))
+
+        XCTAssertEqual(explicitBinary.stdout, "binary file matches (found \"\\0\" byte around offset 5)\n")
+        XCTAssertEqual(explicitBinary.stderr, "")
+        XCTAssertEqual(explicitBinary.exitCode, 0)
+        XCTAssertEqual(namedBinary.stdout, "document.pdf: binary file matches (found \"\\0\" byte around offset 5)\n")
+        XCTAssertEqual(countedBinary.stdout, "1\n")
+        XCTAssertEqual(listedBinary.stdout, "document.pdf\n")
+        XCTAssertEqual(quietBinary.stdout, "")
+        XCTAssertEqual(quietBinary.exitCode, 0)
+        XCTAssertEqual(stdinBinary.stdout, "binary file matches (found \"\\0\" byte around offset 5)\n")
+        XCTAssertEqual(namedStdinBinary.stdout, "<stdin>: binary file matches (found \"\\0\" byte around offset 5)\n")
+        XCTAssertEqual(zeroCount.stdout, "")
+        XCTAssertEqual(zeroCount.stderr, "")
+        XCTAssertEqual(zeroCount.exitCode, 1)
+    }
+
+    func testRgStdinOptionsMatchDebian12RipgrepOracle() async throws {
+        let input = Data("alpha\nbeta\nalpha alphabet\nexact\n".utf8)
+        let cases: [(arguments: [String], stdout: String, exitCode: Int32)] = [
+            (["alpha"], "alpha\nalpha alphabet\n", 0),
+            (["-n", "alpha"], "1:alpha\n3:alpha alphabet\n", 0),
+            (["-H", "-n", "alpha"], "<stdin>:1:alpha\n<stdin>:3:alpha alphabet\n", 0),
+            (["-I", "-n", "alpha"], "1:alpha\n3:alpha alphabet\n", 0),
+            (["-c", "alpha"], "2\n", 0),
+            (["-c", "zeta"], "", 1),
+            (["-l", "alpha"], "<stdin>\n", 0),
+            (["-q", "alpha"], "", 0),
+            (["-q", "zeta"], "", 1),
+            (["-v", "beta"], "alpha\nalpha alphabet\nexact\n", 0),
+            (["-w", "alpha"], "alpha\nalpha alphabet\n", 0),
+            (["-x", "exact"], "exact\n", 0)
+        ]
+
+        for testCase in cases {
+            let result = await runCommand("rg", testCase.arguments, standardInput: input)
+            XCTAssertEqual(result.stdout, testCase.stdout, "arguments: \(testCase.arguments)")
+            XCTAssertEqual(result.stderr, "", "arguments: \(testCase.arguments)")
+            XCTAssertEqual(result.exitCode, testCase.exitCode, "arguments: \(testCase.arguments)")
+        }
+    }
+
     private func runCommand(
         _ name: String,
         _ arguments: [String],

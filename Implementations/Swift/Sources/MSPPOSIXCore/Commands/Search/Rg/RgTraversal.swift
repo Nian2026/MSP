@@ -15,6 +15,7 @@ struct RgRootItem {
 struct RgFileCandidate {
     var info: MSPFileInfo
     var displayPath: String
+    var reportBinaryMatches: Bool
 }
 
 struct RgRootResolution {
@@ -77,6 +78,7 @@ func visitRgFiles(
     query: RgQuery,
     output: any RgOutputWriter,
     state: RgRunState,
+    reportBinaryMatches: Bool = false,
     onFile: (RgFileCandidate) async throws -> Bool
 ) async throws -> Bool {
     if !query.includeHidden, MSPPOSIXCommandSupport.basename(info.virtualPath).hasPrefix(".") {
@@ -87,7 +89,11 @@ func visitRgFiles(
         guard query.globRules.isEmpty || query.includes(displayPath) else {
             return true
         }
-        return try await onFile(RgFileCandidate(info: info, displayPath: displayPath))
+        return try await onFile(RgFileCandidate(
+            info: info,
+            displayPath: displayPath,
+            reportBinaryMatches: reportBinaryMatches
+        ))
     case .directory:
         do {
             var shouldContinue = true
@@ -99,6 +105,7 @@ func visitRgFiles(
                     query: query,
                     output: output,
                     state: state,
+                    reportBinaryMatches: false,
                     onFile: onFile
                 )
                 return shouldContinue

@@ -23,6 +23,14 @@ private actor RecordingInProcessExecutor: MSPInProcessExternalCommandExecutor {
     }
 }
 
+private struct UnexpectedInProcessInputRead: Error {}
+
+private final class RejectingInProcessInputStream: MSPCommandInputStream {
+    func read(maxBytes: Int) async throws -> Data? {
+        throw UnexpectedInProcessInputRead()
+    }
+}
+
 final class MSPInProcessExternalCommandRunnerTests: XCTestCase {
     func testVersionOutputDoesNotRequireWorkspaceOrInvokeExecutor() async throws {
         let executor = RecordingInProcessExecutor()
@@ -107,6 +115,55 @@ final class MSPInProcessExternalCommandRunnerTests: XCTestCase {
         )
         XCTAssertEqual(result.stderr, "SELF=/usr/local/bin/qpdf\n")
         XCTAssertEqual(result.exitCode, 3)
+    }
+
+    func testInheritedLiveSessionInputDoesNotBlockInProcessCommandStartup() async throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+        let workspace = try MSPAppleWorkspace(rootURL: rootURL)
+        let executor = RecordingInProcessExecutor()
+        let runner = MSPInProcessExternalCommandRunner(
+            executableURL: URL(fileURLWithPath: "/runtime/bin/git"),
+            executor: executor
+        )
+
+        let result = try await runner.run(
+            MSPExternalCommandRequest(executableName: "git", arguments: ["status"]),
+            context: MSPCommandContext(
+                workspace: workspace,
+                standardInput: Data("snapshot\n".utf8),
+                standardInputStream: RejectingInProcessInputStream()
+            )
+        )
+
+        XCTAssertEqual(result.exitCode, 3)
+        let invocation = await executor.invocation
+        XCTAssertEqual(invocation?.standardInput, Data("snapshot\n".utf8))
+    }
+
+    func testRedirectedInputIsBufferedBeforeInProcessCommandStartup() async throws {
+        let rootURL = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: rootURL) }
+        let workspace = try MSPAppleWorkspace(rootURL: rootURL)
+        let executor = RecordingInProcessExecutor()
+        let runner = MSPInProcessExternalCommandRunner(
+            executableURL: URL(fileURLWithPath: "/runtime/bin/qpdf"),
+            executor: executor
+        )
+
+        let result = try await runner.run(
+            MSPExternalCommandRequest(executableName: "qpdf", arguments: []),
+            context: MSPCommandContext(
+                workspace: workspace,
+                standardInput: Data("ignored snapshot\n".utf8),
+                standardInputOverridesFileDescriptor: true,
+                standardInputStream: MSPDataInputStream(Data("redirected\n".utf8))
+            )
+        )
+
+        XCTAssertEqual(result.exitCode, 3)
+        let invocation = await executor.invocation
+        XCTAssertEqual(invocation?.standardInput, Data("redirected\n".utf8))
     }
 
     private func temporaryDirectory() throws -> URL {

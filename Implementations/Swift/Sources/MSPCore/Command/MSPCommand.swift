@@ -42,6 +42,7 @@ public struct MSPCommandContext: Sendable {
     public var environment: [String: String]
     public var standardInput: Data
     public var standardInputClosed: Bool
+    public var standardInputOverridesFileDescriptor: Bool
     public var standardInputStream: (any MSPCommandInputStream)?
     public var standardOutputStream: (any MSPCommandOutputStream)?
     public var standardErrorStream: (any MSPCommandOutputStream)?
@@ -59,6 +60,7 @@ public struct MSPCommandContext: Sendable {
         environment: [String: String] = [:],
         standardInput: Data = Data(),
         standardInputClosed: Bool = false,
+        standardInputOverridesFileDescriptor: Bool = false,
         standardInputStream: (any MSPCommandInputStream)? = nil,
         standardOutputStream: (any MSPCommandOutputStream)? = nil,
         standardErrorStream: (any MSPCommandOutputStream)? = nil,
@@ -75,6 +77,7 @@ public struct MSPCommandContext: Sendable {
         self.environment = environment
         self.standardInput = standardInput
         self.standardInputClosed = standardInputClosed
+        self.standardInputOverridesFileDescriptor = standardInputOverridesFileDescriptor
         self.standardInputStream = standardInputStream
         self.standardOutputStream = standardOutputStream
         self.standardErrorStream = standardErrorStream

@@ -86,15 +86,16 @@ public struct MSPInProcessExternalCommandRunner: MSPExternalCommandRunner {
                 virtualPath: request.workingDirectory,
                 context: context
             ),
-            standardInput: await bufferedStandardInput(from: context)
+            standardInput: try await standardInputData(from: context)
         )
         return outputSanitizer.sanitize(try await executor.execute(invocation))
     }
 
-    private func bufferedStandardInput(
+    private func standardInputData(
         from context: MSPCommandContext
     ) async throws -> Data {
-        guard let stream = context.standardInputStream else {
+        guard context.standardInputOverridesFileDescriptor,
+              let stream = context.standardInputStream else {
             return context.standardInput
         }
         var data = Data()

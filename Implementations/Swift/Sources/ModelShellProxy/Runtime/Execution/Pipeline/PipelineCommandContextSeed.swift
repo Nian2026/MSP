@@ -27,6 +27,7 @@ struct ShellPipelineCommandContextSeed {
     func makeCommandContext(
         standardInput: Data,
         standardInputClosed: Bool = false,
+        standardInputOverridesFileDescriptor: Bool = false,
         standardInputStream: (any MSPCommandInputStream)? = nil,
         standardOutputStream: (any MSPCommandOutputStream)? = nil,
         standardErrorStream: (any MSPCommandOutputStream)? = nil,
@@ -46,6 +47,7 @@ struct ShellPipelineCommandContextSeed {
             environment: commandEnvironment,
             standardInput: standardInput,
             standardInputClosed: standardInputClosed,
+            standardInputOverridesFileDescriptor: standardInputOverridesFileDescriptor,
             standardInputStream: standardInputStream,
             standardOutputStream: standardOutputStream,
             standardErrorStream: standardErrorStream,

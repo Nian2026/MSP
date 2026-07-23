@@ -48,8 +48,34 @@ public struct MSPRgCommand: MSPStreamingCommand {
             throw MSPCommandFailure.usage("rg: missing pattern\n")
         }
 
-        let fileSystem = try MSPPOSIXCommandSupport.workspaceFileSystem(from: context, command: name)
         let state = RgRunState()
+        if shouldSearchRgStandardInput(query: query, context: context) {
+            do {
+                let matcher = try RgMatcher(
+                    patterns: query.patterns,
+                    fixedStrings: query.fixedStrings,
+                    ignoreCase: query.ignoreCase,
+                    wordRegexp: query.wordRegexp,
+                    lineRegexp: query.lineRegexp
+                )
+                try await searchRgStandardInput(
+                    try await rgStandardInputData(context),
+                    query: query,
+                    matcher: matcher,
+                    output: output,
+                    state: state
+                )
+                return MSPCommandResult(
+                    stdoutData: await output.stdoutData,
+                    stderr: await output.stderr,
+                    exitCode: state.anyMatched ? 0 : 1
+                )
+            } catch MSPCommandStreamError.brokenPipe {
+                return .success(stdoutData: await output.stdoutData, stderr: await output.stderr)
+            }
+        }
+
+        let fileSystem = try MSPPOSIXCommandSupport.workspaceFileSystem(from: context, command: name)
         let roots = try await resolveRgRoots(
             query: query,
             fileSystem: fileSystem,
@@ -98,7 +124,8 @@ public struct MSPRgCommand: MSPStreamingCommand {
                     fileSystem: fileSystem,
                     query: query,
                     output: output,
-                    state: state
+                    state: state,
+                    reportBinaryMatches: root.info.type == .regularFile
                 ) { candidate in
                     try await searchRgFile(
                         candidate,
@@ -129,4 +156,24 @@ public struct MSPRgCommand: MSPStreamingCommand {
             return .success(stdoutData: await output.stdoutData, stderr: await output.stderr)
         }
     }
+}
+
+private func shouldSearchRgStandardInput(
+    query: RgQuery,
+    context: MSPCommandContext
+) -> Bool {
+    !query.filesOnly
+        && query.paths.isEmpty
+        && (context.standardInputOverridesFileDescriptor || !context.standardInput.isEmpty)
+}
+
+private func rgStandardInputData(_ context: MSPCommandContext) async throws -> Data {
+    guard let stream = context.standardInputStream else {
+        return context.standardInput
+    }
+    var data = Data()
+    while let chunk = try await stream.read(maxBytes: 32 * 1024) {
+        data.append(chunk)
+    }
+    return data
 }
